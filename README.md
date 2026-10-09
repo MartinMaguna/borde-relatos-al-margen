@@ -16,6 +16,14 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 ├── client/               # Frontend (SPA)
 │   ├── public/
 │   ├── src/
+│   │   ├── a11y/         # región viva (Announcer), foco al cambiar de ruta, document.title
+│   │   ├── api/          # cliente fetch con el formato de la API
+│   │   ├── components/   # layout, menú, tarjetas, paginación, ruta de navegación
+│   │   ├── lib/          # categorías, menú, formato de fechas
+│   │   ├── pages/        # Inicio, listado por categoría, detalle, Acerca, error/404
+│   │   ├── routes/       # rutas y loaders (React Router 8, modo datos)
+│   │   ├── styles/       # global.css (tokens, claro/oscuro, foco, lectura)
+│   │   └── test/         # tests de la interfaz + axe
 │   ├── index.html        # lang="es", viewport sin bloqueo de zoom
 │   ├── vite.config.js    # proxy /api → server en desarrollo
 │   └── eslint.config.js  # incluye jsx-a11y (strict)
@@ -38,7 +46,7 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 
 ## Requisitos
 
-- Node.js **22 LTS** o superior (ver `.nvmrc`; mínimo 20.19 por Vite).
+- Node.js **22.22** o superior (ver `.nvmrc`; lo exige React Router 8).
 - Una cuenta gratuita de [MongoDB Atlas](https://www.mongodb.com/atlas).
 
 ## Puesta en marcha local
@@ -104,9 +112,23 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 | `npm run build` | Build de producción del cliente |
 | `npm run seed` | Crea/actualiza el editor y la página Acerca |
 | `npm run lint` | ESLint en server y cliente (incluye jsx-a11y) |
-| `npm test` | Tests de la API (y de accesibilidad desde la Fase 5) |
+| `npm test` | Tests de la API y de la interfaz (incluye axe) |
+
+## Sitio público
+
+| Ruta | Vista |
+| ---- | ----- |
+| `/` | Presentación y últimas 3 publicaciones de cada categoría |
+| `/poesia`, `/cuentos`, `/talleres`, `/convocatorias` | Listado paginado (`?pagina=2`) |
+| `/:categoria/:slug` | Detalle de la publicación |
+| `/acerca` | Página editable "Acerca" |
+
+Las decisiones de accesibilidad están registradas en [docs/accesibilidad.md](docs/accesibilidad.md).
 
 ### Tests
+
+- **Cliente** (`npm test -w client`): Vitest + Testing Library + axe-core, con la API simulada.
+- **API** (`npm test -w server`): ver abajo.
 
 Los tests de la API usan **MongoDB en memoria** (`mongodb-memory-server`): no tocan Atlas ni necesitan `.env`.
 La primera ejecución descarga un binario de MongoDB (en Windows, unos 800 MB; queda en caché en `~/.cache/mongodb-binaries`).
