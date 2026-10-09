@@ -31,6 +31,30 @@ Objetivo: **WCAG 2.2 nivel AA**, con prioridad en personas ciegas que usan lecto
 | 3 | Contraste verificado: texto ≥ 14:1, secundario ≥ 7:1, acento ≥ 7:1, foco y bordes ≥ 3:1, en modo claro y oscuro | WCAG 1.4.3 / 1.4.11. axe en navegador real: 0 violaciones en ambos esquemas. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
 | 3 | Objetivos táctiles ≥ 2.75rem (44 px) en menú y paginación | WCAG 2.5.8. |
+| 4 | Etiqueta visible y asociada (`label for`) en cada campo; pistas y errores vinculados con `aria-describedby` | El lector lee etiqueta, pista y error al enfocar el campo. Nada de placeholder como etiqueta. |
+| 4 | Se marcan los campos **opcionales** "(opcional)"; los obligatorios llevan `required` | Menos ruido visual; el lector anuncia "obligatorio" por sí solo. |
+| 4 | Validación al enviar (no mientras se escribe) con `noValidate`; errores de la API mostrados por campo | Los globos nativos del navegador son inconsistentes con lectores de pantalla; un único origen de validación (servidor). |
+| 4 | Resumen de errores arriba del formulario, enfocado al fallar; cada error es un enlace que enfoca su campo | Patrón GOV.UK: la persona sabe cuántos errores hay y llega a cada uno directamente (WCAG 3.3.1, 3.3.3). |
+| 4 | Errores con prefijo "Error:" en texto, borde más grueso y barra lateral; `aria-invalid="true"` en el campo | WCAG 1.4.1 y 3.3.1: no se depende del color. |
+| 4 | `document.title` empieza con "Error:" mientras haya errores | Es lo primero que se anuncia; confirma que el envío falló. |
+| 4 | Lo escrito se conserva tras un error (formulario no controlado) | Nadie tiene que volver a tipear un texto largo. |
+| 4 | Botón de envío nunca `disabled` mientras envía (se evita el doble envío por código) | Un botón deshabilitado pierde el foco y el lector queda en el vacío. |
+| 4 | Radios y grupos dentro de `fieldset`/`legend` ("Estado", "Imagen", "Datos de la convocatoria") | El lector anuncia la pregunta al entrar al grupo. |
+| 4 | Campos de convocatoria aparecen después del selector de categoría, con una pista que lo avisa | Cambio de contexto predecible (WCAG 3.2.2): el contenido nuevo queda adelante en el orden de lectura. |
+| 4 | Pista para el texto alternativo ("Contá qué se ve y por qué importa… No empieces con «imagen de»") | Ayuda a que el equipo editorial escriba buenos `alt`. |
+| 4 | Confirmación de borrado con `<dialog>` nativo y `showModal()`; foco inicial en "Cancelar"; Escape cierra | Foco atrapado y fondo inerte sin ARIA extra. La opción segura es la predeterminada. |
+| 4 | Tras eliminar, foco al `h1` y aviso en región viva ("Se eliminó «…»") | El botón que abrió el diálogo ya no existe: el foco no queda perdido. |
+| 4 | Acciones con el título en el nombre accesible ("Editar «Orilla»", "Eliminar «Orilla»") | En la lista de botones del lector cada acción se distingue. |
+| 4 | Avisos de éxito visibles **y** anunciados (región viva) | Un mensaje que aparece en pantalla no se lee solo. |
+| 4 | Filtros como formulario GET con `role="search"` y nombre; "N publicaciones con estos filtros" debajo del `h1` | Cada búsqueda tiene URL; el foco va al `h1` y lo siguiente que se lee es el resultado. |
+| 4 | Listado como tarjetas, no tabla | Sin scroll horizontal en móvil ni con zoom alto. |
+| 4 | Login con `autocomplete="username"` / `current-password` y opción "Mostrar la contraseña" | WCAG 1.3.5 y 3.3.8 (autenticación accesible): permite gestores de contraseñas y verificar lo escrito. |
+
+### Pendiente de verificar con lector de pantalla (Fase 5)
+
+- Que NVDA/JAWS/VoiceOver lean el texto oculto de los botones ("Eliminar «título»") como parte del nombre.
+- Lectura del resumen de errores al recibir el foco en cada lector.
+- Comportamiento del `<dialog>` modal en VoiceOver iOS y TalkBack.
 
 ## Tests automáticos
 

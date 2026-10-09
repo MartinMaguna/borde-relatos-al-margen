@@ -123,6 +123,20 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 | `/:categoria/:slug` | Detalle de la publicación |
 | `/acerca` | Página editable "Acerca" |
 
+## Panel del editor
+
+Se entra desde el pie del sitio ("Ingreso del equipo editorial") o directamente en `/panel`. No hay registro público: el usuario editor se crea con `npm run seed`.
+
+| Ruta | Vista |
+| ---- | ----- |
+| `/panel/ingresar` | Login (si ya hay sesión, va directo al panel) |
+| `/panel` | Publicaciones: filtros por título, categoría y estado; editar, ver y eliminar (con confirmación) |
+| `/panel/publicaciones/nueva` | Alta |
+| `/panel/publicaciones/:id` | Edición |
+| `/panel/acerca` | Edición de la página Acerca |
+
+Todas las rutas del panel verifican la sesión (`/api/auth/me`) antes de mostrarse; sin sesión se redirige al login y, al ingresar, se vuelve a la página pedida.
+
 Las decisiones de accesibilidad están registradas en [docs/accesibilidad.md](docs/accesibilidad.md).
 
 ### Tests

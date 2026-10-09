@@ -4,8 +4,14 @@ import CategoryPage from '../pages/CategoryPage.jsx';
 import PostPage from '../pages/PostPage.jsx';
 import AboutPage from '../pages/AboutPage.jsx';
 import ErrorPage from '../pages/ErrorPage.jsx';
+import PanelLayout from '../components/PanelLayout.jsx';
+import LoginPage from '../pages/panel/LoginPage.jsx';
+import PostsAdminPage from '../pages/panel/PostsAdminPage.jsx';
+import PostFormPage from '../pages/panel/PostFormPage.jsx';
+import AboutEditPage from '../pages/panel/AboutEditPage.jsx';
 import { CATEGORIES, SITE_NAME } from '../lib/site.js';
 import { aboutLoader, categoryLoader, homeLoader, notFoundLoader, postLoader } from './loaders.js';
+import { adminPostsLoader, editAboutLoader, editPostLoader, loginLoader, requireUserLoader } from './panelLoaders.js';
 
 /** Se muestra solo en la primera carga, mientras llegan los datos iniciales. */
 function InitialLoading() {
@@ -17,11 +23,36 @@ function InitialLoading() {
 }
 
 /**
- * Rutas públicas. El errorElement va en una ruta intermedia sin path:
+ * Rutas del panel y del sitio público. El errorElement va en una ruta intermedia sin path:
  * así un error o un 404 se muestran DENTRO del layout (con header y menú).
  * Exportadas aparte para poder usarlas en tests con createMemoryRouter.
  */
 export const routes = [
+  // Panel del editor: va antes que el sitio público para que /panel no lo capture el comodín *.
+  {
+    path: '/panel',
+    element: <PanelLayout />,
+    hydrateFallbackElement: <InitialLoading />,
+    children: [
+      {
+        errorElement: <ErrorPage />,
+        children: [
+          { path: 'ingresar', loader: loginLoader, element: <LoginPage /> },
+          {
+            // Ruta sin path que protege a todas sus hijas (y la que comparte el usuario con el layout).
+            id: 'panel',
+            loader: requireUserLoader,
+            children: [
+              { index: true, loader: adminPostsLoader, element: <PostsAdminPage /> },
+              { path: 'publicaciones/nueva', element: <PostFormPage /> },
+              { path: 'publicaciones/:id', loader: editPostLoader, element: <PostFormPage /> },
+              { path: 'acerca', loader: editAboutLoader, element: <AboutEditPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
   {
     path: '/',
     element: <RootLayout />,

@@ -7,20 +7,31 @@ import { AnnouncerProvider } from '../a11y/Announcer.jsx';
 import { routes } from '../routes/routes.jsx';
 
 /**
- * Simula la API: `responses` mapea "ruta sin /api" → { status, body }.
+ * Simula la API. `responses` mapea "ruta sin /api" (GET) o "MÉTODO ruta" → { status, body }
+ * o una función (requestBody) => { status, body } para respuestas dinámicas.
  * Si una ruta no está definida, responde 404 como el server.
+ * Devuelve la lista de llamadas hechas ({ method, path, body }) para poder verificarlas.
  */
 export function mockApi(responses) {
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+  const calls = [];
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, options = {}) => {
     const path = String(url).replace(/^\/api/, '');
-    const match = responses[path];
+    const method = options.method ?? 'GET';
+    const body = options.body ? JSON.parse(options.body) : undefined;
+    calls.push({ method, path, body });
+
+    let match = responses[`${method} ${path}`] ?? (method === 'GET' ? responses[path] : undefined);
+    if (typeof match === 'function') match = match(body);
     const status = match?.status ?? (match ? 200 : 404);
-    const body = match?.body ?? { ok: false, error: { message: 'No encontrado', code: 'NOT_FOUND' } };
-    return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+    const json = match?.body ?? { ok: false, error: { message: 'No encontrado', code: 'NOT_FOUND' } };
+    return new Response(JSON.stringify(json), { status, headers: { 'Content-Type': 'application/json' } });
   });
+  return calls;
 }
 
 export const ok = (data, meta) => ({ body: { ok: true, data, ...(meta && { meta }) } });
+
+export const fail = (status, message, extra = {}) => ({ status, body: { ok: false, error: { message, ...extra } } });
 
 /** Renderiza la app en una ruta y espera a que aparezca el h1 de la vista. */
 export async function renderRoute(path) {

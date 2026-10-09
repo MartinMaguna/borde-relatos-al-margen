@@ -38,7 +38,8 @@ export default function RootLayout() {
       <footer className="site-footer">
         <div className="container">
           <p>
-            Borde. Relatos al Margen · {new Date().getFullYear()} · <Link to="/acerca">Acerca del proyecto</Link>
+            Borde. Relatos al Margen · {new Date().getFullYear()} · <Link to="/acerca">Acerca del proyecto</Link> ·{" "}
+            <Link to="/panel">Ingreso del equipo editorial</Link>
           </p>
         </div>
       </footer>

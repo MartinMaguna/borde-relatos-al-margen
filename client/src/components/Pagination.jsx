@@ -14,9 +14,10 @@ function pageItems(page, totalPages) {
  * - Cada número se anuncia "Página 2"; la actual lleva aria-current="page".
  * - "Anterior"/"Siguiente" no se muestran cuando no aplican (en vez de quedar deshabilitados).
  */
-export default function Pagination({ page, totalPages, basePath }) {
+export default function Pagination({ page, totalPages, basePath, hrefFor }) {
   if (totalPages <= 1) return null;
-  const href = (p) => (p === 1 ? basePath : `${basePath}?pagina=${p}`);
+  // hrefFor permite conservar otros parámetros de la URL (p. ej. filtros del panel).
+  const href = hrefFor ?? ((p) => (p === 1 ? basePath : `${basePath}?pagina=${p}`));
 
   return (
     <nav className="pagination" aria-label="Paginación">
