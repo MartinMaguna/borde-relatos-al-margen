@@ -19,9 +19,10 @@ import { notFound, errorHandler } from './middleware/errors.js';
 export function createApp() {
   const app = express();
 
-  // Railway (y Vercel al hacer el rewrite) están detrás de un proxy:
-  // necesario para que req.ip (rate limiting) y las cookies Secure funcionen bien.
-  app.set('trust proxy', 1);
+  // En producción la API está detrás de proxies (Vercel hace el rewrite y Railway
+  // tiene su propio borde): hay que indicarlo para que req.ip sea la IP real de
+  // quien navega (límite de intentos de login) y las cookies Secure funcionen.
+  app.set('trust proxy', env.TRUST_PROXY);
 
   app.use(helmet());
   // En producción las peticiones llegan same-origin vía rewrite de Vercel;

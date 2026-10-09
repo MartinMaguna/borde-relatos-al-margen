@@ -15,6 +15,10 @@ const envSchema = z.object({
   // Intentos de login permitidos por IP cada 15 minutos.
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
+  // Proxies de confianza delante de la API: define de dónde sale req.ip (límite de
+  // intentos de login). Con más de 1, quien llame directo a Railway podría falsear
+  // su IP en X-Forwarded-For; ver README → Deploy.
+  TRUST_PROXY: z.coerce.number().int().min(0).default(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

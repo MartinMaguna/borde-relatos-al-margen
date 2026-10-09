@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axeViolations, mockApi, ok, renderRoute } from './utils.jsx';
@@ -139,6 +139,13 @@ describe('Vistas públicas', () => {
     mockApi({});
     await renderRoute('/cuentos/borrador');
     expect(screen.getByRole('heading', { level: 1, name: 'Página no encontrada' })).toBeInTheDocument();
+  });
+
+  test('Si /api devuelve algo que no es la API (p. ej. 404 de Vercel), es un error del servidor, no "no encontrada"', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('The page could not be found', { status: 404 }));
+    await renderRoute('/');
+    expect(screen.getByRole('heading', { level: 1, name: 'Algo salió mal' })).toBeInTheDocument();
+    expect(screen.getByText(/El servidor respondió de forma inesperada\. Probá de nuevo en unos minutos\./)).toBeInTheDocument();
   });
 
   test('Si la API no responde, se muestra un error claro', async () => {

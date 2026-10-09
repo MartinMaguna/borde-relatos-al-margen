@@ -20,5 +20,10 @@
   },
   "devDependencies": {
     "concurrently": "^10.0.6"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "disablePostinstall": "1"
+    }
   }
 }

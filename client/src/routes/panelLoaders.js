@@ -15,7 +15,7 @@ async function adminLoad(path, request) {
     return await api(path, { signal: request.signal });
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) throw toLogin(request);
-    if (err instanceof ApiError && err.status === 404) throw data({ message: err.message }, { status: 404 });
+    if (err instanceof ApiError && err.code === 'NOT_FOUND') throw data({ message: err.message }, { status: 404 });
     throw err;
   }
 }

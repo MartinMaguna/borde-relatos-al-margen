@@ -13,7 +13,7 @@ async function load(path, signal) {
   try {
     return await api(path, { signal });
   } catch (err) {
-    if (err instanceof ApiError && err.status === 404) {
+    if (err instanceof ApiError && err.code === 'NOT_FOUND') {
       throw data({ message: err.message }, { status: 404 });
     }
     throw err;
@@ -55,7 +55,7 @@ export async function aboutLoader({ request }) {
     return { page };
   } catch (err) {
     // Si todavía no se cargó contenido, la vista muestra un texto por defecto.
-    if (err instanceof ApiError && err.status === 404) return { page: null };
+    if (err instanceof ApiError && err.code === 'NOT_FOUND') return { page: null };
     throw err;
   }
 }

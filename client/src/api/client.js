@@ -39,6 +39,14 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
   }
 
   const json = await res.json().catch(() => null);
-  if (!res.ok || !json?.ok) throw new ApiError(res.status, json?.error);
+  // Una respuesta que no es JSON de nuestra API (p. ej. un 404 de Vercel por un
+  // rewrite mal configurado) es un problema del servidor, no "contenido no encontrado".
+  if (!json) {
+    throw new ApiError(res.status, {
+      message: 'El servidor respondió de forma inesperada. Probá de nuevo en unos minutos.',
+      code: 'BAD_RESPONSE',
+    });
+  }
+  if (!res.ok || !json.ok) throw new ApiError(res.status, json.error);
   return { data: json.data, meta: json.meta };
 }

@@ -219,7 +219,108 @@ El navegador siempre habla con **un solo origen** (`/api/...`): en local lo resu
 
 ## Deploy
 
-Guía paso a paso para Railway y Vercel: se completa en la **Fase 6**.
+```
+Navegador ──► Vercel (client/dist + vercel.json)
+                 │  /poesia, /panel… → index.html (SPA)
+                 └─ /api/*  ──rewrite──► Railway (server) ──► MongoDB Atlas
+```
+
+El navegador solo habla con el dominio de Vercel. Vercel reenvía `/api/*` a Railway, así la cookie de sesión es del mismo sitio (`SameSite=Strict`) y no hace falta CORS.
+
+Producción actual:
+
+| Servicio | URL |
+| -------- | --- |
+| Sitio (Vercel) | https://borde-relatos-al-margen.vercel.app |
+| API (Railway) | https://server-production-3d08.up.railway.app/api/health |
+
+### 1. MongoDB Atlas
+
+1. Cluster (el gratuito M0 alcanza) y un usuario de base de datos con contraseña.
+2. *Network Access* → **Add IP Address** → `0.0.0.0/0`. Railway no tiene IP fija; la seguridad la da el usuario y la contraseña de la cadena de conexión.
+3. *Connect → Drivers*: copiar la cadena `mongodb+srv://…` y agregar el nombre de la base (`/borde`) antes del `?`.
+
+### 2. Railway (API)
+
+1. **New Project → Deploy from GitHub repo** → este repositorio.
+2. En el servicio, *Settings*:
+   - **Root Directory: `/`** (la raíz). No `server`: el `package-lock.json` del monorepo está en la raíz.
+   - El resto lo define [`railway.json`](railway.json): arranque con `npm run start -w server`, *healthcheck* en `/api/health`, reinicio ante fallas y `watchPatterns` (un cambio solo en `client/` no redespliega la API).
+3. *Variables*:
+
+   | Variable | Valor |
+   | -------- | ----- |
+   | `NODE_ENV` | `production` (cookie `Secure`, logs de producción) |
+   | `MONGODB_URI` | cadena de Atlas |
+   | `JWT_SECRET` | 48+ bytes aleatorios: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
+   | `TRUST_PROXY` | opcional, `1` por defecto (ver nota) |
+   | `CLIENT_ORIGIN` | `https://borde-relatos-al-margen.vercel.app` |
+   | `SESSION_TTL_HOURS`, `LOGIN_RATE_LIMIT` | opcionales (8 y 10 por defecto) |
+   | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo para el seed (ver paso 4) |
+
+   `PORT` no se define: Railway la inyecta.
+
+   > **Nota sobre `TRUST_PROXY`.** Con `1`, el límite de intentos de login cuenta por la IP con la que Vercel llega a Railway, que pueden compartir varias personas: en el peor caso, un ataque al login bloquea el ingreso 15 minutos. Subirlo a `2` haría que se cuente por la IP real de cada persona, pero quien llame **directo** a la URL de Railway podría falsear esa IP y saltarse el límite. Para un equipo editorial chico, `1` es la opción más segura.
+4. *Networking* → **Generate Domain** (o un dominio propio).
+5. **Crear el editor** (una vez). Con la [CLI de Railway](https://docs.railway.com/guides/cli), desde la raíz del repo:
+
+   ```bash
+   railway link
+   ```
+   ```bash
+   railway ssh
+   ```
+
+   Eso abre una terminal **dentro** del contenedor de Railway (con sus variables). Ahí:
+
+   ```bash
+   npm run seed -w server
+   ```
+
+   Alternativa sin la CLI: el seed también se puede correr desde tu equipo con un `server/.env` que tenga la misma `MONGODB_URI` y las variables `SEED_*` (`npm run seed`). Para cargar también las publicaciones de ejemplo: `npm run seed -w server -- --demo`.
+   Después del seed, **borrá las tres variables `SEED_*`** en Railway: no son necesarias para que la API funcione y así la contraseña no queda guardada. Para cambiar la contraseña más adelante, volvé a crearlas y repetí el seed.
+
+### 3. Vercel (sitio)
+
+1. **Add New → Project** → este repositorio.
+2. *Settings → Build and Deployment*:
+   - **Root Directory: `client`**, con "Incluir archivos fuera del directorio raíz" activado (el lockfile está en la raíz).
+   - Framework, build y salida los define [`client/vercel.json`](client/vercel.json): Vite, `npm run build`, `dist`.
+3. No hacen falta variables de entorno: el cliente usa `/api` y el rewrite de `vercel.json` lo lleva a Railway. **Si cambia la URL de Railway, hay que actualizarla en `client/vercel.json`.**
+4. `vercel.json` además:
+   - devuelve `index.html` para cualquier ruta (`/poesia`, `/panel`…), así se puede entrar directo o recargar;
+   - cachea un año los archivos de `/assets` (llevan hash en el nombre);
+   - agrega cabeceras de seguridad básicas al HTML.
+
+### 4. Verificar el deploy
+
+```bash
+curl https://server-production-3d08.up.railway.app/api/health
+```
+→ `{"ok":true,"data":{"status":"ok","db":"conectado",…}}` (Railway ↔ Atlas)
+
+```bash
+curl https://borde-relatos-al-margen.vercel.app/api/health
+```
+→ la misma respuesta (Vercel ↔ Railway: el rewrite funciona)
+
+```bash
+curl -I https://borde-relatos-al-margen.vercel.app/poesia
+```
+→ `200` con `content-type: text/html` (fallback de la SPA)
+
+En el navegador: la portada muestra las secciones (o "Todavía no hay…" si la base está vacía), `/panel` lleva al login y, tras ingresar, la cookie `borde_session` aparece con `HttpOnly`, `Secure` y `SameSite=Strict` (DevTools → Application → Cookies).
+
+### Problemas frecuentes
+
+| Síntoma | Causa probable |
+| ------- | -------------- |
+| La portada dice "Algo salió mal: el servidor respondió de forma inesperada" | El rewrite de `/api` no llega a Railway: revisar la URL en `client/vercel.json`. |
+| `/poesia` da 404 de Vercel al recargar | Falta `client/vercel.json` o el Root Directory de Vercel no es `client`. |
+| `/api/health` dice `"db":"desconectado"` o el deploy no pasa el healthcheck | `MONGODB_URI` mal copiada o Atlas no permite `0.0.0.0/0`. |
+| La cookie `borde_session` no tiene `Secure` | Falta `NODE_ENV=production` en Railway. |
+| El login funciona en Railway pero no en Vercel (o al revés) | La cookie es de un solo dominio: usar siempre la URL de Vercel. |
+| "Demasiados intentos" para todo el equipo a la vez | Alguien está probando contraseñas: el límite es por IP de Vercel (ver nota sobre `TRUST_PROXY`). Se libera solo en 15 minutos. |
 
 ## Accesibilidad
 
