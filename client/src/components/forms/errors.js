@@ -6,6 +6,16 @@ import { ApiError } from '../../api/client.js';
  * - Cualquier otro (credenciales, sesión vencida, red) es un error general.
  */
 export function errorsFromApi(err) {
+  // Sesión vencida: lo escrito sigue en el formulario, así que se puede reingresar sin perder nada.
+  if (err instanceof ApiError && err.status === 401 && err.code === 'UNAUTHENTICATED') {
+    return [
+      {
+        field: null,
+        message:
+          'Tu sesión venció. Abrí el panel en otra pestaña, iniciá sesión y volvé a esta para guardar: lo que escribiste sigue acá.',
+      },
+    ];
+  }
   if (err instanceof ApiError && err.details?.length) {
     return err.details.map((d) => ({ field: d.field, message: d.message }));
   }

@@ -25,6 +25,7 @@ export default function PanelLayout() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function logout() {
+    if (loggingOut) return; // sin disabled: el botón no pierde el foco
     setLoggingOut(true);
     try {
       await api('/auth/logout', { method: 'POST' });
@@ -71,7 +72,7 @@ export default function PanelLayout() {
               <span>
                 Sesión de <strong>{session.user.name}</strong>
               </span>
-              <button type="button" className="button button--secondary button--small" onClick={logout} disabled={loggingOut}>
+              <button type="button" className="button button--secondary button--small" onClick={logout}>
                 {loggingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
               </button>
             </div>

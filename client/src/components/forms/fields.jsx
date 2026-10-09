@@ -7,8 +7,10 @@
  *   <input id aria-describedby="…-pista …-error" aria-invalid>
  *
  * - La etiqueta siempre visible y asociada (nada de placeholder como etiqueta).
- * - Marcamos los campos opcionales, no los obligatorios (que llevan `required`,
- *   y el lector anuncia "obligatorio").
+ * - Marcamos los campos opcionales, no los obligatorios (que llevan
+ *   aria-required y el lector anuncia "obligatorio"). No usamos `required`
+ *   nativo: con JAWS + Chrome, un campo vacío con `required` puede anunciarse
+ *   como "entrada no válida" antes de que la persona escriba nada.
  * - El error se lee al enfocar el campo y dice "Error:" en texto, no solo en color.
  */
 
@@ -56,7 +58,7 @@ export function TextField({ name, label, hint, error, optional = false, type = '
         name={name}
         type={type}
         className="field__input"
-        required={!optional}
+        aria-required={optional ? undefined : true}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
         {...inputProps}
@@ -76,7 +78,7 @@ export function TextArea({ name, label, hint, error, optional = false, rows = 4,
         name={name}
         rows={rows}
         className="field__input field__textarea"
-        required={!optional}
+        aria-required={optional ? undefined : true}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
         {...props}
@@ -95,7 +97,7 @@ export function SelectField({ name, label, hint, error, optional = false, option
         id={id}
         name={name}
         className="field__input field__select"
-        required={!optional}
+        aria-required={optional ? undefined : true}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
         {...props}

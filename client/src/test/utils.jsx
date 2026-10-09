@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
@@ -33,13 +34,18 @@ export const ok = (data, meta) => ({ body: { ok: true, data, ...(meta && { meta 
 
 export const fail = (status, message, extra = {}) => ({ status, body: { ok: false, error: { message, ...extra } } });
 
-/** Renderiza la app en una ruta y espera a que aparezca el h1 de la vista. */
+/**
+ * Renderiza la app en una ruta (con StrictMode, como en main.jsx: así se detectan
+ * efectos que fallan al ejecutarse dos veces) y espera el h1 de la vista.
+ */
 export async function renderRoute(path) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const utils = render(
-    <AnnouncerProvider>
-      <RouterProvider router={router} />
-    </AnnouncerProvider>,
+    <StrictMode>
+      <AnnouncerProvider>
+        <RouterProvider router={router} />
+      </AnnouncerProvider>
+    </StrictMode>,
   );
   await screen.findByRole('heading', { level: 1 });
   return { router, ...utils };

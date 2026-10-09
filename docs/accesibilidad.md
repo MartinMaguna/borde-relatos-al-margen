@@ -2,8 +2,151 @@
 
 Objetivo: **WCAG 2.2 nivel AA**, con prioridad en personas ciegas que usan lector de pantalla.
 
-> Documento en construcción. La checklist manual completa (NVDA, JAWS, VoiceOver, TalkBack)
-> se redacta en la **Fase 5**. Acá se registran desde ya las decisiones tomadas.
+Contenido:
+
+1. [Cómo verificar](#cómo-verificar): tests automáticos y checklist manual con lectores de pantalla.
+2. [Decisiones registradas](#decisiones-registradas): qué se hizo y por qué, fase por fase.
+
+---
+
+## Cómo verificar
+
+### 1. Tests automáticos
+
+| Comando | Qué cubre |
+| ------- | --------- |
+| `npm run lint` | `eslint-plugin-jsx-a11y` en modo estricto: etiquetas, roles, `alt`, eventos de teclado. |
+| `npm test -w client` | Vitest + Testing Library + axe-core (jsdom): estructura, foco, ARIA, formularios, diálogo. |
+| `npm run test:e2e -w client` | Playwright + axe en **Chromium real**, en escritorio claro, escritorio oscuro y móvil: WCAG 2.2 A/AA **con contraste**, foco visible, menú móvil, reflow a 320 px, espaciado de texto, movimiento reducido, alto contraste forzado, diálogo modal, flujo de errores del panel. |
+
+Los tests automáticos detectan entre un 30 y un 50 % de los problemas. **El resto requiere probar con personas y lectores de pantalla reales**: la checklist de abajo.
+
+### 2. Preparar el entorno de prueba manual
+
+```bash
+npm run dev:memory -w server   # API con datos de ejemplo, sin Atlas
+npm run dev -w client          # en otra terminal → http://localhost:5173
+```
+
+El editor de prueba de la base en memoria se muestra en la consola al arrancar (contraseña en `server/scripts/dev-memory.js`).
+
+Combinaciones recomendadas (cubren la gran mayoría de usuarios):
+
+| Lector | Sistema | Navegador |
+| ------ | ------- | --------- |
+| **NVDA** (gratuito) | Windows | Firefox y Chrome |
+| **JAWS** | Windows | Chrome |
+| **VoiceOver** | macOS | Safari |
+| **VoiceOver** | iOS | Safari |
+| **TalkBack** | Android | Chrome |
+
+### 3. Atajos mínimos
+
+| Acción | NVDA / JAWS | VoiceOver macOS (VO = Ctrl+Opción) | VoiceOver iOS / TalkBack |
+| ------ | ----------- | ------------------------------------ | ------------------------ |
+| Lista de encabezados | NVDA+F7 / Insert+F6 | VO+U → Encabezados | Rotor / menú de lectura → Encabezados |
+| Siguiente encabezado | H (nivel: 1–6) | VO+Cmd+H | Rotor en "Encabezados" + deslizar abajo |
+| Puntos de referencia | D / R (o ; en JAWS) | VO+U → Puntos de referencia | Rotor → Puntos de referencia |
+| Lista de enlaces | NVDA+F7 / Insert+F7 | VO+U → Enlaces | Rotor → Enlaces |
+| Siguiente campo de formulario | F | VO+Cmd+J | Rotor → Controles de formulario |
+| Leer todo | NVDA+↓ / Insert+↓ | VO+A | Dos dedos deslizar abajo / Leer desde aquí |
+
+### 4. Checklist manual
+
+Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué se anunció y qué se esperaba.
+
+#### A. Estructura y orientación (sitio público)
+
+- [ ] Al cargar `/`, el lector anuncia el título "Borde. Relatos al Margen" y el idioma de voz es español.
+- [ ] El primer Tab enfoca "Saltar al contenido", visible en pantalla. Al activarlo, la lectura sigue en el contenido principal (no en el menú).
+- [ ] La lista de puntos de referencia muestra: banner, navegación "Principal", principal (main) e información de contenido (footer). En el detalle también "Ruta de navegación"; en listados largos, "Paginación".
+- [ ] La lista de encabezados de la portada es: un nivel 1 (nombre del sitio), cuatro nivel 2 (Poesía, Cuentos, Talleres, Convocatorias) y nivel 3 para cada publicación. Sin saltos de nivel.
+- [ ] Las secciones de la portada aparecen como regiones con nombre ("Poesía", "Cuentos"…).
+- [ ] En la lista de enlaces no hay textos repetidos sin contexto ("Leer más", "Ver todo"): cada uno se entiende solo.
+
+#### B. Navegación entre páginas
+
+- [ ] Al elegir "Cuentos" en el menú, se anuncia "Cuentos, encabezado nivel 1" (el foco va al título) y el título de la pestaña cambia a "Cuentos · Borde. Relatos al Margen".
+- [ ] La lectura continúa desde el título hacia abajo, no desde el principio de la página ni desde el menú.
+- [ ] En el menú, la página actual se anuncia como "actual" / "página actual".
+- [ ] Con conexión lenta (DevTools → Network → Slow 3G) se anuncia "Cargando…" una sola vez.
+- [ ] Al volver atrás con el navegador, la página anterior se muestra y el foco va a su título.
+
+#### C. Menú en móvil (VoiceOver iOS, TalkBack, o navegador con ventana angosta)
+
+- [ ] El botón se anuncia "Menú, botón, contraído".
+- [ ] Al activarlo se anuncia "expandido" y el siguiente elemento son los enlaces del menú.
+- [ ] Con teclado, Escape cierra el menú y el foco vuelve al botón.
+- [ ] Con el menú cerrado, sus enlaces no se pueden alcanzar ni con Tab ni deslizando.
+
+#### D. Listados y paginación
+
+- [ ] Al entrar en una lista se anuncia la cantidad de elementos ("lista, 2 elementos").
+- [ ] Cada publicación se lee: título (encabezado y enlace), autor/a y fecha completa ("7 de octubre de 2026"), resumen.
+- [ ] En convocatorias se anuncia "Estado de la convocatoria: Abierta" (o "Cerrada") y la fecha límite.
+- [ ] En la paginación, los números se anuncian "Página 2, enlace" y la actual como "actual". "Anterior: página 1" / "Siguiente: página 3" son claros.
+- [ ] En la página 2 el título de la pestaña dice "(página 2 de N)".
+
+#### E. Lectura de un texto
+
+- [ ] En un poema, cada verso se lee como línea separada y las estrofas como párrafos distintos.
+- [ ] La ruta de navegación se lee "Inicio, Poesía, Orilla (actual)", sin leer las barras "/".
+- [ ] Si hay imagen, se lee su texto alternativo y tiene sentido sin verla.
+- [ ] En una convocatoria, "Datos de la convocatoria" se lee como lista de definiciones (Estado, Fecha límite, Bases) y el enlace a las bases avisa "(sitio externo)".
+- [ ] Los subtítulos dentro del texto aparecen en la lista de encabezados con nivel 2 o mayor (nunca un segundo nivel 1).
+
+#### F. Login del panel
+
+- [ ] Cada campo anuncia su etiqueta: "Correo electrónico, edición, obligatorio" y "Contraseña, protegido, obligatorio".
+- [ ] El gestor de contraseñas del navegador ofrece autocompletar.
+- [ ] "Mostrar la contraseña" es una casilla que se anuncia marcada/no marcada y cambia el campo.
+- [ ] Con datos incorrectos, se anuncia el resumen ("Hay un problema…") y el título de la pestaña empieza con "Error:".
+- [ ] Al volver al campo de correo se anuncia "inválido" y el mensaje "Error: El correo o la contraseña no son correctos".
+- [ ] Con datos correctos, se llega al listado y se anuncia "Publicaciones, encabezado nivel 1".
+
+#### G. Listado del panel
+
+- [ ] El formulario de filtros aparece como punto de referencia "búsqueda" llamado "Filtrar publicaciones".
+- [ ] Tras aplicar filtros, el foco va a "Publicaciones" y lo siguiente que se lee es la cantidad ("1 publicación con estos filtros").
+- [ ] En la lista de botones/enlaces, cada acción incluye el título: "Editar «Orilla»", "Eliminar «Orilla»", "Ver en el sitio «Orilla»". *(Pendiente desde la Fase 4: confirmarlo en cada lector.)*
+- [ ] El estado ("Publicado" / "Borrador") se lee como texto.
+
+#### H. Eliminar (diálogo)
+
+- [ ] Al pulsar "Eliminar «…»" se anuncia "¿Eliminar esta publicación?, diálogo" seguido de la descripción, y el foco está en "Cancelar".
+- [ ] No se puede salir del diálogo con Tab ni con el cursor virtual / deslizando (el fondo está inerte). *(Verificar especialmente en VoiceOver iOS y TalkBack.)*
+- [ ] Escape (o el gesto de "atrás"/escape de dos dedos en VoiceOver iOS) cierra el diálogo y el foco vuelve al botón "Eliminar".
+- [ ] Al confirmar, se anuncia "Se eliminó «…»" y el foco queda en "Publicaciones".
+
+#### I. Formulario de publicación
+
+- [ ] Cada campo anuncia etiqueta y pista: p. ej. "Resumen, opcional, Hasta 500 caracteres…".
+- [ ] Los obligatorios se anuncian como "obligatorio"; los opcionales dicen "(opcional)" en la etiqueta.
+- [ ] El grupo "Estado" se anuncia al entrar, con sus dos opciones de radio.
+- [ ] Al elegir "Convocatorias", los campos de fecha límite y bases aparecen **después** del selector y se pueden alcanzar avanzando.
+- [ ] El selector de fecha (`input type="date"`) se puede usar solo con teclado / gestos.
+- [ ] Enviar vacío: se anuncia el resumen ("Hay N problemas"), cada error es un enlace y al activarlo el foco va al campo, que anuncia "inválido" y el mensaje "Error: …".
+- [ ] Lo ya escrito sigue en los campos después del error.
+- [ ] Al guardar bien, se llega al listado y se anuncia "Se creó «…»".
+- [ ] En "Página Acerca", al guardar se anuncia "Se guardaron los cambios de la página Acerca." sin mover el foco.
+
+#### J. Visión baja, zoom y preferencias (sin lector)
+
+- [ ] Zoom del navegador al 200 % y al 400 %: todo se lee sin scroll horizontal, nada se superpone ni se corta.
+- [ ] Tamaño de letra del sistema/navegador en "muy grande": el texto crece en todo el sitio.
+- [ ] Solo con teclado: el foco siempre se ve (contorno azul grueso) y nunca queda oculto detrás de otro elemento.
+- [ ] Tema oscuro del sistema: el sitio cambia y todo se lee bien.
+- [ ] Alto contraste de Windows: enlaces, botones, bordes de campos y foco siguen siendo visibles.
+- [ ] "Reducir movimiento" activado: no hay animaciones.
+- [ ] Se puede usar con lupa (ZoomText, Lupa de Windows): los mensajes de error y avisos aparecen cerca de donde se está trabajando.
+
+### 5. Registro de pruebas manuales
+
+| Fecha | Persona | Lector + navegador | Secciones | Resultado / problemas |
+| ----- | ------- | ------------------ | --------- | --------------------- |
+| | | | | |
+
+---
 
 ## Decisiones registradas
 
@@ -49,14 +192,19 @@ Objetivo: **WCAG 2.2 nivel AA**, con prioridad en personas ciegas que usan lecto
 | 4 | Filtros como formulario GET con `role="search"` y nombre; "N publicaciones con estos filtros" debajo del `h1` | Cada búsqueda tiene URL; el foco va al `h1` y lo siguiente que se lee es el resultado. |
 | 4 | Listado como tarjetas, no tabla | Sin scroll horizontal en móvil ni con zoom alto. |
 | 4 | Login con `autocomplete="username"` / `current-password` y opción "Mostrar la contraseña" | WCAG 1.3.5 y 3.3.8 (autenticación accesible): permite gestores de contraseñas y verificar lo escrito. |
+| 5 | **Corrección:** en carga inicial el foco saltaba al `h1` en desarrollo (StrictMode ejecuta los efectos dos veces), y el primer Tab no llegaba a "Saltar al contenido". Ahora se compara la clave de la ubicación inicial | Detectado por Playwright. Los tests de Vitest ahora renderizan con StrictMode para atrapar este tipo de error. |
+| 5 | **Corrección:** `aria-required="true"` en lugar de `required` nativo | Con `noValidate`, el `required` nativo no aporta nada y JAWS + Chrome puede anunciar "entrada no válida" en campos vacíos antes de escribir. |
+| 5 | **Corrección:** el contenido del resumen de errores va dentro de `role="alert"` (además de recibir el foco) | Patrón actual de GOV.UK: algunos lectores no leen el contenido de un contenedor genérico al enfocarlo. |
+| 5 | **Corrección:** los botones del diálogo y "Cerrar sesión" ya no se deshabilitan mientras procesan | Un botón deshabilitado pierde el foco; se ignoran los clics repetidos por código. |
+| 5 | **Corrección:** el "…" de la paginación se oculta con su `<li>` completo | Un elemento de lista vacío se anunciaba sin contenido. |
+| 5 | **Corrección:** si la sesión vence mientras se edita, el error indica cómo reingresar sin perder lo escrito | WCAG 2.2.1 / 2.2.5: la sesión dura 8 h; vencida, nada se pierde y se puede volver a guardar. |
+| 5 | Tests e2e con Playwright + axe en Chromium real, contra el **build de producción**, en claro, oscuro y móvil | Lo que jsdom no ve: contraste real, visibilidad con CSS, diálogo modal nativo, reflow, espaciado de texto, preferencias del sistema. |
 
-### Pendiente de verificar con lector de pantalla (Fase 5)
+### Verificado en navegador real (Fase 5)
 
-- Que NVDA/JAWS/VoiceOver lean el texto oculto de los botones ("Eliminar «título»") como parte del nombre.
-- Lectura del resumen de errores al recibir el foco en cada lector.
-- Comportamiento del `<dialog>` modal en VoiceOver iOS y TalkBack.
+- Chrome incluye el texto oculto visualmente en el nombre accesible: Playwright encuentra `button "Eliminar «título»"` por rol y nombre.
+- El `<dialog>` con `showModal()` deja inerte el fondo: con Tab el foco solo recorre el diálogo o sale a la interfaz del navegador.
 
-## Tests automáticos
+### Pendiente de verificar con lectores de pantalla
 
-- `npm test -w client`: Vitest + Testing Library + **axe-core** sobre la app renderizada (portada, listado, detalle, 404). Verifican además: primer Tab en "Saltar al contenido", landmarks, un solo `h1`, foco al `h1` tras navegar, `document.title`, menú con `aria-expanded` y Escape.
-- jsdom no aplica CSS: el contraste y la visibilidad real se revisan con axe en navegador (Fase 5, Playwright).
+Ver la [checklist manual](#4-checklist-manual), en especial las secciones G (nombres de las acciones), H (diálogo en VoiceOver iOS y TalkBack) e I (resumen de errores en cada lector).

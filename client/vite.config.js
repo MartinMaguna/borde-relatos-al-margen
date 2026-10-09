@@ -19,6 +19,8 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       environment: 'jsdom',
+      // Los tests de e2e/ son de Playwright y corren aparte (npm run test:e2e).
+      include: ['src/**/*.test.{js,jsx}'],
       setupFiles: ['./src/test/setup.js'],
       css: false,
     },

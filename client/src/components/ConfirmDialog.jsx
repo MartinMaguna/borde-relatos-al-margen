@@ -5,6 +5,8 @@ import { useEffect, useId, useRef } from 'react';
  * - El navegador mantiene el foco dentro del diálogo y deja inerte el resto de la página.
  * - Escape lo cierra (evento "cancel").
  * - El foco inicial va a "Cancelar": la opción segura en una acción destructiva.
+ * - Mientras se procesa, los botones no se deshabilitan (perderían el foco):
+ *   se ignoran los clics repetidos.
  * - Al cerrarse, el foco vuelve al elemento que lo abrió, o a `returnFocusRef.current`
  *   si se indicó (p. ej. cuando el botón que lo abrió desaparece tras eliminar).
  */
@@ -46,10 +48,10 @@ export default function ConfirmDialog({ open, title, children, confirmLabel, onC
       </h2>
       <div id={descId}>{children}</div>
       <div className="button-group">
-        <button ref={cancelRef} type="button" className="button button--secondary" onClick={onCancel} disabled={busy}>
+        <button ref={cancelRef} type="button" className="button button--secondary" onClick={() => !busy && onCancel()}>
           Cancelar
         </button>
-        <button type="button" className="button button--danger" onClick={onConfirm} disabled={busy}>
+        <button type="button" className="button button--danger" onClick={() => !busy && onConfirm()}>
           {busy ? 'Eliminando…' : confirmLabel}
         </button>
       </div>

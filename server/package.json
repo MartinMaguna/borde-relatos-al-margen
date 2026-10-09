@@ -9,7 +9,8 @@
     "start": "node --env-file-if-exists=.env src/index.js",
     "seed": "node --env-file-if-exists=.env scripts/seed.js",
     "lint": "eslint src scripts test",
-    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\""
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "dev:memory": "node scripts/dev-memory.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

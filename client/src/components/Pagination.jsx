@@ -31,8 +31,9 @@ export default function Pagination({ page, totalPages, basePath, hrefFor }) {
         )}
         {pageItems(page, totalPages).map((item, i) =>
           item === '…' ? (
-            <li key={`gap-${i}`}>
-              <span aria-hidden="true">…</span>
+            // Oculto entero: un elemento de lista vacío se anunciaría como "elemento de lista" sin contenido.
+            <li key={`gap-${i}`} aria-hidden="true">
+              <span>…</span>
             </li>
           ) : (
             <li key={item}>

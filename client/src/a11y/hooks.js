@@ -10,32 +10,39 @@ export function useDocumentTitle(title) {
   }, [title]);
 }
 
-// Global (no por componente): al pasar del sitio público al panel cambia el
-// layout y se vuelve a montar, pero eso sigue siendo una navegación.
-let isInitialLoad = true;
+// Estado global (no por componente): al pasar del sitio público al panel cambia
+// el layout y se vuelve a montar, pero eso sigue siendo una navegación.
+let initialKey = null;
+let hasNavigated = false;
 
 /** Solo para tests: cada test simula una carga inicial nueva. */
 export function resetRouteFocus() {
-  isInitialLoad = true;
+  initialKey = null;
+  hasNavigated = false;
 }
 
 /**
  * Al navegar dentro de la SPA el navegador no recarga la página, así que el
  * foco quedaría en el enlace pulsado (que quizá ya no existe). Lo movemos al h1
  * de la nueva vista: el lector anuncia el título y la lectura arranca desde ahí.
- * No se hace en la carga inicial, donde el lector ya empieza desde el principio.
+ *
+ * No se hace en la carga inicial, donde el lector ya empieza desde el principio
+ * y el primer Tab tiene que llegar a "Saltar al contenido". Se compara la clave
+ * de la ubicación y no "es el primer render": en desarrollo, StrictMode ejecuta
+ * los efectos dos veces y eso se confundía con una navegación.
  */
 export function useRouteFocus() {
-  const { pathname, search } = useLocation();
+  const { key, pathname, search } = useLocation();
 
   useEffect(() => {
-    if (isInitialLoad) {
-      isInitialLoad = false;
-      return;
-    }
+    if (initialKey === null) initialKey = key;
+    if (key !== initialKey) hasNavigated = true;
+    if (!hasNavigated) return;
+
     const target = document.querySelector('main h1') ?? document.querySelector('main');
     // El scroll lo maneja <ScrollRestoration> (arriba al avanzar, posición previa al volver).
     target?.focus({ preventScroll: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` cambia también con el hash (#contenido); solo reaccionamos a cambios de vista
   }, [pathname, search]);
 }
 

@@ -51,7 +51,7 @@ describe('Acceso al panel', () => {
     await user.click(screen.getByRole('button', { name: 'Ingresar' }));
 
     const summary = await screen.findByRole('heading', { level: 2, name: 'Hay un problema' });
-    await waitFor(() => expect(summary.parentElement).toHaveFocus());
+    await waitFor(() => expect(summary.closest('.error-summary')).toHaveFocus());
     expect(document.title).toMatch(/^Error: Ingresar al panel/);
 
     const email = screen.getByLabelText('Correo electrónico');
@@ -59,7 +59,7 @@ describe('Acceso al panel', () => {
     expect(email).toHaveAccessibleDescription(/Error: El correo o la contraseña no son correctos/);
 
     // El enlace del resumen lleva el foco al campo.
-    await user.click(within(summary.parentElement).getByRole('link'));
+    await user.click(within(summary.closest('.error-summary')).getByRole('link'));
     expect(email).toHaveFocus();
     expect(await axeViolations()).toEqual([]);
   });
@@ -195,7 +195,7 @@ describe('Formulario de publicación', () => {
     await user.click(screen.getByRole('button', { name: 'Crear publicación' }));
 
     const heading = await screen.findByRole('heading', { level: 2, name: 'Hay 2 problemas' });
-    await waitFor(() => expect(heading.parentElement).toHaveFocus());
+    await waitFor(() => expect(heading.closest('.error-summary')).toHaveFocus());
     expect(document.title).toMatch(/^Error: Nueva publicación/);
 
     const title = screen.getByLabelText('Título');

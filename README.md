@@ -143,6 +143,17 @@ Las decisiones de accesibilidad están registradas en [docs/accesibilidad.md](do
 
 - **Cliente** (`npm test -w client`): Vitest + Testing Library + axe-core, con la API simulada.
 - **API** (`npm test -w server`): ver abajo.
+- **Accesibilidad en navegador real** (`npm run test:e2e -w client`): Playwright + axe en Chromium, en escritorio claro, escritorio oscuro y móvil. Levanta solo su API con base en memoria (puertos 4100 y 5174). La primera vez, instalá el navegador con `npx playwright install chromium` (desde `client/`). Reporte HTML en `client/playwright-report/`.
+
+La checklist manual con lectores de pantalla está en [docs/accesibilidad.md](docs/accesibilidad.md#cómo-verificar).
+
+### Probar sin Atlas
+
+```bash
+npm run dev:memory -w server
+```
+
+Levanta la API con una base MongoDB en memoria, el editor de prueba y las publicaciones de ejemplo (todo se borra al cerrarla). En otra terminal, `npm run dev -w client`.
 
 Los tests de la API usan **MongoDB en memoria** (`mongodb-memory-server`): no tocan Atlas ni necesitan `.env`.
 La primera ejecución descarga un binario de MongoDB (en Windows, unos 800 MB; queda en caché en `~/.cache/mongodb-binaries`).
