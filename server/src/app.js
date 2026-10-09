@@ -5,11 +5,16 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { env } from './config/env.js';
 import healthRouter from './routes/health.js';
+import { createAuthRouter } from './routes/auth.js';
+import postsRouter from './routes/posts.js';
+import adminPostsRouter from './routes/adminPosts.js';
+import { adminPagesRouter, publicPagesRouter } from './routes/pages.js';
+import { requireAuth, requireRole } from './middleware/auth.js';
 import { notFound, errorHandler } from './middleware/errors.js';
 
 /**
- * Crea la app de Express sin levantar el servidor,
- * para poder testearla con supertest (Fase 2).
+ * Crea la app de Express sin levantar el servidor, para poder testearla
+ * con supertest. Cada llamada crea su propio rate limiter (tests aislados).
  */
 export function createApp() {
   const app = express();
@@ -26,8 +31,22 @@ export function createApp() {
   app.use(cookieParser());
   if (env.NODE_ENV !== 'test') app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
+  // Las respuestas de la API no se cachean en el navegador ni en proxies intermedios.
+  app.use('/api', (_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
+
+  // Públicas
   app.use('/api/health', healthRouter);
-  // Fase 2: /api/auth, /api/posts, /api/pages
+  app.use('/api/auth', createAuthRouter());
+  app.use('/api/posts', postsRouter);
+  app.use('/api/pages', publicPagesRouter);
+
+  // Panel del editor: todo lo que cuelga de /api/admin exige sesión y rol.
+  app.use('/api/admin', requireAuth, requireRole('editor'));
+  app.use('/api/admin/posts', adminPostsRouter);
+  app.use('/api/admin/pages', adminPagesRouter);
 
   app.use(notFound);
   app.use(errorHandler);

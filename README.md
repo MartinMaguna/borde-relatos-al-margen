@@ -20,10 +20,15 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 │   ├── vite.config.js    # proxy /api → server en desarrollo
 │   └── eslint.config.js  # incluye jsx-a11y (strict)
 ├── server/               # API REST
+│   ├── scripts/          # seed.js (editor + Acerca), demo-posts.js
+│   ├── test/             # tests de API (node:test + supertest + Mongo en memoria)
 │   └── src/
 │       ├── config/       # env.js (validación con Zod), db.js (Atlas)
-│       ├── middleware/   # errores centralizados
-│       ├── routes/       # /api/health (más rutas en Fase 2)
+│       ├── middleware/   # auth, validación, errores centralizados
+│       ├── models/       # User, Post, Page
+│       ├── routes/       # auth, posts (público), adminPosts, pages, health
+│       ├── utils/        # markdown (sanitizado), slug, respuestas
+│       ├── validators/   # esquemas Zod de entrada
 │       ├── app.js        # crea la app (testeable sin levantar el puerto)
 │       └── index.js      # conecta a Atlas y levanta el servidor
 ├── docs/
@@ -64,7 +69,22 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 
    El cliente no necesita `.env` en desarrollo (los valores por defecto ya apuntan al proxy).
 
-4. **Levantar todo**
+   Completar también `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL` y `SEED_EDITOR_PASSWORD` (mínimo 12 caracteres).
+
+4. **Crear el usuario editor** (no hay registro público):
+
+   ```bash
+   npm run seed
+   ```
+
+   Crea o actualiza el editor y la página "Acerca". Es idempotente: correrlo de nuevo sirve para cambiar la contraseña.
+   Para cargar además publicaciones de ejemplo (solo si la base está vacía):
+
+   ```bash
+   npm run seed -w server -- --demo
+   ```
+
+5. **Levantar todo**
 
    ```bash
    npm run dev
@@ -82,8 +102,50 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 | `npm run dev` | Server (con `--watch`) y cliente en paralelo |
 | `npm run dev:server` / `npm run dev:client` | Cada uno por separado |
 | `npm run build` | Build de producción del cliente |
+| `npm run seed` | Crea/actualiza el editor y la página Acerca |
 | `npm run lint` | ESLint en server y cliente (incluye jsx-a11y) |
-| `npm test` | Tests (se agregan en Fases 2 y 5) |
+| `npm test` | Tests de la API (y de accesibilidad desde la Fase 5) |
+
+### Tests
+
+Los tests de la API usan **MongoDB en memoria** (`mongodb-memory-server`): no tocan Atlas ni necesitan `.env`.
+La primera ejecución descarga un binario de MongoDB (en Windows, unos 800 MB; queda en caché en `~/.cache/mongodb-binaries`).
+
+## API
+
+Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_session`).
+
+| Método | Ruta | Descripción |
+| ------ | ---- | ----------- |
+| GET | `/health` | Estado de la API y de la base |
+| POST | `/auth/login` | `{ email, password }` → setea la cookie de sesión. Limitado a 10 intentos / 15 min por IP |
+| POST | `/auth/logout` | Borra la cookie |
+| GET | `/auth/me` | Usuario de la sesión actual (401 si no hay) |
+| GET | `/posts?category=&page=&limit=` | Publicadas, paginadas, sin el cuerpo |
+| GET | `/posts/latest?perCategory=3` | Últimas publicadas agrupadas por categoría (portada) |
+| GET | `/posts/:category/:slug` | Detalle publicado, con `bodyHtml` |
+| GET | `/pages/acerca` | Página Acerca, con `bodyHtml` |
+| GET | `/admin/posts?category=&status=&q=&page=&limit=` | Todas (borradores incluidos), con filtros |
+| GET | `/admin/posts/:id` | Una publicación, con el Markdown original |
+| POST | `/admin/posts` | Crear |
+| PUT | `/admin/posts/:id` | Editar (se envía la publicación completa) |
+| DELETE | `/admin/posts/:id` | Eliminar |
+| GET / PUT | `/admin/pages/acerca` | Leer / guardar la página Acerca |
+
+### Publicación (`Post`)
+
+| Campo | Notas |
+| ----- | ----- |
+| `title`, `author`, `body` | Obligatorios. `body` en Markdown |
+| `slug` | Opcional: si va vacío se genera del título (`"Canción del Ñandú"` → `cancion-del-nandu`) |
+| `category` | `poesia` · `cuentos` · `talleres` · `convocatorias` (coinciden con las URLs del sitio) |
+| `summary` | Hasta 500 caracteres |
+| `image` | `{ url, alt }` o `null`. **`alt` es obligatorio** |
+| `status` | `draft` · `published`. `publishedAt` se registra la primera vez que se publica |
+| `deadline`, `basesUrl` | Solo convocatorias; `deadline` obligatorio. Una fecha sola (`2026-11-30`) vale hasta las 23:59 de ese día (UTC-3) |
+| `callStatus` | Calculado: `abierta` / `cerrada` según `deadline` |
+
+El Markdown se convierte a HTML en el servidor y se **sanitiza** con lista blanca: sin scripts, estilos ni imágenes embebidas; los saltos de línea simples se respetan (poesía) y los encabezados se bajan un nivel para que el único `h1` sea el título.
 
 ## Convenciones de la API
 
@@ -98,7 +160,15 @@ Los errores se manejan en un único middleware (`server/src/middleware/errors.js
 
 ## Por qué un rewrite de `/api` en Vercel
 
-El navegador siempre habla con **un solo origen** (`/api/...`): en local lo resuelve el proxy de Vite y en producción un rewrite de Vercel hacia Railway. Así la cookie httpOnly del JWT es *first-party*, funciona con `SameSite=Lax` y no depende de CORS ni de cookies de terceros (que Safari y otros navegadores bloquean).
+El navegador siempre habla con **un solo origen** (`/api/...`): en local lo resuelve el proxy de Vite y en producción un rewrite de Vercel hacia Railway. Así la cookie httpOnly del JWT es *first-party*, puede usar `SameSite=Strict` (protección contra CSRF) y no depende de CORS ni de cookies de terceros (que Safari y otros navegadores bloquean).
+
+## Seguridad
+
+- Contraseñas con **bcrypt** (costo 12). El login responde igual si falla el email o la contraseña, y tarda lo mismo.
+- **JWT** firmado con HS256 en cookie `httpOnly`, `Secure` (producción) y `SameSite=Strict`. En cada request se verifica que el usuario siga existiendo.
+- **Rate limiting** del login por IP. **helmet** para cabeceras seguras. Las respuestas de `/api` llevan `Cache-Control: no-store`.
+- **Validación** de toda entrada con Zod (mensajes en español, errores por campo). URLs solo `http(s)`.
+- **Sanitización** del HTML generado desde Markdown.
 
 ## Deploy
 

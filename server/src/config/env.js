@@ -10,7 +10,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   MONGODB_URI: z.string({ error: 'es obligatoria' }).min(1, 'es obligatoria'),
   JWT_SECRET: z.string({ error: 'es obligatoria' }).min(32, 'debe tener al menos 32 caracteres'),
-  JWT_EXPIRES_IN: z.string().default('8h'),
+  // Duración de la sesión del editor (JWT y cookie usan el mismo valor).
+  SESSION_TTL_HOURS: z.coerce.number().positive().default(8),
+  // Intentos de login permitidos por IP cada 15 minutos.
+  LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
 });
 
