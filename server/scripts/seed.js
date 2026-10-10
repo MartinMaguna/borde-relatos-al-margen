@@ -15,6 +15,7 @@ import { connectDB, disconnectDB } from '../src/config/db.js';
 import { User } from '../src/models/User.js';
 import { Page } from '../src/models/Page.js';
 import { Post } from '../src/models/Post.js';
+import { DEFAULT_ABOUT } from '../src/bootstrap.js';
 import { demoPosts } from './demo-posts.js';
 
 const seedEnv = z
@@ -48,12 +49,7 @@ async function run() {
   console.info(`👤 Editor listo: ${editor.email}`);
 
   if (!(await Page.exists({ slug: 'acerca' }))) {
-    await Page.create({
-      slug: 'acerca',
-      title: 'Acerca de Borde',
-      body: 'Borde. Relatos al Margen es un espacio de lectura para voces que escriben desde los márgenes.\n\nEste texto se puede editar desde el panel.',
-      updatedBy: editor.id,
-    });
+    await Page.create({ slug: 'acerca', ...DEFAULT_ABOUT, updatedBy: editor.id });
     console.info('📄 Página "Acerca" creada');
   } else {
     console.info('📄 Página "Acerca" ya existía (sin cambios)');

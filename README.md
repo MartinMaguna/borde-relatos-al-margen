@@ -250,35 +250,22 @@ Producción actual:
 
    | Variable | Valor |
    | -------- | ----- |
-   | `NODE_ENV` | `production` (cookie `Secure`, logs de producción) |
+   | `NODE_ENV` | `production` (recomendado: logs de producción; la cookie igual sale `Secure` por HTTPS) |
    | `MONGODB_URI` | cadena de Atlas |
    | `JWT_SECRET` | 48+ bytes aleatorios: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
    | `TRUST_PROXY` | opcional, `1` por defecto (ver nota) |
    | `CLIENT_ORIGIN` | `https://borde-relatos-al-margen.vercel.app` |
    | `SESSION_TTL_HOURS`, `LOGIN_RATE_LIMIT` | opcionales (8 y 10 por defecto) |
-   | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo para el seed (ver paso 4) |
+   | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo hasta crear el primer editor (ver paso 5) |
 
    `PORT` no se define: Railway la inyecta.
 
    > **Nota sobre `TRUST_PROXY`.** Con `1`, el límite de intentos de login cuenta por la IP con la que Vercel llega a Railway, que pueden compartir varias personas: en el peor caso, un ataque al login bloquea el ingreso 15 minutos. Subirlo a `2` haría que se cuente por la IP real de cada persona, pero quien llame **directo** a la URL de Railway podría falsear esa IP y saltarse el límite. Para un equipo editorial chico, `1` es la opción más segura.
 4. *Networking* → **Generate Domain** (o un dominio propio).
-5. **Crear el editor** (una vez). Con la [CLI de Railway](https://docs.railway.com/guides/cli), desde la raíz del repo:
-
-   ```bash
-   railway link
-   ```
-   ```bash
-   railway ssh
-   ```
-
-   Eso abre una terminal **dentro** del contenedor de Railway (con sus variables). Ahí:
-
-   ```bash
-   npm run seed -w server
-   ```
-
-   Alternativa sin la CLI: el seed también se puede correr desde tu equipo con un `server/.env` que tenga la misma `MONGODB_URI` y las variables `SEED_*` (`npm run seed`). Para cargar también las publicaciones de ejemplo: `npm run seed -w server -- --demo`.
-   Después del seed, **borrá las tres variables `SEED_*`** en Railway: no son necesarias para que la API funcione y así la contraseña no queda guardada. Para cambiar la contraseña más adelante, volvé a crearlas y repetí el seed.
+5. **Primer editor: se crea solo.** Al arrancar, si la base no tiene ningún usuario y están las variables `SEED_EDITOR_*`, la API crea ese editor (y la página "Acerca" si falta). En los logs de Railway aparece `👤 Primer editor creado: …`. Si no hay usuario ni variables, el log lo avisa.
+   - **Ingresá** en `https://borde-relatos-al-margen.vercel.app/panel` con `SEED_EDITOR_EMAIL` y `SEED_EDITOR_PASSWORD`.
+   - Después, **borrá las tres variables `SEED_*`** en Railway: ya no hacen falta y así la contraseña no queda guardada.
+   - El arranque **nunca** modifica usuarios existentes. Para cambiar una contraseña o cargar publicaciones de ejemplo, usá el seed manual: con la [CLI de Railway](https://docs.railway.com/guides/cli), `railway link` y luego `railway ssh`; dentro del contenedor, `npm run seed -w server` (o `npm run seed -w server -- --demo`). También se puede correr `npm run seed` desde tu equipo con un `server/.env` que tenga la misma `MONGODB_URI` y las `SEED_*`.
 
 ### 3. Vercel (sitio)
 
@@ -318,7 +305,7 @@ En el navegador: la portada muestra las secciones (o "Todavía no hay…" si la 
 | La portada dice "Algo salió mal: el servidor respondió de forma inesperada" | El rewrite de `/api` no llega a Railway: revisar la URL en `client/vercel.json`. |
 | `/poesia` da 404 de Vercel al recargar | Falta `client/vercel.json` o el Root Directory de Vercel no es `client`. |
 | `/api/health` dice `"db":"desconectado"` o el deploy no pasa el healthcheck | `MONGODB_URI` mal copiada o Atlas no permite `0.0.0.0/0`. |
-| La cookie `borde_session` no tiene `Secure` | Falta `NODE_ENV=production` en Railway. |
+| No puedo ingresar al panel en un deploy nuevo | No hay editor: revisar en los logs de Railway el aviso del arranque y las variables `SEED_EDITOR_*` (contraseña de 12+ caracteres). |
 | El login funciona en Railway pero no en Vercel (o al revés) | La cookie es de un solo dominio: usar siempre la URL de Vercel. |
 | "Demasiados intentos" para todo el equipo a la vez | Alguien está probando contraseñas: el límite es por IP de Vercel (ver nota sobre `TRUST_PROXY`). Se libera solo en 15 minutos. |
 

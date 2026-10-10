@@ -1,9 +1,12 @@
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { createApp } from './app.js';
+import { ensureInitialData } from './bootstrap.js';
 
 async function main() {
   await connectDB(env.MONGODB_URI);
+  // Primer editor y página "Acerca" si faltan. Un fallo acá no impide que la API arranque.
+  await ensureInitialData().catch((err) => console.error('⚠️  No se pudieron crear los datos iniciales:', err.message));
 
   const app = createApp();
   const server = app.listen(env.PORT, () => {

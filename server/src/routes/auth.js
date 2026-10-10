@@ -18,15 +18,16 @@ const DUMMY_HASH = bcrypt.hashSync('borde-dummy-password', 12);
 /**
  * Cookie de sesión:
  * - httpOnly: JavaScript del navegador no puede leerla (mitiga XSS).
- * - secure en producción: solo viaja por HTTPS.
+ * - secure: solo viaja por HTTPS. Se activa en producción y también siempre que
+ *   el pedido llegue por HTTPS (req.secure, vía el proxy), aunque falte NODE_ENV.
  * - sameSite strict: el navegador no la envía en requests iniciados desde otros
  *   sitios (mitiga CSRF). Funciona porque el cliente y la API comparten origen
  *   (proxy de Vite en local, rewrite de Vercel en producción).
  */
-function cookieOptions() {
+function cookieOptions(req) {
   return {
     httpOnly: true,
-    secure: env.isProduction,
+    secure: env.isProduction || req.secure,
     sameSite: 'strict',
     path: '/',
     maxAge: env.SESSION_TTL_HOURS * 60 * 60 * 1000,
@@ -59,12 +60,12 @@ export function createAuthRouter() {
       algorithm: 'HS256',
       expiresIn: `${env.SESSION_TTL_HOURS}h`,
     });
-    res.cookie(AUTH_COOKIE, token, cookieOptions());
+    res.cookie(AUTH_COOKIE, token, cookieOptions(req));
     sendOk(res, { user });
   });
 
-  router.post('/logout', (_req, res) => {
-    const { maxAge: _maxAge, ...options } = cookieOptions();
+  router.post('/logout', (req, res) => {
+    const { maxAge: _maxAge, ...options } = cookieOptions(req);
     res.clearCookie(AUTH_COOKIE, options);
     sendOk(res, { loggedOut: true });
   });

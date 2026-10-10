@@ -31,6 +31,20 @@ describe('POST /api/auth/login', () => {
     assert.match(cookie, /SameSite=Strict/i);
   });
 
+  test('detrás de un proxy HTTPS la cookie lleva Secure aunque NODE_ENV no sea production', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .set('X-Forwarded-Proto', 'https')
+      .send({ email: EDITOR.email, password: EDITOR.password });
+    assert.equal(res.status, 200);
+    assert.match(res.headers['set-cookie'].join(';'), /;\s*Secure/i);
+  });
+
+  test('por HTTP local la cookie no lleva Secure (si no, el navegador la descartaría)', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: EDITOR.email, password: EDITOR.password });
+    assert.doesNotMatch(res.headers['set-cookie'].join(';'), /;\s*Secure/i);
+  });
+
   test('acepta el email con mayúsculas y espacios', async () => {
     const res = await request(app).post('/api/auth/login').send({ email: `  ${EDITOR.email.toUpperCase()} `, password: EDITOR.password });
     assert.equal(res.status, 200);
