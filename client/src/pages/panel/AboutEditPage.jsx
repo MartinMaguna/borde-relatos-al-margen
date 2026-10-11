@@ -4,7 +4,8 @@ import { api } from '../../api/client.js';
 import { useAnnounce } from '../../a11y/Announcer.jsx';
 import { useDocumentTitle } from '../../a11y/hooks.js';
 import ErrorSummary from '../../components/forms/ErrorSummary.jsx';
-import { TextArea, TextField } from '../../components/forms/fields.jsx';
+import { TextField } from '../../components/forms/fields.jsx';
+import MarkdownEditor from '../../components/forms/MarkdownEditor.jsx';
 import { errorsByField, errorsFromApi } from '../../components/forms/errors.js';
 
 /** Edición de la página "Acerca". Al guardar se queda en la misma vista y confirma. */
@@ -55,12 +56,12 @@ export default function AboutEditPage() {
 
       <form onSubmit={handleSubmit} noValidate className="form">
         <TextField name="title" label="Título" defaultValue={page.title || 'Acerca de Borde'} error={fieldErrors.title} />
-        <TextArea
+        <MarkdownEditor
           name="body"
           label="Texto"
           optional
           rows={14}
-          hint="Para separar párrafos, dejá una línea en blanco. Formato opcional en Markdown: **negrita**, *cursiva*, ## Subtítulo, [texto del enlace](https://…)."
+          hint="Para separar párrafos, dejá una línea en blanco. Usá la barra de formato (antes del campo) o los atajos Control+B negrita, Control+I cursiva y Control+K enlace."
           defaultValue={page.body}
           error={fieldErrors.body}
         />

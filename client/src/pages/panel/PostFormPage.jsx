@@ -5,6 +5,7 @@ import { useDocumentTitle } from '../../a11y/hooks.js';
 import ErrorSummary from '../../components/forms/ErrorSummary.jsx';
 import ImageField from '../../components/forms/ImageField.jsx';
 import MediaFields from '../../components/forms/MediaFields.jsx';
+import MarkdownEditor from '../../components/forms/MarkdownEditor.jsx';
 import { Fieldset, SelectField, TextArea, TextField } from '../../components/forms/fields.jsx';
 import { errorsByField, errorsFromApi } from '../../components/forms/errors.js';
 import { CATEGORY_OPTIONS, STATUS_LABELS, toDateInput } from '../../lib/admin.js';
@@ -150,13 +151,14 @@ export default function PostFormPage() {
           error={fieldErrors.summary}
         />
 
-        <TextArea
+        <MarkdownEditor
           name="body"
           label="Texto"
           rows={16}
-          hint="Cada salto de línea se respeta, ideal para versos. Para separar párrafos o estrofas, dejá una línea en blanco. Formato opcional en Markdown: **negrita**, *cursiva*, ## Subtítulo, > cita."
+          hint="Cada salto de línea se respeta, ideal para versos; para separar párrafos o estrofas, dejá una línea en blanco. Usá la barra de formato (antes del campo) o los atajos Control+B negrita, Control+I cursiva y Control+K enlace."
           defaultValue={post.body}
           error={fieldErrors.body}
+          previewClassName={`prose prose--${category}`}
         />
 
         {category === 'convocatorias' && (

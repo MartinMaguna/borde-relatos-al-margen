@@ -97,6 +97,40 @@ test.describe('Panel del editor en navegador real', () => {
     await expect(img).toHaveJSProperty('complete', true);
   });
 
+  test('editor de texto: barra de formato, deshacer, vista previa del servidor y sin violaciones', async ({ page }) => {
+    await login(page);
+    await page.goto('/panel/publicaciones/nueva');
+    await waitForView(page);
+
+    const text = page.getByLabel('Texto', { exact: true });
+    await text.fill('Primera parte\nhola mundo');
+    // Título de sección en la primera línea.
+    await text.evaluate((el) => el.setSelectionRange(0, 0));
+    await page.getByRole('button', { name: 'Título de sección' }).click();
+    // Negrita sobre "mundo".
+    await text.evaluate((el) => {
+      const i = el.value.indexOf('mundo');
+      el.setSelectionRange(i, i + 5);
+    });
+    await page.getByRole('button', { name: 'Negrita' }).click();
+    await expect(text).toHaveValue('# Primera parte\nhola **mundo**');
+    await expect(text).toBeFocused();
+
+    // Deshacer funciona (el formato se insertó como si se tipeara).
+    await page.keyboard.press('Control+z');
+    await expect(text).not.toHaveValue('# Primera parte\nhola **mundo**');
+
+    await text.fill('# Sección\n\n**negrita** y *cursiva*');
+    await page.getByRole('button', { name: 'Ver vista previa' }).click();
+    const preview = page.getByRole('region', { name: 'Vista previa' });
+    await expect(preview.locator('h2', { hasText: 'Sección' })).toBeVisible();
+    await expect(preview.locator('strong', { hasText: 'negrita' })).toBeVisible();
+    await expect(preview.locator('em', { hasText: 'cursiva' })).toBeVisible();
+
+    await expectNoA11yViolations(page);
+    expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
   test('eliminar: nombre accesible con el título, diálogo modal real, Escape y confirmación', async ({ page }, testInfo) => {
     await login(page);
 

@@ -51,6 +51,7 @@
   --space-6: 4rem;
   --radius-none: 0;
   --radius-sm: 4px;
+  --radius-lg: 1.25rem; /* láminas: tarjetas, bloques, avisos, diálogo */
   --radius-pill: 999px;
   --radius-circle: 50%;
   --stroke-hairline: 1px;
@@ -472,10 +473,26 @@ main:focus {
   padding: var(--space-4);
   background: var(--surface-raised);
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+/* Miniatura de la publicación: ocupa el ancho de la tarjeta, arriba, 16:9. */
+.post-card__image {
+  display: block;
+  width: calc(100% + 2 * var(--space-4));
+  max-width: none;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-2);
+  background: var(--surface-sunken);
+}
+
+/* Con imagen no va el cuarto de disco: se superpondría con la foto. */
+.post-card--with-image::after {
+  display: none;
 }
 
 .post-card:hover {
@@ -560,7 +577,7 @@ main:focus {
 .post-media__block {
   padding: var(--space-3) var(--space-4) var(--space-4);
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   background: var(--surface-raised);
 }
 
@@ -587,7 +604,7 @@ main:focus {
   aspect-ratio: 16 / 9;
   width: 100%;
   max-width: 100%;
-  border-radius: var(--radius-none);
+  border-radius: calc(var(--radius-lg) / 2);
   overflow: hidden;
   background: #000;
 }
@@ -670,13 +687,14 @@ main:focus {
 }
 
 .article__figure img {
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
 }
 
 .call-details {
   margin: 0 0 var(--space-5);
   padding: var(--space-3) var(--space-4);
   border: var(--stroke-hairline) solid var(--line);
+  border-radius: var(--radius-lg);
   background: var(--surface-raised);
 }
 
@@ -795,7 +813,7 @@ main:focus {
 .notice {
   padding: var(--space-3) var(--space-4);
   border: var(--stroke-rule) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   background: var(--surface-raised);
   max-width: var(--measure);
 }
@@ -946,7 +964,7 @@ main:focus {
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4) var(--space-4);
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
 }
 
 .fieldset--group legend {
@@ -1019,7 +1037,7 @@ main:focus {
   max-height: 10rem;
   object-fit: cover;
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: calc(var(--radius-lg) / 2);
 }
 
 .image-preview__label {
@@ -1027,12 +1045,77 @@ main:focus {
   font-weight: 600;
 }
 
+/* ---------- Editor de texto (barra de formato) ---------- */
+.md-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.md-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--surface-sunken);
+  border: var(--stroke-hairline) solid var(--line);
+  border-radius: calc(var(--radius-lg) / 2);
+}
+
+.md-toolbar__button {
+  min-height: var(--target-min);
+  min-width: var(--target-min);
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: var(--stroke-rule) solid var(--line);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.md-toolbar__button:hover {
+  border-color: var(--indigo);
+}
+
+/* El texto de cada botón muestra el formato que aplica (no solo dice cuál es). */
+.md-toolbar__button--bold { font-weight: 800; }
+.md-toolbar__button--italic { font-style: italic; font-weight: 400; }
+.md-toolbar__button--strike { text-decoration: line-through; font-weight: 400; }
+.md-toolbar__button--h2 { font-family: var(--font-display); }
+.md-toolbar__button--h3 { font-family: var(--font-display); }
+.md-toolbar__button--h4 { font-family: var(--font-display); font-weight: 700; }
+
+.md-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.md-preview__panel {
+  flex-basis: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface-raised);
+  border: var(--stroke-rule) dashed var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.md-preview__title {
+  font-size: 1rem;
+  font-family: var(--font-text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
 /* ---------- Resumen de errores ---------- */
 .error-summary {
   margin-block: var(--space-4);
   padding: var(--space-3) var(--space-4);
   border: 0.25rem solid var(--magenta);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   background: var(--surface-raised);
 }
 
@@ -1145,7 +1228,7 @@ main:focus {
   margin-bottom: var(--space-4);
   padding: var(--space-3) var(--space-4) var(--space-4);
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   background: var(--surface-sunken);
 }
 
@@ -1181,7 +1264,7 @@ main:focus {
 .admin-item {
   padding: var(--space-3) var(--space-4);
   border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   background: var(--surface-raised);
 }
 
@@ -1221,7 +1304,7 @@ main:focus {
   color: var(--ink);
   background: var(--surface-raised);
   border: var(--stroke-rule) solid var(--ink);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sheet);
 }
 

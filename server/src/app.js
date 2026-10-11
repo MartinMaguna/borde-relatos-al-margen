@@ -10,6 +10,7 @@ import postsRouter from './routes/posts.js';
 import adminPostsRouter from './routes/adminPosts.js';
 import { adminPagesRouter, publicPagesRouter } from './routes/pages.js';
 import { adminImagesRouter, publicImagesRouter } from './routes/images.js';
+import previewRouter from './routes/preview.js';
 import { requireAuth, requireRole } from './middleware/auth.js';
 import { notFound, errorHandler } from './middleware/errors.js';
 
@@ -51,6 +52,7 @@ export function createApp() {
   app.use('/api/admin/posts', adminPostsRouter);
   app.use('/api/admin/pages', adminPagesRouter);
   app.use('/api/admin/images', adminImagesRouter);
+  app.use('/api/admin/preview', previewRouter);
 
   app.use(notFound);
   app.use(errorHandler);

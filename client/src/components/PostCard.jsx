@@ -23,7 +23,16 @@ export default function PostCard({ post, headingLevel = 2 }) {
   const hasMedia = Boolean(post.audio?.url || post.signVideoId);
 
   return (
-    <article className="post-card">
+    <article className={`post-card${post.image?.url ? ' post-card--with-image' : ''}`}>
+      {/*
+        Imagen de la publicación como miniatura, arriba de la tarjeta.
+        alt="" (decorativa): en un listado, describir cada foto antes de cada
+        título vuelve la navegación muy lenta; el lector la saltea y la
+        descripción completa está en la página de la publicación.
+      */}
+      {post.image?.url && (
+        <img className="post-card__image" src={post.image.url} alt="" loading="lazy" decoding="async" />
+      )}
       <Heading className="post-card__title">
         <Link to={href}>{post.title}</Link>
       </Heading>

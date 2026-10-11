@@ -184,6 +184,11 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 9 | `coral` y `orange` solo en formas y degradados; texto sobre rellenos de marca en `on-brand` (≥6.3:1 en ambos temas) | Esos tonos no alcanzan 4.5:1 como texto en el tema claro. |
 | 9 | Degradados solo en formas sin texto (portada, cuarto de disco de las tarjetas, barra de carga) | El texto nunca queda sobre un fondo de contraste variable. |
 | 9 | Tipografías **Atkinson Hyperlegible Next** (texto) y **Archivo** (títulos), alojadas en el propio sitio | Atkinson está diseñada para baja visión (no confunde I l 1, O 0). Alojarlas evita pedidos a Google (privacidad) y fallas si el servicio externo no responde. |
+| 10 | Editor de texto: `<textarea>` nativo con barra de formato (`role="toolbar"`, un solo punto de tabulación, flechas), no un editor visual (contenteditable) | Los editores enriquecidos son muy difíciles de usar con lector de pantalla; el textarea funciona con todos los lectores, el corrector y el dictado. |
+| 10 | Botones de formato con texto visible y nombre accesible que lo contiene ("Título" → "Título de sección"); atajos Control+B/I/K con `aria-keyshortcuts` | WCAG 2.5.3 (etiqueta en el nombre) y 2.1.1 (teclado). |
+| 10 | Tras cada acción, foco de vuelta al texto con la selección lista y aviso en la región viva ("Negrita aplicada" / "quitada"); se puede deshacer con Control+Z | La persona sabe qué pasó sin buscarlo y puede revertirlo. |
+| 10 | Vista previa generada por el servidor, con las mismas reglas que al publicar, en una región con nombre y botón con `aria-expanded` | Lo que se revisa es lo que se publica. |
+| 10 | Imagen en las tarjetas con `alt=""` y `loading="lazy"` | En un listado la foto es decorativa: describir cada una antes de cada título vuelve lenta la navegación. Su descripción completa está en la publicación. |
 | 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde. Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
 | 3 | Objetivos táctiles ≥ 2.75rem (44 px) en menú y paginación | WCAG 2.5.8. |
