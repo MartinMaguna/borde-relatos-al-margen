@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Post } from '../models/Post.js';
+import { Image, uploadedImageId } from '../models/Image.js';
 import { HttpError } from '../middleware/errors.js';
 import { validate } from '../middleware/validate.js';
 import { adminListQuery, idParams, postInputSchema } from '../validators/posts.js';
@@ -10,6 +11,18 @@ import { slugify, uniqueSlug } from '../utils/slug.js';
 const router = Router();
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Borra una imagen subida que dejó de usarse (se cambió o se eliminó la
+ * publicación), salvo que otra publicación la siga usando. Las imágenes
+ * externas (http…) no se tocan.
+ */
+async function deleteUnusedImage(url) {
+  const id = uploadedImageId(url);
+  if (!id) return;
+  if (await Post.exists({ 'image.url': url })) return;
+  await Image.deleteOne({ _id: id });
+}
 
 async function findPostOr404(id) {
   const post = await Post.findById(id);
@@ -67,14 +80,17 @@ router.put('/:id', validate({ params: idParams, body: postInputSchema }), async 
   const data = req.valid.body;
   // Si el slug viene vacío en una edición, conservamos el actual (no rompemos enlaces ya compartidos).
   const slug = data.slug ? await resolveSlug(data, post.id) : post.slug;
+  const previousImage = post.image?.url;
   post.set({ ...data, slug, deadline: data.deadline ?? null, basesUrl: data.basesUrl ?? null, updatedBy: req.user.id });
   await post.save();
+  if (previousImage && previousImage !== post.image?.url) await deleteUnusedImage(previousImage);
   sendOk(res, post);
 });
 
 router.delete('/:id', validate({ params: idParams }), async (req, res) => {
   const post = await findPostOr404(req.valid.params.id);
   await post.deleteOne();
+  if (post.image?.url) await deleteUnusedImage(post.image.url);
   sendOk(res, { id: post.id, title: post.title });
 });
 

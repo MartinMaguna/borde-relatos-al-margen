@@ -178,6 +178,18 @@ Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_s
 | PUT | `/admin/posts/:id` | Editar (se envía la publicación completa) |
 | DELETE | `/admin/posts/:id` | Eliminar |
 | GET / PUT | `/admin/pages/acerca` | Leer / guardar la página Acerca |
+| POST | `/admin/images` | Subir una imagen (`multipart/form-data`, campo `imagen`, máx. 3 MB) → `{ id, url }` |
+| GET | `/images/:id` | Ver una imagen subida (público, caché de un año) |
+
+### Imágenes
+
+Las imágenes subidas desde el panel se guardan **en MongoDB** (colección `images`): Railway no tiene disco persistente, así que no pueden quedar como archivos en el servidor.
+
+- El navegador las **achica antes de subirlas** (lado mayor 1600 px, WebP o JPEG): una foto de celular de varios MB queda en unos cientos de KB. Los GIF se suben tal cual para no perder la animación.
+- La API verifica el tipo **por el contenido** del archivo (JPG, PNG, WebP, GIF, AVIF), no por el nombre. No se aceptan SVG (pueden contener scripts).
+- Al cambiar la imagen de una publicación o eliminarla, la imagen anterior se borra si ninguna otra publicación la usa.
+- El plan gratuito de Atlas tiene 512 MB: alcanza para cientos de imágenes. Si el sitio crece mucho, conviene pasar a un servicio de imágenes (Cloudinary, S3…).
+- También se puede usar una imagen de otro sitio pegando su dirección `https://…`.
 
 ### Publicación (`Post`)
 
@@ -187,7 +199,7 @@ Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_s
 | `slug` | Opcional: si va vacío se genera del título (`"Canción del Ñandú"` → `cancion-del-nandu`) |
 | `category` | `poesia` · `cuentos` · `talleres` · `convocatorias` (coinciden con las URLs del sitio) |
 | `summary` | Hasta 500 caracteres |
-| `image` | `{ url, alt }` o `null`. **`alt` es obligatorio** |
+| `image` | `{ url, alt }` o `null`. `url`: una imagen subida (`/api/images/<id>`) o una dirección `https://…`. **`alt` es obligatorio** |
 | `status` | `draft` · `published`. `publishedAt` se registra la primera vez que se publica |
 | `deadline`, `basesUrl` | Solo convocatorias; `deadline` obligatorio. Una fecha sola (`2026-11-30`) vale hasta las 23:59 de ese día (UTC-3) |
 | `callStatus` | Calculado: `abierta` / `cerrada` según `deadline` |

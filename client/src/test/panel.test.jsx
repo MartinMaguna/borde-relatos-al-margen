@@ -191,8 +191,8 @@ describe('Formulario de publicación', () => {
     await renderRoute('/panel/publicaciones/nueva');
     const user = userEvent.setup();
 
-    await user.type(screen.getByLabelText('Dirección de la imagen (opcional)'), 'https://example.com/foto.jpg');
-    await user.click(screen.getByRole('button', { name: 'Crear publicación' }));
+    await user.type(screen.getByLabelText('O pegá la dirección de una imagen (opcional)'), 'https://example.com/foto.jpg');
+    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
 
     const heading = await screen.findByRole('heading', { level: 2, name: 'Hay 2 problemas' });
     await waitFor(() => expect(heading.closest('.error-summary')).toHaveFocus());
@@ -206,41 +206,130 @@ describe('Formulario de publicación', () => {
     expect(alt).toHaveAccessibleDescription(/Obligatorio si hay imagen.*Error: El texto alternativo es obligatorio/);
 
     // Lo escrito no se pierde.
-    expect(screen.getByLabelText('Dirección de la imagen (opcional)')).toHaveValue('https://example.com/foto.jpg');
+    expect(screen.getByLabelText('O pegá la dirección de una imagen (opcional)')).toHaveValue('https://example.com/foto.jpg');
 
     await user.click(screen.getByRole('link', { name: /El texto alternativo es obligatorio/ }));
     expect(alt).toHaveFocus();
     expect(await axeViolations()).toEqual([]);
   });
 
-  test('crear envía los datos y vuelve al listado con un aviso', async () => {
-    const calls = mockApi({
-      ...ME,
-      'POST /admin/posts': (body) => ok({ ...body, id: 'n1', slug: 'nuevo', status: body.status }),
-      '/admin/posts?page=1&limit=10': ok([], listMeta(0)),
-    });
-    await renderRoute('/panel/publicaciones/nueva');
-    const user = userEvent.setup();
-
+  async function fillRequired(user) {
     await user.type(screen.getByLabelText('Título'), 'Nuevo poema');
     await user.type(screen.getByLabelText('Autor o autora'), 'Ana');
     await user.type(screen.getByLabelText('Texto'), 'verso uno{enter}verso dos');
-    await user.click(screen.getByLabelText('Publicado (visible en el sitio)'));
-    await user.click(screen.getByRole('button', { name: 'Crear publicación' }));
+  }
 
-    expect(await screen.findByText('Se creó «Nuevo poema». Está publicada en el sitio.')).toBeInTheDocument();
+  const createMocks = () =>
+    mockApi({
+      ...ME,
+      'POST /admin/posts': (body) => ok({ ...body, id: 'n1', slug: 'nuevo' }),
+      'POST /admin/images': ok({ id: 'a'.repeat(24), url: `/api/images/${'a'.repeat(24)}`, size: 1000, contentType: 'image/png' }),
+      '/admin/posts?page=1&limit=10': ok([], listMeta(0)),
+    });
+
+  test('"Publicar" crea la publicación visible y vuelve al listado con un aviso', async () => {
+    const calls = createMocks();
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+
+    await fillRequired(user);
+    await user.click(screen.getByRole('button', { name: 'Publicar' }));
+
+    expect(await screen.findByText('Se publicó «Nuevo poema». Ya está visible en el sitio.')).toBeInTheDocument();
     const sent = calls.find((c) => c.method === 'POST').body;
     expect(sent).toMatchObject({ title: 'Nuevo poema', author: 'Ana', category: 'poesia', status: 'published', image: null });
     expect(sent.body).toBe('verso uno\nverso dos');
   });
 
-  test('editar carga los valores actuales', async () => {
+  test('"Guardar borrador" crea un borrador (no visible en el sitio)', async () => {
+    const calls = createMocks();
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+
+    await fillRequired(user);
+    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+
+    expect(await screen.findByText(/Se guardó el borrador «Nuevo poema»/)).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'POST').body.status).toBe('draft');
+  });
+
+  test('Enter en un campo guarda como borrador (nunca publica sin querer)', async () => {
+    const calls = createMocks();
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+
+    await fillRequired(user);
+    await user.type(screen.getByLabelText('Autor o autora'), '{enter}');
+
+    await screen.findByText(/Se guardó el borrador/);
+    expect(calls.find((c) => c.method === 'POST').body.status).toBe('draft');
+  });
+
+  test('subir una imagen: se anuncia, se muestra la vista previa y se envía su URL', async () => {
+    const calls = createMocks();
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+
+    const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'foto.png', { type: 'image/png' });
+    await user.upload(screen.getByLabelText('Subir una imagen (opcional)'), file);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('announcer-polite')).toHaveTextContent('Imagen subida. Acordate de escribir el texto alternativo.'),
+    );
+    expect(screen.getByText('Imagen subida.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reemplazar por otra imagen (opcional)')).toBeInTheDocument();
+    // Con una imagen subida no se muestra el campo de dirección externa.
+    expect(screen.queryByLabelText('O pegá la dirección de una imagen (opcional)')).toBeNull();
+    expect(calls.find((c) => c.path === '/admin/images').body).toBeInstanceOf(FormData);
+
+    await fillRequired(user);
+    await user.type(screen.getByLabelText('Texto alternativo (opcional)'), 'Una mesa con libros');
+    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+
+    await screen.findByText(/Se guardó el borrador/);
+    expect(calls.find((c) => c.path === '/admin/posts').body.image).toEqual({
+      url: `/api/images/${'a'.repeat(24)}`,
+      alt: 'Una mesa con libros',
+    });
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('un archivo que no es imagen muestra el error junto al campo, sin subirlo', async () => {
+    const calls = createMocks();
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup({ applyAccept: false });
+
+    const input = screen.getByLabelText('Subir una imagen (opcional)');
+    await user.upload(input, new File(['hola'], 'notas.txt', { type: 'text/plain' }));
+
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveAccessibleDescription(/Error: El archivo tiene que ser una imagen/);
+    expect(calls.some((c) => c.path === '/admin/images')).toBe(false);
+  });
+
+  test('"Quitar la imagen" la saca y devuelve el foco al selector de archivo', async () => {
+    mockApi({
+      ...ME,
+      '/admin/posts/p1': ok({ ...poem, body: 'x', image: { url: `/api/images/${'b'.repeat(24)}`, alt: 'Foto' } }),
+    });
+    await renderRoute('/panel/publicaciones/p1');
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Quitar la imagen' }));
+    expect(screen.queryByText('Imagen subida.')).toBeNull();
+    expect(screen.getByLabelText('Subir una imagen (opcional)')).toHaveFocus();
+  });
+
+  test('editar una publicada: muestra el estado y ofrece "Guardar cambios" y "Pasar a borrador"', async () => {
     mockApi({ ...ME, '/admin/posts/p1': ok({ ...poem, body: 'El agua se fue' }) });
     await renderRoute('/panel/publicaciones/p1');
 
     expect(screen.getByRole('heading', { level: 1, name: 'Editar «Orilla»' })).toBeInTheDocument();
     expect(screen.getByLabelText('Título')).toHaveValue('Orilla');
     expect(screen.getByLabelText('Texto')).toHaveValue('El agua se fue');
-    expect(screen.getByLabelText('Publicado (visible en el sitio)')).toBeChecked();
+    expect(screen.getByText(/Estado actual/)).toHaveTextContent('Estado actual: Publicado (visible en el sitio)');
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pasar a borrador' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Publicar' })).toBeNull();
   });
 });

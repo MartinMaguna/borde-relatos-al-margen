@@ -18,7 +18,7 @@ export function mockApi(responses) {
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, options = {}) => {
     const path = String(url).replace(/^\/api/, '');
     const method = options.method ?? 'GET';
-    const body = options.body ? JSON.parse(options.body) : undefined;
+    const body = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
     calls.push({ method, path, body });
 
     let match = responses[`${method} ${path}`] ?? (method === 'GET' ? responses[path] : undefined);

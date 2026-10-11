@@ -122,7 +122,12 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 
 - [ ] Cada campo anuncia etiqueta y pista: p. ej. "Resumen, opcional, Hasta 500 caracteres…".
 - [ ] Los obligatorios se anuncian como "obligatorio"; los opcionales dicen "(opcional)" en la etiqueta.
-- [ ] El grupo "Estado" se anuncia al entrar, con sus dos opciones de radio.
+- [ ] Al final se encuentran los botones "Guardar borrador" y "Publicar" (o "Guardar cambios" y "Pasar a borrador" en una publicada), y en la edición se lee el "Estado actual".
+- [ ] Pulsar Enter en un campo de texto guarda como borrador (no publica).
+- [ ] "Subir una imagen" se anuncia como botón/selector de archivo con su pista; en móvil ofrece cámara o galería.
+- [ ] Al elegir una foto se anuncia "Subiendo la imagen…" y después "Imagen subida. Acordate de escribir el texto alternativo.", sin que el foco salte.
+- [ ] Un archivo que no es imagen muestra "Error: …" junto al selector, y se lee al volver a él.
+- [ ] "Quitar la imagen" se anuncia "Se quitó la imagen." y el foco queda en el selector de archivo.
 - [ ] Al elegir "Convocatorias", los campos de fecha límite y bases aparecen **después** del selector y se pueden alcanzar avanzando.
 - [ ] El selector de fecha (`input type="date"`) se puede usar solo con teclado / gestos.
 - [ ] Enviar vacío: se anuncia el resumen ("Hay N problemas"), cada error es un enlace y al activarlo el foco va al campo, que anuncia "inválido" y el mensaje "Error: …".
@@ -185,6 +190,11 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 4 | Radios y grupos dentro de `fieldset`/`legend` ("Estado", "Imagen", "Datos de la convocatoria") | El lector anuncia la pregunta al entrar al grupo. |
 | 4 | Campos de convocatoria aparecen después del selector de categoría, con una pista que lo avisa | Cambio de contexto predecible (WCAG 3.2.2): el contenido nuevo queda adelante en el orden de lectura. |
 | 4 | Pista para el texto alternativo ("Contá qué se ve y por qué importa… No empieces con «imagen de»") | Ayuda a que el equipo editorial escriba buenos `alt`. |
+| 7 | Subida de imágenes con `<input type="file">` nativo y etiqueta visible | Funciona con teclado, lectores de pantalla y en móvil (cámara o galería) sin componentes a medida. |
+| 7 | Progreso y resultado de la subida anunciados en la región viva ("Subiendo la imagen…", "Imagen subida. Acordate de escribir el texto alternativo."), sin mover el foco | El cambio se comunica sin sorprender (WCAG 3.2.2, 4.1.3) y recuerda el paso siguiente. |
+| 7 | Vista previa con `alt=""` | Es una copia decorativa de lo que se está editando; la descripción real es el campo "Texto alternativo". |
+| 7 | "Quitar la imagen" devuelve el foco al selector de archivo | El botón desaparece al usarlo: el foco no queda perdido. |
+| 7 | Estado con botones de acción: "Guardar borrador" / "Publicar" (o "Guardar cambios" / "Pasar a borrador" si ya está publicada), con el estado actual escrito arriba | Más claro que un grupo de radios al final: la acción dice qué pasa. Con Enter se usa el primer botón, que nunca cambia la visibilidad en el sitio. |
 | 4 | Confirmación de borrado con `<dialog>` nativo y `showModal()`; foco inicial en "Cancelar"; Escape cierra | Foco atrapado y fondo inerte sin ARIA extra. La opción segura es la predeterminada. |
 | 4 | Tras eliminar, foco al `h1` y aviso en región viva ("Se eliminó «…»") | El botón que abrió el diálogo ya no existe: el foco no queda perdido. |
 | 4 | Acciones con el título en el nombre accesible ("Editar «Orilla»", "Eliminar «Orilla»") | En la lista de botones del lector cada acción se distingue. |

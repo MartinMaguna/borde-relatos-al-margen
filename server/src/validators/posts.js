@@ -12,8 +12,13 @@ const deadlineDate = z.preprocess(
   z.coerce.date({ error: 'Fecha inválida' }),
 );
 
+// Una imagen subida desde el panel ("/api/images/<id>") o una dirección externa http(s).
+const imageUrl = z.union([z.string().regex(/^\/api\/images\/[a-f\d]{24}$/i), httpUrl], {
+  error: 'Subí una imagen o escribí una dirección que empiece con http:// o https://',
+});
+
 const imageSchema = z.object({
-  url: httpUrl,
+  url: imageUrl,
   alt: z
     .string({ error: 'El texto alternativo es obligatorio' })
     .trim()

@@ -37,8 +37,8 @@ test.describe('Panel del editor en navegador real', () => {
     await page.goto('/panel/publicaciones/nueva');
     await waitForView(page);
 
-    await page.getByLabel('Dirección de la imagen (opcional)').fill('https://example.com/foto.jpg');
-    await page.getByRole('button', { name: 'Crear publicación' }).click();
+    await page.getByLabel('O pegá la dirección de una imagen (opcional)').fill('https://example.com/foto.jpg');
+    await page.getByRole('button', { name: 'Guardar borrador' }).click();
 
     const summary = page.locator('.error-summary');
     await expect(summary).toBeFocused();
@@ -50,6 +50,51 @@ test.describe('Panel del editor en navegador real', () => {
 
     await expectNoA11yViolations(page);
     expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
+  test('subir una foto grande: se achica en el navegador, se sube y se publica con su texto alternativo', async ({ page }, testInfo) => {
+    await login(page);
+    await page.goto('/panel/publicaciones/nueva');
+    await waitForView(page);
+
+    // Foto "de celular" de 2400×1800 generada en el navegador.
+    const dataUrl = await page.evaluate(() => {
+      const c = document.createElement('canvas');
+      c.width = 2400;
+      c.height = 1800;
+      const ctx = c.getContext('2d');
+      for (let i = 0; i < 400; i++) {
+        ctx.fillStyle = `hsl(${(i * 37) % 360} 70% 50%)`;
+        ctx.fillRect((i * 97) % 2400, (i * 53) % 1800, 300, 200);
+      }
+      return c.toDataURL('image/png');
+    });
+    const buffer = Buffer.from(dataUrl.split(',')[1], 'base64');
+
+    const uploadResponse = page.waitForResponse((r) => r.url().endsWith('/api/admin/images') && r.request().method() === 'POST');
+    await page.getByLabel('Subir una imagen (opcional)').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer });
+    const uploaded = await (await uploadResponse).json();
+
+    expect(uploaded.ok).toBe(true);
+    expect(uploaded.data.size).toBeLessThan(buffer.length); // se achicó antes de subir
+    await expect(page.getByText('Imagen subida.')).toBeVisible();
+    await expect(page.locator('.image-preview__img')).toHaveJSProperty('naturalWidth', 1600);
+    await expectNoA11yViolations(page);
+
+    const title = `Con foto ${testInfo.project.name}`;
+    await page.getByLabel('Título').fill(title);
+    await page.getByLabel('Autor o autora').fill('E2E');
+    await page.getByLabel('Texto', { exact: true }).fill('Texto con foto.');
+    await page.getByLabel('Texto alternativo (opcional)').fill('Rectángulos de colores superpuestos');
+    await page.getByRole('button', { name: 'Publicar' }).click();
+    await expect(page.locator('.notice', { hasText: `Se publicó «${title}»` })).toBeVisible();
+
+    // En el sitio público la imagen se ve con su texto alternativo.
+    await page.goto(`/panel?q=${encodeURIComponent(title)}`);
+    await page.getByRole('link', { name: `Ver en el sitio «${title}»` }).click();
+    const img = page.getByRole('img', { name: 'Rectángulos de colores superpuestos' });
+    await expect(img).toBeVisible();
+    await expect(img).toHaveJSProperty('complete', true);
   });
 
   test('eliminar: nombre accesible con el título, diálogo modal real, Escape y confirmación', async ({ page }, testInfo) => {

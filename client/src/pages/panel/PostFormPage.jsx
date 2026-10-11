@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useLoaderData, useNavigate } from 'react-router';
 import { api } from '../../api/client.js';
 import { useDocumentTitle } from '../../a11y/hooks.js';
 import ErrorSummary from '../../components/forms/ErrorSummary.jsx';
-import { Fieldset, RadioGroup, SelectField, TextArea, TextField } from '../../components/forms/fields.jsx';
+import ImageField from '../../components/forms/ImageField.jsx';
+import { Fieldset, SelectField, TextArea, TextField } from '../../components/forms/fields.jsx';
 import { errorsByField, errorsFromApi } from '../../components/forms/errors.js';
-import { CATEGORY_OPTIONS, STATUS_OPTIONS, toDateInput } from '../../lib/admin.js';
+import { CATEGORY_OPTIONS, STATUS_LABELS, toDateInput } from '../../lib/admin.js';
 
 const EMPTY_POST = {
   title: '',
@@ -21,7 +22,7 @@ const EMPTY_POST = {
 };
 
 /** Arma el cuerpo que espera la API a partir del formulario. */
-function payloadFrom(form) {
+function payloadFrom(form, status) {
   const get = (name) => String(form.get(name) ?? '').trim();
   const imageUrl = get('image.url');
   return {
@@ -31,12 +32,25 @@ function payloadFrom(form) {
     author: get('author'),
     summary: get('summary'),
     body: get('body'),
-    status: get('status') || 'draft',
+    status,
     // Sin URL no hay imagen; si hay URL, el texto alternativo es obligatorio (lo valida la API).
     image: imageUrl ? { url: imageUrl, alt: get('image.alt') } : null,
     deadline: get('deadline'),
     basesUrl: get('basesUrl'),
   };
+}
+
+/** Mensaje de confirmación según lo que pasó con el estado. */
+function savedMessage(saved, previousStatus) {
+  const title = `«${saved.title}»`;
+  if (saved.status === 'published') {
+    return previousStatus === 'published'
+      ? `Se guardaron los cambios de ${title}. Sigue publicada en el sitio.`
+      : `Se publicó ${title}. Ya está visible en el sitio.`;
+  }
+  return previousStatus === 'published'
+    ? `${title} pasó a borrador: ya no se ve en el sitio.`
+    : `Se guardó el borrador ${title}. No se ve en el sitio hasta que lo publiques.`;
 }
 
 /**
@@ -50,7 +64,10 @@ export default function PostFormPage() {
   const isEdit = Boolean(loaderData?.post);
   const navigate = useNavigate();
   const [errors, setErrors] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
+  // Estado elegido con el botón usado ("draft" / "published"); null mientras no se envía.
+  const [submitting, setSubmitting] = useState(null);
+  const intent = useRef(null);
+  const isPublished = isEdit && post.status === 'published';
   // Solo la categoría necesita estado: decide si se muestran los campos de convocatoria.
   const [category, setCategory] = useState(post.category);
   const fieldErrors = errorsByField(errors);
@@ -61,19 +78,21 @@ export default function PostFormPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     if (submitting) return;
-    setSubmitting(true);
-    const body = payloadFrom(new FormData(event.currentTarget));
+    // El botón usado define el estado. Con Enter en un campo, el navegador usa el
+    // primer botón del formulario, que siempre es el más prudente.
+    const status = event.nativeEvent.submitter?.value || intent.current || (isPublished ? 'published' : 'draft');
+    intent.current = null; // un Enter posterior no debe repetir un «Publicar» anterior
+    setSubmitting(status);
+    const body = payloadFrom(new FormData(event.currentTarget), status);
     try {
       const { data: saved } = await api(isEdit ? `/admin/posts/${post.id}` : '/admin/posts', {
         method: isEdit ? 'PUT' : 'POST',
         body,
       });
-      const verb = isEdit ? 'Se guardaron los cambios de' : 'Se creó';
-      const where = saved.status === 'published' ? 'Está publicada en el sitio.' : 'Quedó como borrador.';
-      navigate('/panel', { state: { flash: `${verb} «${saved.title}». ${where}` } });
+      navigate('/panel', { state: { flash: savedMessage(saved, isEdit ? post.status : null) } });
     } catch (err) {
       setErrors(errorsFromApi(err));
-      setSubmitting(false);
+      setSubmitting(null);
     }
   }
 
@@ -83,6 +102,13 @@ export default function PostFormPage() {
         <Link to="/panel">Volver a publicaciones</Link>
       </p>
       <h1 tabIndex={-1}>{pageTitle}</h1>
+      {isEdit && (
+        <p className="lead">
+          Estado actual:{' '}
+          <span className={`status-tag status-tag--${post.status}`}>{STATUS_LABELS[post.status]}</span>
+          {post.status === 'published' ? ' (visible en el sitio)' : ' (no se ve en el sitio)'}
+        </p>
+      )}
 
       <ErrorSummary errors={errors} />
 
@@ -151,35 +177,7 @@ export default function PostFormPage() {
           </Fieldset>
         )}
 
-        <Fieldset legend="Imagen" hint="Opcional. Si agregás una imagen, describila para quienes no pueden verla.">
-          <TextField
-            name="image.url"
-            label="Dirección de la imagen"
-            type="url"
-            optional
-            hint="Dirección completa, por ejemplo https://ejemplo.com/foto.jpg"
-            defaultValue={post.image?.url ?? ''}
-            error={fieldErrors['image.url']}
-          />
-          <TextArea
-            name="image.alt"
-            label="Texto alternativo"
-            optional
-            rows={2}
-            maxLength={300}
-            hint="Obligatorio si hay imagen. Contá qué se ve y por qué importa, en una o dos frases. No empieces con «imagen de»."
-            defaultValue={post.image?.alt ?? ''}
-            error={fieldErrors['image.alt']}
-          />
-        </Fieldset>
-
-        <RadioGroup
-          name="status"
-          legend="Estado"
-          options={STATUS_OPTIONS}
-          defaultValue={post.status}
-          error={fieldErrors.status}
-        />
+        <ImageField initialUrl={post.image?.url ?? ''} initialAlt={post.image?.alt ?? ''} errors={fieldErrors} />
 
         <TextField
           name="slug"
@@ -196,12 +194,38 @@ export default function PostFormPage() {
           error={fieldErrors.slug}
         />
 
-        <div className="button-group">
-          <button type="submit" className="button">
-            {submitting ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear publicación'}
-          </button>
+        {/*
+          Acciones. El primer botón es el que usa el navegador al pulsar Enter en
+          un campo, así que siempre es el que NO cambia la visibilidad en el sitio.
+          No se deshabilitan mientras se guarda (perderían el foco).
+        */}
+        <div className="form-actions">
+          {isPublished ? (
+            <>
+              <button type="submit" name="status" value="published" className="button" onClick={() => (intent.current = 'published')}>
+                {submitting === 'published' ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+              <button type="submit" name="status" value="draft" className="button button--secondary" onClick={() => (intent.current = 'draft')}>
+                {submitting === 'draft' ? 'Guardando…' : 'Pasar a borrador'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="submit" name="status" value="draft" className="button button--secondary" onClick={() => (intent.current = 'draft')}>
+                {submitting === 'draft' ? 'Guardando…' : 'Guardar borrador'}
+              </button>
+              <button type="submit" name="status" value="published" className="button" onClick={() => (intent.current = 'published')}>
+                {submitting === 'published' ? 'Publicando…' : 'Publicar'}
+              </button>
+            </>
+          )}
           <Link to="/panel">Cancelar</Link>
         </div>
+        <p className="field__hint">
+          {isPublished
+            ? '«Pasar a borrador» la saca del sitio sin borrarla.'
+            : 'Un borrador se guarda pero no se ve en el sitio. Podés publicarlo cuando quieras.'}
+        </p>
       </form>
     </div>
   );

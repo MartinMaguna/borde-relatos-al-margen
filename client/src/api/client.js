@@ -20,14 +20,16 @@ const TIMEOUT_MS = 20_000;
  */
 export async function api(path, { method = 'GET', body, signal } = {}) {
   const timeout = AbortSignal.timeout(TIMEOUT_MS);
+  const isForm = body instanceof FormData;
   let res;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method,
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       credentials: 'same-origin',
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
+      // FormData (subida de archivos): el navegador arma el Content-Type con su separador.
+      headers: body && !isForm ? { 'Content-Type': 'application/json' } : undefined,
+      body: isForm ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch (err) {
     if (timeout.aborted) {

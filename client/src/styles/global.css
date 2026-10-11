@@ -747,6 +747,55 @@ main:focus {
   flex-shrink: 0;
 }
 
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+/* Selector de archivo nativo: solo agrandamos el área táctil y el texto. */
+.field__file {
+  font: inherit;
+  min-height: 2.75rem;
+  max-width: 100%;
+}
+
+.field__file::file-selector-button {
+  font: inherit;
+  font-weight: 700;
+  min-height: 2.75rem;
+  margin-inline-end: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.image-preview__img {
+  width: 10rem;
+  max-height: 10rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.image-preview__label {
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+}
+
 /* ---------- Resumen de errores ---------- */
 .error-summary {
   margin-block: var(--space-4);
