@@ -11,6 +11,7 @@ import adminPostsRouter from './routes/adminPosts.js';
 import { adminPagesRouter, publicPagesRouter } from './routes/pages.js';
 import { adminImagesRouter, publicImagesRouter } from './routes/images.js';
 import previewRouter from './routes/preview.js';
+import { adminInteractionsRouter, createPublicInteractionsRouter } from './routes/interactions.js';
 import { requireAuth, requireRole } from './middleware/auth.js';
 import { notFound, errorHandler } from './middleware/errors.js';
 
@@ -44,6 +45,7 @@ export function createApp() {
   app.use('/api/health', healthRouter);
   app.use('/api/auth', createAuthRouter());
   app.use('/api/posts', postsRouter);
+  app.use('/api/posts', createPublicInteractionsRouter());
   app.use('/api/pages', publicPagesRouter);
   app.use('/api/images', publicImagesRouter);
 
@@ -53,6 +55,7 @@ export function createApp() {
   app.use('/api/admin/pages', adminPagesRouter);
   app.use('/api/admin/images', adminImagesRouter);
   app.use('/api/admin/preview', previewRouter);
+  app.use('/api/admin', adminInteractionsRouter);
 
   app.use(notFound);
   app.use(errorHandler);

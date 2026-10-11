@@ -43,6 +43,10 @@ export const NAV_ITEMS = [
   { to: '/', label: 'Inicio' },
   ...CATEGORIES.map((c) => ({ to: `/${c.slug}`, label: c.label })),
   { to: '/acerca', label: 'Acerca' },
+  { to: '/contacto', label: 'Contacto' },
 ];
+
+/** Correo de contacto del sitio (página Contacto). */
+export const CONTACT_EMAIL = 'martinmaguna33@gmail.com';
 
 export const PAGE_SIZE = 10;

@@ -3,15 +3,27 @@ import HomePage from '../pages/HomePage.jsx';
 import CategoryPage from '../pages/CategoryPage.jsx';
 import PostPage from '../pages/PostPage.jsx';
 import AboutPage from '../pages/AboutPage.jsx';
+import SavedPage from '../pages/SavedPage.jsx';
+import ContactPage from '../pages/ContactPage.jsx';
 import ErrorPage from '../pages/ErrorPage.jsx';
 import PanelLayout from '../components/PanelLayout.jsx';
 import LoginPage from '../pages/panel/LoginPage.jsx';
 import PostsAdminPage from '../pages/panel/PostsAdminPage.jsx';
 import PostFormPage from '../pages/panel/PostFormPage.jsx';
 import AboutEditPage from '../pages/panel/AboutEditPage.jsx';
+import CommentsAdminPage from '../pages/panel/CommentsAdminPage.jsx';
+import ApplicationsAdminPage from '../pages/panel/ApplicationsAdminPage.jsx';
 import { CATEGORIES, SITE_NAME } from '../lib/site.js';
 import { aboutLoader, categoryLoader, homeLoader, notFoundLoader, postLoader } from './loaders.js';
-import { adminPostsLoader, editAboutLoader, editPostLoader, loginLoader, requireUserLoader } from './panelLoaders.js';
+import {
+  adminCommentsLoader,
+  adminPostsLoader,
+  applicationsLoader,
+  editAboutLoader,
+  editPostLoader,
+  loginLoader,
+  requireUserLoader,
+} from './panelLoaders.js';
 
 /** Se muestra solo en la primera carga, mientras llegan los datos iniciales. */
 function InitialLoading() {
@@ -46,6 +58,8 @@ export const routes = [
               { index: true, loader: adminPostsLoader, element: <PostsAdminPage /> },
               { path: 'publicaciones/nueva', element: <PostFormPage /> },
               { path: 'publicaciones/:id', loader: editPostLoader, element: <PostFormPage /> },
+              { path: 'publicaciones/:id/postulaciones', loader: applicationsLoader, element: <ApplicationsAdminPage /> },
+              { path: 'comentarios', loader: adminCommentsLoader, element: <CommentsAdminPage /> },
               { path: 'acerca', loader: editAboutLoader, element: <AboutEditPage /> },
             ],
           },
@@ -67,6 +81,8 @@ export const routes = [
             { path: `${category.slug}/:slug`, loader: postLoader(category.slug), element: <PostPage /> },
           ]),
           { path: 'acerca', loader: aboutLoader, element: <AboutPage /> },
+          { path: 'contacto', element: <ContactPage /> },
+          { path: 'guardados', element: <SavedPage /> },
           { path: '*', loader: notFoundLoader, element: null },
         ],
       },

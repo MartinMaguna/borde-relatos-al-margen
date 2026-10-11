@@ -40,6 +40,7 @@ function payloadFrom(form, status) {
     // Sin enlace no hay audio. La API valida y normaliza el enlace.
     audio: get('audio.url') ? { url: get('audio.url'), label: get('audio.label') } : null,
     signVideoUrl: get('signVideoUrl'),
+    acceptsApplications: form.get('acceptsApplications') === 'on',
     deadline: get('deadline'),
     basesUrl: get('basesUrl'),
   };
@@ -180,6 +181,22 @@ export default function PostFormPage() {
               defaultValue={post.basesUrl ?? ''}
               error={fieldErrors.basesUrl}
             />
+            <div className="field">
+              <div className="checkbox">
+                <input
+                  id="campo-acceptsApplications"
+                  name="acceptsApplications"
+                  type="checkbox"
+                  defaultChecked={post.acceptsApplications}
+                  aria-describedby="campo-acceptsApplications-pista"
+                />
+                <label htmlFor="campo-acceptsApplications">Recibir postulaciones con el formulario del sitio</label>
+              </div>
+              <p id="campo-acceptsApplications-pista" className="field__hint">
+                Agrega un formulario de postulación al final de la convocatoria mientras esté abierta. Las postulaciones
+                llegan al panel y se pueden descargar en CSV.
+              </p>
+            </div>
           </Fieldset>
         )}
 

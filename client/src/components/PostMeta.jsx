@@ -1,10 +1,15 @@
 import { formatDate } from '../lib/format.js';
 
-/** "Por Lucía Ferreyra · 7 de octubre de 2026". La fecha va en <time> con el valor ISO. */
-export function PostMeta({ post }) {
+/**
+ * "Por Lucía Ferreyra · 3 minutos de lectura · 7 de octubre de 2026".
+ * La fecha va en <time> con el valor ISO. El tiempo de lectura, solo en el detalle.
+ */
+export function PostMeta({ post, withReadingTime = false }) {
+  const minutes = post.readingMinutes;
   return (
     <p className="post-meta">
       Por {post.author}
+      {withReadingTime && minutes > 0 && ` · ${minutes === 1 ? '1 minuto' : `${minutes} minutos`} de lectura`}
       {post.publishedAt && (
         <>
           {' · '}

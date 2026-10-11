@@ -178,6 +178,13 @@ Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_s
 | PUT | `/admin/posts/:id` | Editar (se envía la publicación completa) |
 | DELETE | `/admin/posts/:id` | Eliminar |
 | GET / PUT | `/admin/pages/acerca` | Leer / guardar la página Acerca |
+| GET | `/posts/:category/:slug/comments` | Comentarios aprobados de una publicación |
+| POST | `/posts/:category/:slug/comments` | Enviar un comentario `{ name, text }`: queda **pendiente** de moderación. Límite: 5 cada 15 min por IP |
+| POST | `/posts/convocatorias/:slug/applications` | Postularse `{ name, email, workTitle, text?, link?, message?, consent: true }`. Solo si la convocatoria tiene el formulario activado y está abierta. Límite: 5 por hora por IP |
+| GET / PATCH / DELETE | `/admin/comments[/:id]` | Moderar comentarios (`?status=pending\|approved\|rejected`; PATCH `{ status }`) |
+| GET | `/admin/posts/:id/applications[.csv]` | Postulaciones de una convocatoria (JSON o CSV para planilla) |
+| DELETE | `/admin/applications/:id` | Eliminar una postulación |
+| POST | `/admin/preview` | Vista previa del Markdown con las mismas reglas que al publicar |
 | POST | `/admin/images` | Subir una imagen (`multipart/form-data`, campo `imagen`, máx. 3 MB) → `{ id, url }` |
 | GET | `/images/:id` | Ver una imagen subida (público, caché de un año) |
 
@@ -333,6 +340,19 @@ En el navegador: la portada muestra las secciones (o "Todavía no hay…" si la 
 ## Design system
 
 La identidad visual (colores, tipografía, formas y componentes) está documentada en el design system **Borde**: https://claude.ai/artifact/16SMTbxRSUEukMddJrCsFg. Los tokens de `client/src/styles/global.css` usan los mismos nombres; si se cambia un valor allá, se cambia acá con el mismo nombre. Las fuentes (Archivo y Atkinson Hyperlegible Next) se alojan en el propio sitio con `@fontsource`.
+
+## Lectores: guardar, compartir, comentar, postularse y contacto
+
+- **Guardar**: sin cuentas; se guarda en el navegador de la persona (`localStorage`) y se ve en `/guardados`.
+- **Compartir**: copiar enlace, WhatsApp, correo, Facebook, LinkedIn y, en móviles, el menú de compartir del sistema.
+- **Comentarios**: se publican solo después de aprobarlos en el panel (`/panel/comentarios`). Tienen campo trampa contra bots y límite de envíos por IP.
+- **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones y comentarios.
+- **Contacto**: `/contacto`, con el correo de `CONTACT_EMAIL` en `client/src/lib/site.js`.
+- Todavía **no se envían avisos por correo** (nuevos comentarios o postulaciones): requiere un servicio de envío de correo.
+
+## Créditos
+
+Íconos de lengua de señas, compartir, guardar y comentar: [Font Awesome Free](https://fontawesome.com) (licencia de íconos CC BY 4.0).
 
 ## Accesibilidad
 

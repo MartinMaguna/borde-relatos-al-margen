@@ -159,6 +159,11 @@ export default function PostsAdminPage() {
                     Ver en el sitio <span className="visually-hidden">«{post.title}»</span>
                   </Link>
                 )}
+                {post.category === 'convocatorias' && post.acceptsApplications && (
+                  <Link to={`/panel/publicaciones/${post.id}/postulaciones`} className="button button--secondary button--small">
+                    Postulaciones <span className="visually-hidden">«{post.title}»</span>
+                  </Link>
+                )}
                 <button type="button" className="button button--danger button--small" onClick={() => setToDelete(post)}>
                   Eliminar <span className="visually-hidden">«{post.title}»</span>
                 </button>

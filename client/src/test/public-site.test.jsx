@@ -35,7 +35,7 @@ describe('Layout accesible', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Principal' });
     const links = within(nav).getAllByRole('link', { hidden: true });
-    expect(links.map((l) => l.textContent)).toEqual(['Inicio', 'Poesía', 'Cuentos', 'Talleres', 'Convocatorias', 'Acerca']);
+    expect(links.map((l) => l.textContent)).toEqual(['Inicio', 'Poesía', 'Cuentos', 'Talleres', 'Convocatorias', 'Acerca', 'Contacto']);
     expect(within(nav).getByRole('link', { name: 'Inicio', hidden: true })).toHaveAttribute('aria-current', 'page');
   });
 

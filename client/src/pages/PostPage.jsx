@@ -3,6 +3,9 @@ import Breadcrumbs from '../components/Breadcrumbs.jsx';
 import { CallStatus, PostMeta } from '../components/PostMeta.jsx';
 import { SIGN_SECTION_ID } from '../components/PostCard.jsx';
 import { SignLanguageIcon } from '../components/icons.jsx';
+import ArticleActions from '../components/ArticleActions.jsx';
+import CommentsSection from '../components/CommentsSection.jsx';
+import ApplicationForm from '../components/ApplicationForm.jsx';
 import { useDocumentTitle } from '../a11y/hooks.js';
 import { formatDate } from '../lib/format.js';
 import { CATEGORY_BY_SLUG } from '../lib/site.js';
@@ -64,7 +67,7 @@ function PostMedia({ post }) {
 
 /** Detalle de una publicación, pensado para lectura prolongada. */
 export default function PostPage() {
-  const { post } = useLoaderData();
+  const { post, comments } = useLoaderData();
   const category = CATEGORY_BY_SLUG[post.category];
   useDocumentTitle(`${post.title} · ${category.label}`);
 
@@ -81,7 +84,8 @@ export default function PostPage() {
       <article className="article">
         <header className="article__header">
           <h1 tabIndex={-1}>{post.title}</h1>
-          <PostMeta post={post} />
+          <PostMeta post={post} withReadingTime />
+          <ArticleActions post={post} />
         </header>
 
         <PostMedia post={post} />
@@ -122,7 +126,11 @@ export default function PostPage() {
 
         {/* HTML generado y sanitizado en el servidor a partir del Markdown (sin scripts ni atributos peligrosos). */}
         <div className={`prose prose--${post.category}`} dangerouslySetInnerHTML={{ __html: post.bodyHtml }} />
+
+        {post.category === 'convocatorias' && post.acceptsApplications && <ApplicationForm post={post} />}
       </article>
+
+      <CommentsSection post={post} comments={comments} />
 
       <p className="back-link">
         <Link to={`/${category.slug}`}>Volver a {category.label}</Link>

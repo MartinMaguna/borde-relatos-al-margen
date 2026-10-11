@@ -18,8 +18,10 @@ const DEFAULTS = {
   SEED_EDITOR_NAME: 'Editora de prueba',
   SEED_EDITOR_EMAIL: 'editora@borde.test',
   SEED_EDITOR_PASSWORD: 'contrasena-de-prueba',
-  // Los tests e2e hacen muchos logins seguidos desde la misma IP.
+  // Los tests e2e hacen muchos logins y envíos seguidos desde la misma IP.
   LOGIN_RATE_LIMIT: '100',
+  COMMENT_RATE_LIMIT: '100',
+  APPLICATION_RATE_LIMIT: '100',
 };
 
 const mongod = await MongoMemoryServer.create({ instance: { launchTimeout: 60_000 } });

@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 import { CATEGORIES, POST_STATUS } from '../constants.js';
 import { renderMarkdown } from '../utils/markdown.js';
 import { youTubeId } from '../utils/youtube.js';
+
+/** Minutos de lectura: palabras / 200, mínimo 1. */
+export function readingMinutes(markdown = '') {
+  const words = markdown.replace(/[#>*_~`[\]()-]/g, ' ').split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
 import { toJSONOptions } from './shared.js';
 
 const imageSchema = new mongoose.Schema(
@@ -37,6 +43,10 @@ const postSchema = new mongoose.Schema(
     audio: { type: audioSchema, default: null },
     // Versión en lengua de señas: video de YouTube (guardado en forma canónica).
     signVideoUrl: { type: String, trim: true, default: null },
+    // Minutos de lectura estimados (≈200 palabras por minuto), calculados al guardar.
+    readingMinutes: { type: Number, default: null },
+    // Solo convocatorias: si se reciben postulaciones con el formulario del sitio.
+    acceptsApplications: { type: Boolean, default: false },
     status: { type: String, enum: POST_STATUS, default: 'draft' },
     publishedAt: { type: Date, default: null },
     // Solo convocatorias
@@ -70,12 +80,16 @@ postSchema.virtual('signVideoId').get(function () {
 });
 
 postSchema.pre('validate', function () {
-  if (this.isModified('body')) this.bodyHtml = renderMarkdown(this.body);
+  if (this.isModified('body') || this.readingMinutes == null) {
+    this.bodyHtml = renderMarkdown(this.body);
+    this.readingMinutes = readingMinutes(this.body);
+  }
   // La primera vez que se publica, registramos la fecha. Si vuelve a borrador, se conserva.
   if (this.status === 'published' && !this.publishedAt) this.publishedAt = new Date();
   if (this.category !== 'convocatorias') {
     this.deadline = null;
     this.basesUrl = null;
+    this.acceptsApplications = false;
   }
 });
 

@@ -8,6 +8,7 @@ import { LOGIN_PATH } from '../routes/panelLoaders.js';
 const PANEL_NAV = [
   { to: '/panel', label: 'Publicaciones', end: true },
   { to: '/panel/publicaciones/nueva', label: 'Nueva publicación' },
+  { to: '/panel/comentarios', label: 'Comentarios' },
   { to: '/panel/acerca', label: 'Página Acerca' },
 ];
 

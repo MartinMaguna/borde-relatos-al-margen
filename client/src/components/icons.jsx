@@ -1,6 +1,14 @@
+import { faHandsAslInterpreting, faBookmark as faBookmarkSolid, faLink, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark, faComment, faEnvelope, faCopy } from '@fortawesome/free-regular-svg-icons';
+import { faWhatsapp, faFacebook, faLinkedin } from '@fortawesome/free-brands-svg-icons';
+
 /**
  * Íconos decorativos: siempre acompañan un texto visible, así que se ocultan
  * a los lectores de pantalla (aria-hidden) y no reciben foco.
+ *
+ * Varios provienen de Font Awesome Free (https://fontawesome.com), licencia
+ * CC BY 4.0: el de lengua de señas es su "hands-asl-interpreting", el símbolo
+ * internacional de interpretación en lengua de señas.
  */
 const base = {
   viewBox: '0 0 24 24',
@@ -13,6 +21,19 @@ const base = {
   focusable: false,
   className: 'icon',
 };
+
+/** Ícono de Font Awesome a partir de su definición { icon: [ancho, alto, , , path] }. */
+function FaIcon({ def, className = 'icon' }) {
+  const [width, height, , , path] = def.icon;
+  const paths = Array.isArray(path) ? path : [path];
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className={className} fill="currentColor" aria-hidden="true" focusable="false">
+      {paths.map((d) => (
+        <path key={d.slice(0, 16)} d={d} />
+      ))}
+    </svg>
+  );
+}
 
 export function PlayIcon() {
   return (
@@ -30,15 +51,17 @@ export function PauseIcon() {
   );
 }
 
-/** Mano que seña, con líneas de movimiento: símbolo habitual de lengua de señas. */
+/** Símbolo internacional de interpretación en lengua de señas (dos manos). */
 export function SignLanguageIcon() {
-  return (
-    <svg {...base}>
-      <path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12" />
-      <path d="M11 11.5V5a1.5 1.5 0 0 1 3 0v6.5" />
-      <path d="M14 11.5V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.7-2.3l-2.8-3.6a1.6 1.6 0 0 1 2.5-2l1.6 1.9" />
-      <path d="M19.5 3.5a5 5 0 0 1 1.8 3.4" />
-      <path d="M4.5 3.6A5 5 0 0 0 2.8 7" />
-    </svg>
-  );
+  return <FaIcon def={faHandsAslInterpreting} className="icon icon--wide" />;
 }
+
+export const BookmarkIcon = ({ filled = false }) => <FaIcon def={filled ? faBookmarkSolid : faBookmark} />;
+export const ShareIcon = () => <FaIcon def={faArrowUpFromBracket} />;
+export const CommentIcon = () => <FaIcon def={faComment} />;
+export const LinkIcon = () => <FaIcon def={faLink} />;
+export const CopyIcon = () => <FaIcon def={faCopy} />;
+export const MailIcon = () => <FaIcon def={faEnvelope} />;
+export const WhatsappIcon = () => <FaIcon def={faWhatsapp} />;
+export const FacebookIcon = () => <FaIcon def={faFacebook} />;
+export const LinkedinIcon = () => <FaIcon def={faLinkedin} />;

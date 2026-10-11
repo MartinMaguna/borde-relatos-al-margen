@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { User } from './models/User.js';
 import { Page } from './models/Page.js';
+import { Post } from './models/Post.js';
 
 export const DEFAULT_ABOUT = {
   title: 'Acerca de Borde',
@@ -46,6 +47,11 @@ export async function ensureInitialData({ env = process.env, log = console } = {
       editorId = editor.id;
       log.info(`👤 Primer editor creado: ${editor.email}. Ya podés borrar las variables SEED_* del servidor.`);
     }
+  }
+
+  // Publicaciones anteriores al tiempo de lectura: se calcula al guardarlas otra vez.
+  for (const post of await Post.find({ readingMinutes: null })) {
+    await post.save();
   }
 
   if (!(await Page.exists({ slug: 'acerca' }))) {

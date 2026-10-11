@@ -184,6 +184,15 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 9 | `coral` y `orange` solo en formas y degradados; texto sobre rellenos de marca en `on-brand` (≥6.3:1 en ambos temas) | Esos tonos no alcanzan 4.5:1 como texto en el tema claro. |
 | 9 | Degradados solo en formas sin texto (portada, cuarto de disco de las tarjetas, barra de carga) | El texto nunca queda sobre un fondo de contraste variable. |
 | 9 | Tipografías **Atkinson Hyperlegible Next** (texto) y **Archivo** (títulos), alojadas en el propio sitio | Atkinson está diseñada para baja visión (no confunde I l 1, O 0). Alojarlas evita pedidos a Google (privacidad) y fallas si el servicio externo no responde. |
+| 11 | Guardar: botón cuyo texto dice la acción ("Guardar" / "Quitar de guardados") y aviso en región viva | Un cambio de estado claro sin depender del ícono. |
+| 11 | Compartir como "disclosure" (`aria-expanded`/`aria-controls`) con enlaces y botones comunes, no un menú ARIA; Escape cierra y devuelve el foco; enlaces externos avisan "(se abre en otra pestaña)" | Se recorre con Tab como el resto de la página; el patrón de menú ARIA exige teclas especiales que muchas personas no conocen. |
+| 11 | "Comentar" lleva el foco al título de la sección de comentarios | La persona llega donde quería sin buscarlo. |
+| 11 | Formularios de comentario y postulación con el mismo patrón de errores (resumen enfocable, errores por campo); al enviar, la confirmación recibe el foco | Coherencia con el panel; el resultado del envío se lee de inmediato. |
+| 11 | Consentimiento como casilla con su error vinculado; los errores se muestran todos juntos | WCAG 3.3.1 / 3.3.3; nada aparece recién en un segundo intento. |
+| 11 | Campo trampa antispam fuera de la vista, con `aria-hidden` y `tabindex="-1"` | No interfiere con teclado ni lector, a diferencia de un CAPTCHA. |
+| 11 | Texto de comentarios y postulaciones como texto plano (sin HTML) | Seguridad (sin inyección de código) y lectura consistente. |
+| 11 | Correo de contacto visible como texto, con botón para copiar y enlace `mailto:` | Funciona aunque no haya un programa de correo configurado. |
+| 11 | Ícono de lengua de señas: símbolo internacional (dos manos), siempre con el texto "Lengua de señas" | Reconocible para la comunidad sorda; el texto evita ambigüedad. |
 | 10 | Editor de texto: `<textarea>` nativo con barra de formato (`role="toolbar"`, un solo punto de tabulación, flechas), no un editor visual (contenteditable) | Los editores enriquecidos son muy difíciles de usar con lector de pantalla; el textarea funciona con todos los lectores, el corrector y el dictado. |
 | 10 | Botones de formato con texto visible y nombre accesible que lo contiene ("Título" → "Título de sección"); atajos Control+B/I/K con `aria-keyshortcuts` | WCAG 2.5.3 (etiqueta en el nombre) y 2.1.1 (teclado). |
 | 10 | Tras cada acción, foco de vuelta al texto con la selección lista y aviso en la región viva ("Negrita aplicada" / "quitada"); se puede deshacer con Control+Z | La persona sabe qué pasó sin buscarlo y puede revertirlo. |

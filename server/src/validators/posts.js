@@ -88,6 +88,7 @@ export const postInputSchema = z
     image: imageSchema.nullable().default(null),
     audio: audioSchema.nullable().default(null),
     signVideoUrl: emptyToUndefined(signVideoUrl.nullable().optional()),
+    acceptsApplications: z.boolean().default(false),
     status: z.enum(POST_STATUS).default('draft'),
     deadline: emptyToUndefined(deadlineDate.nullable().optional()),
     basesUrl: emptyToUndefined(httpUrl.nullable().optional()),
