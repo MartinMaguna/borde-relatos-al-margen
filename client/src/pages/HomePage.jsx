@@ -1,7 +1,32 @@
 import { Link, useLoaderData } from 'react-router';
 import PostCard from '../components/PostCard.jsx';
 import { useDocumentTitle } from '../a11y/hooks.js';
-import { CATEGORIES, SITE_NAME } from '../lib/site.js';
+import { CATEGORIES } from '../lib/site.js';
+
+/**
+ * Composición geométrica de la portada (design system: Hero). Decorativa:
+ * oculta al lector, sin texto, colores tomados de los tokens.
+ */
+function HeroArt() {
+  return (
+    <svg className="hero__art" viewBox="0 0 320 300" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="hero-degradado" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style={{ stopColor: 'var(--indigo)' }} />
+          <stop offset="0.4" style={{ stopColor: 'var(--violet)' }} />
+          <stop offset="0.7" style={{ stopColor: 'var(--magenta)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--orange)' }} />
+        </linearGradient>
+      </defs>
+      <circle cx="100" cy="190" r="70" fill="none" style={{ stroke: 'var(--line-soft)' }} strokeWidth="1" />
+      <circle cx="100" cy="190" r="100" fill="none" style={{ stroke: 'var(--line-soft)' }} strokeWidth="1" />
+      <circle cx="210" cy="110" r="90" fill="url(#hero-degradado)" />
+      <path d="M150 300 a90 90 0 0 1 180 0 z" style={{ fill: 'var(--coral)' }} />
+      <circle cx="70" cy="70" r="18" style={{ fill: 'var(--indigo)' }} />
+      <circle cx="120" cy="240" r="22" fill="none" style={{ stroke: 'var(--coral)' }} strokeWidth="2" />
+    </svg>
+  );
+}
 
 /**
  * Portada: presentación y últimas publicaciones de cada categoría.
@@ -14,12 +39,19 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="page-intro">
-        <h1 tabIndex={-1}>{SITE_NAME}</h1>
-        <p className="lead">
-          Un espacio de lectura para voces que escriben desde los márgenes: poesía, cuentos, talleres y convocatorias
-          abiertas.
-        </p>
+      <div className="hero">
+        <div className="hero__text">
+          {/* El espacio entre las dos partes mantiene el nombre accesible "Borde. Relatos al Margen". */}
+          <h1 tabIndex={-1} className="hero__title">
+            Borde.{' '}
+            <span className="hero__title-sub">Relatos al Margen</span>
+          </h1>
+          <p className="lead hero__lead">
+            Un espacio de lectura para voces que escriben desde los márgenes: poesía, cuentos, talleres y
+            convocatorias abiertas.
+          </p>
+        </div>
+        <HeroArt />
       </div>
 
       {CATEGORIES.map((category) => {

@@ -77,7 +77,7 @@ test.describe('Panel del editor en navegador real', () => {
 
     expect(uploaded.ok).toBe(true);
     expect(uploaded.data.size).toBeLessThan(buffer.length); // se achicó antes de subir
-    await expect(page.getByText('Imagen subida.')).toBeVisible();
+    await expect(page.locator('.image-preview__label', { hasText: 'Imagen subida.' })).toBeVisible();
     await expect(page.locator('.image-preview__img')).toHaveJSProperty('naturalWidth', 1600);
     await expectNoA11yViolations(page);
 

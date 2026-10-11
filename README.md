@@ -330,6 +330,10 @@ En el navegador: la portada muestra las secciones (o "Todavía no hay…" si la 
 | El login funciona en Railway pero no en Vercel (o al revés) | La cookie es de un solo dominio: usar siempre la URL de Vercel. |
 | "Demasiados intentos" para todo el equipo a la vez | Alguien está probando contraseñas: el límite es por IP de Vercel (ver nota sobre `TRUST_PROXY`). Se libera solo en 15 minutos. |
 
+## Design system
+
+La identidad visual (colores, tipografía, formas y componentes) está documentada en el design system **Borde**: https://claude.ai/artifact/16SMTbxRSUEukMddJrCsFg. Los tokens de `client/src/styles/global.css` usan los mismos nombres; si se cambia un valor allá, se cambia acá con el mismo nombre. Las fuentes (Archivo y Atkinson Hyperlegible Next) se alojan en el propio sitio con `@fontsource`.
+
 ## Accesibilidad
 
 Ver [docs/accesibilidad.md](docs/accesibilidad.md).
