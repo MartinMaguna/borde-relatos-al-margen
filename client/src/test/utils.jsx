@@ -58,6 +58,8 @@ export async function renderRoute(path) {
  */
 export async function axeViolations() {
   const results = await axe.run(document.body, {
+    // jsdom no permite entrar a iframes (p. ej. YouTube); el título del iframe sí se verifica.
+    iframes: false,
     rules: { 'color-contrast': { enabled: false } },
   });
   return results.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join(', ')})`);

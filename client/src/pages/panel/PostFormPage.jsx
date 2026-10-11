@@ -4,6 +4,7 @@ import { api } from '../../api/client.js';
 import { useDocumentTitle } from '../../a11y/hooks.js';
 import ErrorSummary from '../../components/forms/ErrorSummary.jsx';
 import ImageField from '../../components/forms/ImageField.jsx';
+import MediaFields from '../../components/forms/MediaFields.jsx';
 import { Fieldset, SelectField, TextArea, TextField } from '../../components/forms/fields.jsx';
 import { errorsByField, errorsFromApi } from '../../components/forms/errors.js';
 import { CATEGORY_OPTIONS, STATUS_LABELS, toDateInput } from '../../lib/admin.js';
@@ -35,6 +36,9 @@ function payloadFrom(form, status) {
     status,
     // Sin URL no hay imagen; si hay URL, el texto alternativo es obligatorio (lo valida la API).
     image: imageUrl ? { url: imageUrl, alt: get('image.alt') } : null,
+    // Sin enlace no hay audio. La API valida y normaliza el enlace.
+    audio: get('audio.url') ? { url: get('audio.url'), label: get('audio.label') } : null,
+    signVideoUrl: get('signVideoUrl'),
     deadline: get('deadline'),
     basesUrl: get('basesUrl'),
   };
@@ -178,6 +182,8 @@ export default function PostFormPage() {
         )}
 
         <ImageField initialUrl={post.image?.url ?? ''} initialAlt={post.image?.alt ?? ''} errors={fieldErrors} />
+
+        <MediaFields post={post} errors={fieldErrors} />
 
         <TextField
           name="slug"

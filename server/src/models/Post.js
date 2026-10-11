@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { CATEGORIES, POST_STATUS } from '../constants.js';
 import { renderMarkdown } from '../utils/markdown.js';
+import { youTubeId } from '../utils/youtube.js';
 import { toJSONOptions } from './shared.js';
 
 const imageSchema = new mongoose.Schema(
@@ -8,6 +9,16 @@ const imageSchema = new mongoose.Schema(
     url: { type: String, required: true, trim: true },
     // Obligatorio: sin texto alternativo, la imagen no existe para un lector de pantalla.
     alt: { type: String, required: true, trim: true, maxlength: 300 },
+  },
+  { _id: false },
+);
+
+// Audio alojado en otro sitio: solo se guarda el enlace directo al archivo.
+const audioSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true, trim: true },
+    // Qué es el audio, p. ej. "Lectura de la autora". Se usa en el reproductor.
+    label: { type: String, trim: true, maxlength: 120, default: 'Lectura en voz alta' },
   },
   { _id: false },
 );
@@ -23,6 +34,9 @@ const postSchema = new mongoose.Schema(
     body: { type: String, required: true }, // Markdown original, para editar
     bodyHtml: { type: String, default: '' }, // HTML sanitizado, para leer
     image: { type: imageSchema, default: null },
+    audio: { type: audioSchema, default: null },
+    // Versión en lengua de señas: video de YouTube (guardado en forma canónica).
+    signVideoUrl: { type: String, trim: true, default: null },
     status: { type: String, enum: POST_STATUS, default: 'draft' },
     publishedAt: { type: Date, default: null },
     // Solo convocatorias
@@ -48,6 +62,11 @@ postSchema.index({ category: 1, status: 1, publishedAt: -1 });
 postSchema.virtual('callStatus').get(function () {
   if (this.category !== 'convocatorias' || !this.deadline) return undefined;
   return this.deadline.getTime() >= Date.now() ? 'abierta' : 'cerrada';
+});
+
+/** Id del video de YouTube, para que el sitio lo inserte sin tener que interpretar la URL. */
+postSchema.virtual('signVideoId').get(function () {
+  return this.signVideoUrl ? youTubeId(this.signVideoUrl) : null;
 });
 
 postSchema.pre('validate', function () {

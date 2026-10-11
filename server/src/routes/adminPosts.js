@@ -81,7 +81,15 @@ router.put('/:id', validate({ params: idParams, body: postInputSchema }), async 
   // Si el slug viene vacío en una edición, conservamos el actual (no rompemos enlaces ya compartidos).
   const slug = data.slug ? await resolveSlug(data, post.id) : post.slug;
   const previousImage = post.image?.url;
-  post.set({ ...data, slug, deadline: data.deadline ?? null, basesUrl: data.basesUrl ?? null, updatedBy: req.user.id });
+  // Los campos opcionales vacíos llegan como undefined: los pasamos a null para que se borren.
+  post.set({
+    ...data,
+    slug,
+    deadline: data.deadline ?? null,
+    basesUrl: data.basesUrl ?? null,
+    signVideoUrl: data.signVideoUrl ?? null,
+    updatedBy: req.user.id,
+  });
   await post.save();
   if (previousImage && previousImage !== post.image?.url) await deleteUnusedImage(previousImage);
   sendOk(res, post);

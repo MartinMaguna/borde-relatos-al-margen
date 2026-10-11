@@ -84,6 +84,9 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 - [ ] Al entrar en una lista se anuncia la cantidad de elementos ("lista, 2 elementos").
 - [ ] Cada publicación se lee: título (encabezado y enlace), autor/a y fecha completa ("7 de octubre de 2026"), resumen.
 - [ ] En convocatorias se anuncia "Estado de la convocatoria: Abierta" (o "Cerrada") y la fecha límite.
+- [ ] En una tarjeta con audio, el botón se anuncia "Escuchar «título», botón"; al activarlo suena y pasa a "Pausar «título»". Al tocar otro, el primero se detiene.
+- [ ] En una tarjeta con video en señas, el enlace se anuncia "Lengua de señas «título», enlace"; al activarlo se llega a la publicación con el foco en "Versión en lengua de señas".
+- [ ] En el detalle, el reproductor de audio se anuncia con su nombre ("Escuchar: Lectura de la autora") y se maneja con teclado; el video se anuncia por su título y se puede reproducir y poner en pantalla completa con teclado.
 - [ ] En la paginación, los números se anuncian "Página 2, enlace" y la actual como "actual". "Anterior: página 1" / "Siguiente: página 3" son claros.
 - [ ] En la página 2 el título de la pestaña dice "(página 2 de N)".
 
@@ -194,6 +197,12 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 7 | Progreso y resultado de la subida anunciados en la región viva ("Subiendo la imagen…", "Imagen subida. Acordate de escribir el texto alternativo."), sin mover el foco | El cambio se comunica sin sorprender (WCAG 3.2.2, 4.1.3) y recuerda el paso siguiente. |
 | 7 | Vista previa con `alt=""` | Es una copia decorativa de lo que se está editando; la descripción real es el campo "Texto alternativo". |
 | 7 | "Quitar la imagen" devuelve el foco al selector de archivo | El botón desaparece al usarlo: el foco no queda perdido. |
+| 8 | Botón "Escuchar «título»" / "Pausar «título»" en las tarjetas con audio: `<button>` nativo cuyo texto cambia (sin `aria-pressed`, para no anunciar dos estados), con el título en el nombre accesible | Cada botón se distingue en la lista de controles; el `<audio>` sin controles queda fuera del árbol de accesibilidad. Suena un solo audio a la vez. |
+| 8 | Si el audio no se puede reproducir: texto visible y aviso en la región viva | Un fallo silencioso es invisible para quien no ve la pantalla. |
+| 8 | En el detalle, `<audio controls>` nativo con nombre (`aria-labelledby` al título "Escuchar: …") y enlace para abrir o descargar | Los controles nativos son accesibles con teclado y lector en todos los navegadores; el enlace sirve si el reproductor falla. |
+| 8 | El audio es una lectura del texto publicado: la transcripción es el propio texto, en la misma página | WCAG 1.2.1 (alternativa para audio grabado). Si se agrega un audio con contenido distinto al texto, hay que publicar su transcripción. |
+| 8 | Enlace "Lengua de señas" con ícono **y texto visible**, que lleva a `#lengua-de-senas` en el detalle; al llegar, el foco va a esa sección | Un ícono solo es ambiguo; el foco en la sección evita tener que buscar el video. |
+| 8 | Video insertado con `title` descriptivo ("Versión en lengua de señas de «…» (video de YouTube)"), 16:9 adaptable, `loading="lazy"`, desde `youtube-nocookie.com`, más enlace "Ver en YouTube" | El lector anuncia de qué es el iframe; no desborda en móvil; privacidad por defecto. WCAG 1.2.6 (lengua de señas, AAA) como mejora sobre el mínimo AA. |
 | 7 | Estado con botones de acción: "Guardar borrador" / "Publicar" (o "Guardar cambios" / "Pasar a borrador" si ya está publicada), con el estado actual escrito arriba | Más claro que un grupo de radios al final: la acción dice qué pasa. Con Enter se usa el primer botón, que nunca cambia la visibilidad en el sitio. |
 | 4 | Confirmación de borrado con `<dialog>` nativo y `showModal()`; foco inicial en "Cancelar"; Escape cierra | Foco atrapado y fondo inerte sin ARIA extra. La opción segura es la predeterminada. |
 | 4 | Tras eliminar, foco al `h1` y aviso en región viva ("Se eliminó «…»") | El botón que abrió el diálogo ya no existe: el foco no queda perdido. |

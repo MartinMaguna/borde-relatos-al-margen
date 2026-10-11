@@ -32,13 +32,22 @@ export function resetRouteFocus() {
  * los efectos dos veces y eso se confundía con una navegación.
  */
 export function useRouteFocus() {
-  const { key, pathname, search } = useLocation();
+  const { key, pathname, search, hash } = useLocation();
 
   useEffect(() => {
     if (initialKey === null) initialKey = key;
     if (key !== initialKey) hasNavigated = true;
-    if (!hasNavigated) return;
 
+    // Enlace a una sección (p. ej. /poesia/orilla#lengua-de-senas): foco y scroll a esa
+    // sección, también en la carga inicial (la persona pidió ir justo ahí).
+    const section = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    if (section) {
+      if (!section.hasAttribute('tabindex')) section.setAttribute('tabindex', '-1');
+      section.focus();
+      return;
+    }
+
+    if (!hasNavigated) return;
     const target = document.querySelector('main h1') ?? document.querySelector('main');
     // El scroll lo maneja <ScrollRestoration> (arriba al avanzar, posición previa al volver).
     target?.focus({ preventScroll: true });

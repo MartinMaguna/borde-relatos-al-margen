@@ -191,6 +191,13 @@ Las imágenes subidas desde el panel se guardan **en MongoDB** (colección `imag
 - El plan gratuito de Atlas tiene 512 MB: alcanza para cientos de imágenes. Si el sitio crece mucho, conviene pasar a un servicio de imágenes (Cloudinary, S3…).
 - También se puede usar una imagen de otro sitio pegando su dirección `https://…`.
 
+### Audio y lengua de señas
+
+No ocupan espacio en Vercel ni en MongoDB: solo se guardan los enlaces.
+
+- **Audio:** el archivo se aloja en otro lugar (Archive.org, Dropbox, un bucket…) y en el panel se pega el **enlace directo al archivo**. Las páginas de SoundCloud o Spotify no sirven, porque el sitio reproduce el archivo con `<audio>`. En el formulario aparece un reproductor de prueba para verificar que se escucha. En las tarjetas hay un botón "Escuchar"; en la página de la publicación, un reproductor completo y un enlace para abrir o descargar el audio.
+- **Lengua de señas:** enlace a un video de YouTube. En las tarjetas aparece el ícono "Lengua de señas", que lleva a la sección del video en la página de la publicación. El video se inserta desde `youtube-nocookie.com` (sin cookies de seguimiento hasta que se reproduce).
+
 ### Publicación (`Post`)
 
 | Campo | Notas |
@@ -200,6 +207,8 @@ Las imágenes subidas desde el panel se guardan **en MongoDB** (colección `imag
 | `category` | `poesia` · `cuentos` · `talleres` · `convocatorias` (coinciden con las URLs del sitio) |
 | `summary` | Hasta 500 caracteres |
 | `image` | `{ url, alt }` o `null`. `url`: una imagen subida (`/api/images/<id>`) o una dirección `https://…`. **`alt` es obligatorio** |
+| `audio` | `{ url, label }` o `null`. **Enlace** https directo a un archivo de audio alojado en otro sitio (`.mp3`, `.m4a`, `.ogg`, `.wav`…); no se sube nada. Los enlaces de Dropbox se pasan a directos. `label` por defecto: "Lectura en voz alta" |
+| `signVideoUrl` | Video de YouTube con la versión en **lengua de señas** (cualquier formato de enlace; se guarda como `youtube.com/watch?v=…`). La API agrega `signVideoId` para insertarlo |
 | `status` | `draft` · `published`. `publishedAt` se registra la primera vez que se publica |
 | `deadline`, `basesUrl` | Solo convocatorias; `deadline` obligatorio. Una fecha sola (`2026-11-30`) vale hasta las 23:59 de ese día (UTC-3) |
 | `callStatus` | Calculado: `abierta` / `cerrada` según `deadline` |
