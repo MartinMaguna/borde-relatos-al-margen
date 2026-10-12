@@ -13,6 +13,9 @@ process.env.NODE_ENV = 'test';
 process.env.MONGODB_URI = 'mongodb://definida-en-runtime';
 process.env.JWT_SECRET = 'secreto-de-test-con-mas-de-32-caracteres-123';
 process.env.LOGIN_RATE_LIMIT = '5';
+// Correo de contacto "configurado": los tests reemplazan fetch, nunca se llama a Resend.
+process.env.RESEND_API_KEY = 're_test';
+process.env.CONTACT_TO_EMAIL = 'equipo@test.local';
 
 export const EDITOR = { name: 'Editora Test', email: 'editora@test.local', password: 'contrasena-de-prueba' };
 

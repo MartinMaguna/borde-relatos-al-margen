@@ -255,7 +255,6 @@ main:focus {
 .site-footer {
   border-top: var(--stroke-hairline) solid var(--line);
   background: var(--surface-sunken);
-  padding-block: var(--space-4);
   color: var(--ink-muted);
   font-size: 0.9375rem;
 }
@@ -1568,4 +1567,113 @@ main:focus {
     animation: none;
     transform: scaleX(0.6);
   }
+}
+
+/* ---------- Convocatorias a todo el ancho (portada) ---------- */
+@media (min-width: 48rem) {
+  /* La imagen a la izquierda (40 %), el texto a la derecha. */
+  .post-list--wide .post-card--with-image {
+    min-height: 14rem;
+    padding-left: calc(40% + var(--space-4));
+  }
+
+  .post-list--wide .post-card--with-image .post-card__image {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    height: 100%;
+    margin: 0;
+    aspect-ratio: auto;
+  }
+}
+
+/* ---------- Poesía y cuentos: columna centrada ---------- */
+.column-centered {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+/* ---------- Pie: logos de quienes acompañan ---------- */
+.site-footer__bar {
+  padding-block: var(--space-4);
+}
+
+.site-footer__bar p {
+  margin: 0;
+}
+
+.supporters {
+  padding-block: var(--space-5);
+  border-bottom: var(--stroke-hairline) solid var(--line);
+  color: var(--ink);
+}
+
+.supporters__title {
+  margin: 0 0 var(--space-4);
+  font-size: 1.5rem;
+}
+
+/* Los grupos uno al lado del otro mientras entren; en celular, uno debajo del otro. */
+.supporters__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+}
+
+.supporters__label {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.supporters__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.supporters__item > a,
+.supporters__item > img {
+  display: flex;
+}
+
+.supporters__item > a {
+  border-radius: var(--radius-lg);
+}
+
+/* Fondo claro fijo en los dos temas: muchos logos tienen letras oscuras. */
+.supporters__logo {
+  box-sizing: content-box;
+  width: auto;
+  height: 4rem;
+  max-width: 10rem;
+  object-fit: contain;
+  padding: var(--space-2) var(--space-3);
+  background: #fff;
+  border: var(--stroke-hairline) solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.supporters__item > a:hover .supporters__logo {
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Panel → Logos: miniatura del logo junto a su nombre y acciones. */
+.supporter-admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.supporter-admin .admin-item__title {
+  margin: 0 0 var(--space-1);
+  font-weight: 700;
 }

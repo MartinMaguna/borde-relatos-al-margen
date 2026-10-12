@@ -9,6 +9,8 @@ const PANEL_NAV = [
   { to: '/panel', label: 'Publicaciones', end: true },
   { to: '/panel/publicaciones/nueva', label: 'Nueva publicación' },
   { to: '/panel/comentarios', label: 'Comentarios' },
+  { to: '/panel/mensajes', label: 'Mensajes' },
+  { to: '/panel/logos', label: 'Logos' },
   { to: '/panel/acerca', label: 'Página Acerca' },
 ];
 

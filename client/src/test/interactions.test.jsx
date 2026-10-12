@@ -174,14 +174,86 @@ describe('Postulación a convocatorias', () => {
 });
 
 describe('Contacto', () => {
-  test('muestra el correo, permite escribir y copiarlo; está en el menú', async () => {
+  test('formulario: no muestra el correo del equipo; está en el menú; sin violaciones', async () => {
     mockApi({});
     await renderRoute('/contacto');
     expect(screen.getByRole('heading', { level: 1, name: 'Contacto' })).toBeInTheDocument();
-    expect(screen.getByText('martinmaguna33@gmail.com')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Escribir un correo' })).toHaveAttribute('href', 'mailto:martinmaguna33@gmail.com');
+    expect(screen.getByRole('textbox', { name: 'Nombre' })).toHaveAttribute('aria-required', 'true');
+    expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Mensaje' })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/@gmail.com/);
+    expect(screen.queryByRole('link', { name: /correo/i })).toBeNull();
     expect(screen.getByRole('navigation', { name: 'Principal' })).toHaveTextContent('Contacto');
     expect(await axeViolations()).toEqual([]);
+  });
+
+  test('envía el mensaje y la confirmación recibe el foco', async () => {
+    const calls = mockApi({ 'POST /contact': { status: 201, body: { ok: true, data: { received: true } } } });
+    await renderRoute('/contacto');
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Ana');
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico' }), 'ana@ejemplo.com');
+    await user.type(screen.getByRole('textbox', { name: 'Mensaje' }), 'Hola');
+    await user.click(screen.getByRole('button', { name: 'Enviar mensaje' }));
+    const done = await screen.findByText('Mensaje enviado.');
+    await waitFor(() => expect(done.closest('.notice')).toHaveFocus());
+    expect(calls.find((c) => c.method === 'POST').body).toMatchObject({ name: 'Ana', email: 'ana@ejemplo.com', message: 'Hola' });
+  });
+
+  test('errores: resumen y cada campo marcado', async () => {
+    mockApi({
+      'POST /contact': fail(400, 'Revisá los datos', {
+        code: 'VALIDATION_ERROR',
+        details: [
+          { field: 'email', message: 'Escribí un correo electrónico válido, por ejemplo nombre@ejemplo.com' },
+          { field: 'message', message: 'Escribí tu mensaje' },
+        ],
+      }),
+    });
+    await renderRoute('/contacto');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Enviar mensaje' }));
+    expect(await screen.findAllByText('Escribí tu mensaje')).not.toHaveLength(0);
+    await waitFor(() => expect(document.title).toMatch(/^Error: Contacto/));
+    expect(screen.getByRole('textbox', { name: 'Mensaje' })).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('textbox', { name: 'Correo electrónico' })).toHaveAccessibleDescription(/Error: Escribí un correo/);
+  });
+});
+
+describe('Logos al pie y portada', () => {
+  const supporters = [
+    { id: 's1', name: 'Municipio', role: 'impulsan', logoUrl: '/api/images/aaaaaaaaaaaaaaaaaaaaaaaa', link: 'https://municipio.example' },
+    { id: 's2', name: 'Biblioteca Popular', role: 'colaboran', logoUrl: '/api/images/bbbbbbbbbbbbbbbbbbbbbbbb', link: null },
+  ];
+
+  test('se muestran agrupados dentro del pie, con el nombre como texto alternativo', async () => {
+    mockApi({ '/posts/poesia/orilla': ok(poem), '/supporters': ok(supporters) });
+    await renderRoute('/poesia/orilla');
+    const footer = screen.getByRole('contentinfo');
+    const region = await within(footer).findByRole('region', { name: 'Acompañan a Borde' });
+    expect(within(region).getByRole('list', { name: 'Impulsan' })).toBeInTheDocument();
+    expect(within(region).getByRole('link', { name: 'Municipio' })).toHaveAttribute('href', 'https://municipio.example');
+    expect(within(region).getByRole('img', { name: 'Biblioteca Popular' })).toBeInTheDocument();
+    expect(within(region).queryByRole('list', { name: 'Apoyan' })).toBeNull();
+    expect(within(footer).queryByRole('link', { name: /Ingreso/ })).toBeNull();
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('sin logos, la sección no aparece', async () => {
+    mockApi({ '/posts/poesia/orilla': ok(poem), '/supporters': ok([]) });
+    await renderRoute('/poesia/orilla');
+    expect(screen.queryByRole('region', { name: 'Acompañan a Borde' })).toBeNull();
+  });
+
+  test('poesía y cuentos van en una columna centrada; talleres no', async () => {
+    mockApi({
+      '/posts/poesia/orilla': ok(poem),
+      '/posts?category=talleres&page=1&limit=10': ok([], { page: 1, limit: 10, total: 0, totalPages: 0 }),
+    });
+    const { router } = await renderRoute('/poesia/orilla');
+    expect(screen.getByRole('article').closest('.column-centered')).not.toBeNull();
+    await router.navigate('/talleres');
+    await screen.findByRole('heading', { level: 1, name: 'Talleres' });
+    expect(document.querySelector('.column-centered')).toBeNull();
   });
 });
 
@@ -220,5 +292,54 @@ describe('Panel: comentarios y postulaciones', () => {
     expect(screen.getByRole('link', { name: /Descargar todas en CSV/ })).toHaveAttribute('href', '/api/admin/posts/v1/applications.csv');
     expect(screen.getByText('Ver el texto')).toBeInTheDocument();
     expect(await axeViolations()).toEqual([]);
+  });
+});
+
+describe('Panel: mensajes y logos', () => {
+  test('mensajes: lista con aviso si no llegó por correo, responder y eliminar', async () => {
+    mockApi({
+      ...ME,
+      '/admin/messages?page=1&limit=10': ok(
+        [{ id: 'm1', name: 'Ana', email: 'ana@ejemplo.com', message: 'Hola', emailStatus: 'failed', createdAt: '2026-10-08T12:00:00.000Z' }],
+        { page: 1, limit: 10, total: 1, totalPages: 1 },
+      ),
+    });
+    await renderRoute('/panel/mensajes');
+    expect(screen.getByRole('heading', { level: 1, name: 'Mensajes de contacto' })).toBeInTheDocument();
+    expect(screen.getByText(/No llegó por correo/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Responder a Ana' })).toHaveAttribute('href', expect.stringMatching(/^mailto:ana@ejemplo\.com/));
+    expect(screen.getByRole('button', { name: 'Eliminar el mensaje de Ana' })).toBeInTheDocument();
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('logos: agregar uno envía nombre, rol, logo y enlace, y lo anuncia', async () => {
+    let list = [];
+    const calls = mockApi({
+      ...ME,
+      '/admin/supporters': () => ok(list),
+      'POST /admin/supporters': (body) => {
+        list = [{ id: 's1', ...body, link: body.link || null }];
+        return { status: 201, body: { ok: true, data: list[0] } };
+      },
+    });
+    await renderRoute('/panel/logos');
+    expect(screen.getByText(/Todavía no hay logos/)).toBeInTheDocument();
+    expect(await axeViolations()).toEqual([]);
+
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Nombre' }), 'Municipio');
+    await user.selectOptions(screen.getByRole('combobox', { name: '¿Qué hace?' }), 'apoyan');
+    await user.type(screen.getByRole('textbox', { name: /dirección de una imagen/ }), 'https://municipio.example/logo.png');
+    await user.click(screen.getByRole('button', { name: 'Agregar logo' }));
+
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(calls.find((c) => c.method === 'POST').body).toEqual({
+      name: 'Municipio',
+      role: 'apoyan',
+      logoUrl: 'https://municipio.example/logo.png',
+      link: '',
+    });
+    expect(await screen.findByRole('button', { name: 'Editar Municipio' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: 'Cargados' })).toHaveFocus());
   });
 });

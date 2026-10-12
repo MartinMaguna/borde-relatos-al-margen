@@ -84,3 +84,15 @@ export async function editAboutLoader({ request }) {
   const { data: page } = await adminLoad('/admin/pages/acerca', request);
   return { page };
 }
+
+export async function adminMessagesLoader({ request }) {
+  const n = Number(new URL(request.url).searchParams.get('pagina'));
+  const page = Number.isInteger(n) && n > 0 ? n : 1;
+  const { data: messages, meta } = await adminLoad(`/admin/messages?page=${page}&limit=${PAGE_SIZE}`, request);
+  return { messages, meta };
+}
+
+export async function adminSupportersLoader({ request }) {
+  const { data: supporters } = await adminLoad('/admin/supporters', request);
+  return { supporters };
+}

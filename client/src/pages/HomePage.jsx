@@ -57,6 +57,8 @@ export default function HomePage() {
       {CATEGORIES.map((category) => {
         const posts = latest[category.slug] ?? [];
         const headingId = `seccion-${category.slug}`;
+        // Convocatorias: cada tarjeta ocupa todo el ancho (las tres columnas).
+        const layout = category.slug === 'convocatorias' ? 'post-list--wide' : 'post-list--grid';
         return (
           <section key={category.slug} className="section" aria-labelledby={headingId}>
             <div className="section__header">
@@ -64,7 +66,7 @@ export default function HomePage() {
               <Link to={`/${category.slug}`}>{category.seeAll}</Link>
             </div>
             {posts.length ? (
-              <ul className="post-list post-list--grid">
+              <ul className={`post-list ${layout}`}>
                 {posts.map((post) => (
                   <li key={post.id}>
                     <PostCard post={post} headingLevel={3} />

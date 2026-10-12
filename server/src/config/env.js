@@ -17,6 +17,15 @@ const envSchema = z.object({
   // Envíos públicos por IP: comentarios cada 15 minutos y postulaciones por hora.
   COMMENT_RATE_LIMIT: z.coerce.number().int().positive().default(5),
   APPLICATION_RATE_LIMIT: z.coerce.number().int().positive().default(5),
+  // Mensajes del formulario de contacto por IP, por hora.
+  CONTACT_RATE_LIMIT: z.coerce.number().int().positive().default(5),
+  // Envío por correo de los mensajes de contacto (Resend). Sin estas dos variables,
+  // los mensajes igual se guardan y se leen en el panel → Mensajes.
+  RESEND_API_KEY: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
+  CONTACT_TO_EMAIL: z.preprocess((v) => (v === '' ? undefined : v), z.email('tiene que ser un correo válido').optional()),
+  // Remitente. Con la cuenta gratuita de Resend sin dominio propio, onboarding@resend.dev
+  // solo puede enviar al correo con el que se creó la cuenta.
+  CONTACT_FROM_EMAIL: z.string().default('Borde <onboarding@resend.dev>'),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
   // Proxies de confianza delante de la API: define de dónde sale req.ip (límite de
   // intentos de login). Con más de 1, quien llame directo a Railway podría falsear

@@ -19,7 +19,15 @@ import { Fieldset, TextArea, fieldId } from './fields.jsx';
  *
  * El valor que se envía viaja en un input oculto name="image.url".
  */
-export default function ImageField({ initialUrl = '', initialAlt = '', errors = {} }) {
+export default function ImageField({
+  initialUrl = '',
+  initialAlt = '',
+  errors = {},
+  urlName = 'image.url',
+  altName = 'image.alt',
+  legend = 'Imagen',
+  hint = 'Opcional. Podés subir un archivo o pegar la dirección de una imagen publicada en otro sitio.',
+}) {
   const announce = useAnnounce();
   const fileRef = useRef(null);
   const [url, setUrl] = useState(initialUrl);
@@ -28,9 +36,9 @@ export default function ImageField({ initialUrl = '', initialAlt = '', errors = 
 
   const uploaded = isUploadedImage(url);
   const fileId = fieldId('imagen');
-  const linkId = fieldId('image.url');
+  const linkId = fieldId(urlName);
   const fileError = uploadError ?? errors.imagen;
-  const linkError = errors['image.url'];
+  const linkError = errors[urlName];
 
   async function handleFile(event) {
     const original = event.target.files?.[0];
@@ -53,7 +61,7 @@ export default function ImageField({ initialUrl = '', initialAlt = '', errors = 
       form.append('imagen', file);
       const { data } = await api('/admin/images', { method: 'POST', body: form });
       setUrl(data.url);
-      announce('Imagen subida. Acordate de escribir el texto alternativo.');
+      announce(altName ? 'Imagen subida. Acordate de escribir el texto alternativo.' : 'Imagen subida.');
     } catch (err) {
       const message = err.details?.[0]?.message ?? err.message;
       setUploadError(message);
@@ -73,8 +81,8 @@ export default function ImageField({ initialUrl = '', initialAlt = '', errors = 
   }
 
   return (
-    <Fieldset legend="Imagen" hint="Opcional. Podés subir un archivo o pegar la dirección de una imagen publicada en otro sitio.">
-      <input type="hidden" name="image.url" value={url} />
+    <Fieldset legend={legend} hint={hint}>
+      <input type="hidden" name={urlName} value={url} />
 
       {url && (
         <div className="image-preview">
@@ -141,16 +149,19 @@ export default function ImageField({ initialUrl = '', initialAlt = '', errors = 
         </div>
       )}
 
-      <TextArea
-        name="image.alt"
-        label="Texto alternativo"
-        optional
-        rows={2}
-        maxLength={300}
-        hint="Obligatorio si hay imagen. Contá qué se ve y por qué importa, en una o dos frases. No empieces con «imagen de»."
-        defaultValue={initialAlt}
-        error={errors['image.alt']}
-      />
+      {/* Sin altName (logos): el texto alternativo es el nombre, que se carga en otro campo. */}
+      {altName && (
+        <TextArea
+          name={altName}
+          label="Texto alternativo"
+          optional
+          rows={2}
+          maxLength={300}
+          hint="Obligatorio si hay imagen. Contá qué se ve y por qué importa, en una o dos frases. No empieces con «imagen de»."
+          defaultValue={initialAlt}
+          error={errors[altName]}
+        />
+      )}
     </Fieldset>
   );
 }

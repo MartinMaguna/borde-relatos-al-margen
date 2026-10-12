@@ -72,7 +72,8 @@ export default function PostPage() {
   useDocumentTitle(`${post.title} · ${category.label}`);
 
   return (
-    <>
+    // Poesía y cuentos: todo en una columna centrada, cómoda para leer.
+    <div className={category.centered ? 'column-centered' : undefined}>
       <Breadcrumbs
         items={[
           { to: '/', label: 'Inicio' },
@@ -135,6 +136,6 @@ export default function PostPage() {
       <p className="back-link">
         <Link to={`/${category.slug}`}>Volver a {category.label}</Link>
       </p>
-    </>
+    </div>
   );
 }

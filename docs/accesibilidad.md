@@ -191,13 +191,16 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 11 | Consentimiento como casilla con su error vinculado; los errores se muestran todos juntos | WCAG 3.3.1 / 3.3.3; nada aparece recién en un segundo intento. |
 | 11 | Campo trampa antispam fuera de la vista, con `aria-hidden` y `tabindex="-1"` | No interfiere con teclado ni lector, a diferencia de un CAPTCHA. |
 | 11 | Texto de comentarios y postulaciones como texto plano (sin HTML) | Seguridad (sin inyección de código) y lectura consistente. |
-| 11 | Correo de contacto visible como texto, con botón para copiar y enlace `mailto:` | Funciona aunque no haya un programa de correo configurado. |
+| 12 | Contacto por formulario (mismo patrón de errores y confirmación enfocada que comentarios y postulaciones) | No depende de tener un programa de correo configurado y no expone el correo del equipo. |
 | 11 | Ícono de lengua de señas: símbolo internacional (dos manos), siempre con el texto "Lengua de señas" | Reconocible para la comunidad sorda; el texto evita ambigüedad. |
 | 10 | Editor de texto: `<textarea>` nativo con barra de formato (`role="toolbar"`, un solo punto de tabulación, flechas), no un editor visual (contenteditable) | Los editores enriquecidos son muy difíciles de usar con lector de pantalla; el textarea funciona con todos los lectores, el corrector y el dictado. |
 | 10 | Botones de formato con texto visible y nombre accesible que lo contiene ("Título" → "Título de sección"); atajos Control+B/I/K con `aria-keyshortcuts` | WCAG 2.5.3 (etiqueta en el nombre) y 2.1.1 (teclado). |
 | 10 | Tras cada acción, foco de vuelta al texto con la selección lista y aviso en la región viva ("Negrita aplicada" / "quitada"); se puede deshacer con Control+Z | La persona sabe qué pasó sin buscarlo y puede revertirlo. |
 | 10 | Vista previa generada por el servidor, con las mismas reglas que al publicar, en una región con nombre y botón con `aria-expanded` | Lo que se revisa es lo que se publica. |
 | 10 | Imagen en las tarjetas con `alt=""` y `loading="lazy"` | En un listado la foto es decorativa: describir cada una antes de cada título vuelve lenta la navegación. Su descripción completa está en la publicación. |
+| 12 | Logos al pie dentro del `<footer>` (contentinfo), en una región con título y una lista por grupo nombrada por su subtítulo; el texto alternativo de cada logo es el nombre (y el nombre del enlace, si lo tiene) | Todo el contenido queda en landmarks; el lector anuncia "Impulsan, lista, 2 elementos". |
+| 12 | Logos sobre fondo blanco en los dos temas | Muchos logos tienen letras oscuras que desaparecerían en modo oscuro. |
+| 12 | Poesía y cuentos en una columna centrada de ~65 caracteres | Línea cómoda para la lectura prolongada. |
 | 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde. Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
 | 3 | Objetivos táctiles ≥ 2.75rem (44 px) en menú y paginación | WCAG 2.5.8. |

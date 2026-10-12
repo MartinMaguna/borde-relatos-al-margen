@@ -125,7 +125,7 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 
 ## Panel del editor
 
-Se entra desde el pie del sitio ("Ingreso del equipo editorial") o directamente en `/panel`. No hay registro público: el usuario editor se crea con `npm run seed`.
+Se entra escribiendo `/panel` al final de la dirección del sitio (no hay enlace público). No hay registro público: el usuario editor se crea con `npm run seed`.
 
 | Ruta | Vista |
 | ---- | ----- |
@@ -184,6 +184,10 @@ Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_s
 | GET / PATCH / DELETE | `/admin/comments[/:id]` | Moderar comentarios (`?status=pending\|approved\|rejected`; PATCH `{ status }`) |
 | GET | `/admin/posts/:id/applications[.csv]` | Postulaciones de una convocatoria (JSON o CSV para planilla) |
 | DELETE | `/admin/applications/:id` | Eliminar una postulación |
+| POST | `/contact` | Formulario de contacto `{ name, email, message }`: se guarda y se reenvía por correo al equipo. Límite: 5 por hora por IP |
+| GET / DELETE | `/admin/messages[/:id]` | Mensajes de contacto (con `emailStatus`: `sent`, `failed` o `skipped`) |
+| GET | `/supporters` | Logos del pie, agrupados (`impulsan`, `apoyan`, `organizan`, `colaboran`) |
+| GET / POST / PUT / DELETE | `/admin/supporters[/:id]` | Cargar, editar y quitar logos `{ name, role, logoUrl, link? }` |
 | POST | `/admin/preview` | Vista previa del Markdown con las mismas reglas que al publicar |
 | POST | `/admin/images` | Subir una imagen (`multipart/form-data`, campo `imagen`, máx. 3 MB) → `{ id, url }` |
 | GET | `/images/:id` | Ver una imagen subida (público, caché de un año) |
@@ -284,6 +288,10 @@ Producción actual:
    | `TRUST_PROXY` | opcional, `1` por defecto (ver nota) |
    | `CLIENT_ORIGIN` | `https://borde-relatos-al-margen.vercel.app` |
    | `SESSION_TTL_HOURS`, `LOGIN_RATE_LIMIT` | opcionales (8 y 10 por defecto) |
+   | `RESEND_API_KEY` | clave de [Resend](https://resend.com) para que los mensajes de Contacto lleguen por correo (ver *Formulario de contacto*) |
+   | `CONTACT_TO_EMAIL` | correo del equipo que recibe los mensajes de Contacto (no se muestra en el sitio) |
+   | `CONTACT_FROM_EMAIL` | opcional; remitente, `Borde <onboarding@resend.dev>` por defecto |
+   | `COMMENT_RATE_LIMIT`, `APPLICATION_RATE_LIMIT`, `CONTACT_RATE_LIMIT` | opcionales (5 envíos por IP) |
    | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo hasta crear el primer editor (ver paso 5) |
 
    `PORT` no se define: Railway la inyecta.
@@ -347,8 +355,22 @@ La identidad visual (colores, tipografía, formas y componentes) está documenta
 - **Compartir**: copiar enlace, WhatsApp, correo, Facebook, LinkedIn y, en móviles, el menú de compartir del sistema.
 - **Comentarios**: se publican solo después de aprobarlos en el panel (`/panel/comentarios`). Tienen campo trampa contra bots y límite de envíos por IP.
 - **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones y comentarios.
-- **Contacto**: `/contacto`, con el correo de `CONTACT_EMAIL` en `client/src/lib/site.js`.
-- Todavía **no se envían avisos por correo** (nuevos comentarios o postulaciones): requiere un servicio de envío de correo.
+- **Contacto**: `/contacto`, formulario (nombre, correo, mensaje). El correo del equipo no aparece en el sitio. Ver abajo.
+- Todavía **no se envían avisos por correo** de nuevos comentarios o postulaciones: se revisan en el panel.
+
+### Formulario de contacto
+
+Cada mensaje se guarda en la base y se ve en el panel → **Mensajes** (con aviso si no llegó por correo). Además se reenvía por correo con [Resend](https://resend.com), con "Responder" dirigido a quien escribió:
+
+1. Crear una cuenta gratuita en Resend **con el mismo correo que va a recibir los mensajes** (sin dominio propio, el remitente de prueba `onboarding@resend.dev` solo puede enviar a ese correo).
+2. *API Keys* → **Create API Key** (permiso *Sending access*).
+3. En Railway, agregar `RESEND_API_KEY` (la clave) y `CONTACT_TO_EMAIL` (el correo del equipo).
+
+Sin esas variables el formulario funciona igual y los mensajes quedan solo en el panel. Con un dominio propio verificado en Resend se puede usar otro remitente con `CONTACT_FROM_EMAIL`.
+
+## Logos al pie
+
+En el panel → **Logos** se cargan quienes impulsan, apoyan, organizan o colaboran: nombre (también es el texto alternativo), grupo, logo (archivo o dirección) y enlace opcional. Se muestran al pie de todas las páginas, agrupados; sin logos, la sección no aparece.
 
 ## Créditos
 

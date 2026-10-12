@@ -22,6 +22,7 @@ const DEFAULTS = {
   LOGIN_RATE_LIMIT: '100',
   COMMENT_RATE_LIMIT: '100',
   APPLICATION_RATE_LIMIT: '100',
+  CONTACT_RATE_LIMIT: '100',
 };
 
 const mongod = await MongoMemoryServer.create({ instance: { launchTimeout: 60_000 } });

@@ -97,11 +97,65 @@ test.describe('Artículos: guardar, compartir, comentar; contacto; postulaciones
     expect(file.suggestedFilename()).toBe(`postulaciones-${call.slug}.csv`);
   });
 
-  test('contacto: correo visible, enlace para escribir y sin violaciones', async ({ page }) => {
+  test('contacto: formulario sin el correo a la vista; el mensaje llega al panel', async ({ page }, testInfo) => {
+    const name = `Persona ${testInfo.project.name}`;
     await page.goto('/contacto');
     await waitForView(page);
-    await expect(page.getByText('martinmaguna33@gmail.com')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Escribir un correo' })).toHaveAttribute('href', 'mailto:martinmaguna33@gmail.com');
+    await expect(page.getByText(/@gmail\.com/)).toHaveCount(0);
+    await expectNoA11yViolations(page);
+    expect(await hasHorizontalScroll(page)).toBe(false);
+
+    // Enviar vacío: resumen de errores y campos marcados.
+    await page.getByRole('button', { name: 'Enviar mensaje' }).click();
+    await expect(page.locator('.error-summary')).toBeFocused();
+    await expect(page.getByLabel('Mensaje')).toHaveAttribute('aria-invalid', 'true');
+
+    await page.getByLabel('Nombre').fill(name);
+    await page.getByLabel('Correo electrónico').fill('persona@ejemplo.com');
+    await page.getByLabel('Mensaje').fill('Quiero sumarme al próximo taller.');
+    await page.getByRole('button', { name: 'Enviar mensaje' }).click();
+    await expect(page.locator('.notice--success', { hasText: 'Mensaje enviado.' })).toBeFocused();
+    await expectNoA11yViolations(page);
+
+    await login(page);
+    await page.goto('/panel/mensajes');
+    await waitForView(page);
+    await expect(page.getByRole('heading', { level: 2, name })).toBeVisible();
+    await expectNoA11yViolations(page);
+  });
+
+  test('logos: se cargan en el panel y aparecen al pie, sin violaciones', async ({ page }, testInfo) => {
+    const name = `Institución ${testInfo.project.name}`;
+    await login(page);
+    await page.goto('/panel/logos');
+    await waitForView(page);
+    await expectNoA11yViolations(page);
+
+    const dataUrl = await page.evaluate(() => {
+      const c = document.createElement('canvas');
+      c.width = 300;
+      c.height = 120;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#5b2a86';
+      ctx.fillRect(0, 0, 120, 120);
+      ctx.fillStyle = '#e8613c';
+      ctx.fillRect(140, 30, 160, 60);
+      return c.toDataURL('image/png');
+    });
+    await page.getByLabel('Nombre').fill(name);
+    await page.getByLabel('¿Qué hace?').selectOption('apoyan');
+    const upload = page.waitForResponse((r) => r.url().endsWith('/api/admin/images') && r.request().method() === 'POST');
+    await page.getByLabel(/^Subir una imagen/).setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: Buffer.from(dataUrl.split(',')[1], 'base64') });
+    await upload;
+    await page.getByRole('button', { name: 'Agregar logo' }).click();
+    await expect(page.getByRole('button', { name: `Editar ${name}` })).toBeVisible();
+
+    await page.goto('/');
+    await waitForView(page);
+    const footer = page.getByRole('contentinfo');
+    await expect(footer.getByRole('region', { name: 'Acompañan a Borde' })).toBeVisible();
+    await expect(footer.getByRole('list', { name: 'Apoyan' }).getByRole('img', { name })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /Ingreso/ })).toHaveCount(0);
     await expectNoA11yViolations(page);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });

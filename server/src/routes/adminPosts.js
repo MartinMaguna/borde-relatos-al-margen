@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Post } from '../models/Post.js';
-import { Image, uploadedImageId } from '../models/Image.js';
+import { deleteImageIfUnused } from '../utils/images.js';
 import { Comment } from '../models/Comment.js';
 import { Application } from '../models/Application.js';
 import { HttpError } from '../middleware/errors.js';
@@ -13,18 +13,6 @@ import { slugify, uniqueSlug } from '../utils/slug.js';
 const router = Router();
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/**
- * Borra una imagen subida que dejó de usarse (se cambió o se eliminó la
- * publicación), salvo que otra publicación la siga usando. Las imágenes
- * externas (http…) no se tocan.
- */
-async function deleteUnusedImage(url) {
-  const id = uploadedImageId(url);
-  if (!id) return;
-  if (await Post.exists({ 'image.url': url })) return;
-  await Image.deleteOne({ _id: id });
-}
 
 async function findPostOr404(id) {
   const post = await Post.findById(id);
@@ -93,7 +81,7 @@ router.put('/:id', validate({ params: idParams, body: postInputSchema }), async 
     updatedBy: req.user.id,
   });
   await post.save();
-  if (previousImage && previousImage !== post.image?.url) await deleteUnusedImage(previousImage);
+  if (previousImage && previousImage !== post.image?.url) await deleteImageIfUnused(previousImage);
   sendOk(res, post);
 });
 
@@ -102,7 +90,7 @@ router.delete('/:id', validate({ params: idParams }), async (req, res) => {
   await post.deleteOne();
   // Sus comentarios y postulaciones se van con ella (no quedan datos personales huérfanos).
   await Promise.all([Comment.deleteMany({ post: post.id }), Application.deleteMany({ post: post.id })]);
-  if (post.image?.url) await deleteUnusedImage(post.image.url);
+  if (post.image?.url) await deleteImageIfUnused(post.image.url);
   sendOk(res, { id: post.id, title: post.title });
 });
 

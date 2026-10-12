@@ -13,7 +13,8 @@ export default function CategoryPage({ category }) {
   useDocumentTitle(pageLabel ? `${category.label} (${pageLabel})` : category.label);
 
   return (
-    <>
+    // Poesía y cuentos: listado en una columna centrada.
+    <div className={category.centered ? 'column-centered' : undefined}>
       <div className="page-intro">
         <h1 tabIndex={-1}>{category.label}</h1>
         <p className="lead">{category.intro}</p>
@@ -38,6 +39,6 @@ export default function CategoryPage({ category }) {
       )}
 
       <Pagination page={page} totalPages={totalPages} basePath={`/${category.slug}`} />
-    </>
+    </div>
   );
 }

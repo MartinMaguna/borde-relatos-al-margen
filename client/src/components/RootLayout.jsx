@@ -1,5 +1,6 @@
 import { Link, Outlet, ScrollRestoration } from 'react-router';
 import MainNav from './MainNav.jsx';
+import SupportersSection from './SupportersSection.jsx';
 import { useLoadingAnnouncement, useRouteFocus } from '../a11y/hooks.js';
 
 /**
@@ -35,11 +36,13 @@ export default function RootLayout() {
         <Outlet />
       </main>
 
+      {/* Los logos van dentro del footer (contentinfo): todo el contenido queda en un landmark. */}
       <footer className="site-footer">
-        <div className="container">
+        <SupportersSection />
+        <div className="container site-footer__bar">
           <p>
-            Borde. Relatos al Margen · {new Date().getFullYear()} · <Link to="/acerca">Acerca del proyecto</Link> · <Link to="/guardados">Guardados</Link> ·{" "}
-            <Link to="/panel">Ingreso del equipo editorial</Link>
+            Borde. Relatos al Margen · {new Date().getFullYear()} · <Link to="/acerca">Acerca del proyecto</Link> ·{' '}
+            <Link to="/guardados">Guardados</Link>
           </p>
         </div>
       </footer>

@@ -12,6 +12,7 @@ export const CATEGORIES = [
     intro: 'Poemas de voces que escriben desde los márgenes.',
     seeAll: 'Ver toda la poesía',
     empty: 'Todavía no hay poemas publicados.',
+    centered: true, // listado y lectura en una columna centrada
   },
   {
     slug: 'cuentos',
@@ -19,6 +20,7 @@ export const CATEGORIES = [
     intro: 'Narrativa breve: historias para leer de una sentada.',
     seeAll: 'Ver todos los cuentos',
     empty: 'Todavía no hay cuentos publicados.',
+    centered: true,
   },
   {
     slug: 'talleres',
@@ -46,7 +48,15 @@ export const NAV_ITEMS = [
   { to: '/contacto', label: 'Contacto' },
 ];
 
-/** Correo de contacto del sitio (página Contacto). */
-export const CONTACT_EMAIL = 'martinmaguna33@gmail.com';
+/**
+ * Grupos de logos al pie del sitio, en el orden en que se muestran
+ * (coinciden con los roles de la API).
+ */
+export const SUPPORTER_GROUPS = [
+  { role: 'impulsan', label: 'Impulsan' },
+  { role: 'apoyan', label: 'Apoyan' },
+  { role: 'organizan', label: 'Organizan' },
+  { role: 'colaboran', label: 'Colaboran' },
+];
 
 export const PAGE_SIZE = 10;
