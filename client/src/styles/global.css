@@ -1569,21 +1569,105 @@ main:focus {
   }
 }
 
-/* ---------- Convocatorias a todo el ancho (portada) ---------- */
+/* ---------- Convocatorias con el formato de la portada (Hero) ---------- */
+.call-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sin tarjeta: cada convocatoria se separa de la siguiente con una línea fina. */
+.call-list > li + li {
+  border-top: var(--stroke-hairline) solid var(--line-soft);
+}
+
+.call-banner {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-5);
+}
+
+.call-banner__title {
+  margin: 0;
+  font-size: clamp(2rem, 1.25rem + 3.5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.call-banner__title a {
+  color: var(--ink);
+  text-decoration-color: var(--magenta);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.12em;
+}
+
+.call-banner__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.call-banner__meta > * {
+  margin: 0;
+}
+
+.call-banner__lead {
+  margin: var(--space-3) 0 0;
+}
+
+.call-banner .post-card__media {
+  margin-top: var(--space-3);
+}
+
+/* Decoración (composición o imagen): en móvil va debajo y chica; en escritorio, a la derecha. */
+.call-banner__art,
+.call-banner__visual {
+  width: min(9rem, 45%);
+  height: auto;
+  justify-self: end;
+}
+
+/* La imagen en un círculo, con el medio disco coral de la composición detrás. */
+.call-banner__visual {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.call-banner__visual::after {
+  content: '';
+  position: absolute;
+  right: -8%;
+  bottom: -4%;
+  width: 55%;
+  aspect-ratio: 2 / 1;
+  border-radius: 999px 999px 0 0;
+  background: var(--coral);
+}
+
+.call-banner__image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  border-radius: var(--radius-circle);
+  background: var(--surface-sunken);
+}
+
 @media (min-width: 48rem) {
-  /* La imagen a la izquierda (40 %), el texto a la derecha. */
-  .post-list--wide .post-card--with-image {
-    min-height: 14rem;
-    padding-left: calc(40% + var(--space-4));
+  .call-banner {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    align-items: center;
+    gap: var(--space-6);
   }
 
-  .post-list--wide .post-card--with-image .post-card__image {
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 40%;
-    height: 100%;
-    margin: 0;
-    aspect-ratio: auto;
+  .call-banner__art,
+  .call-banner__visual {
+    width: 100%;
   }
 }
 

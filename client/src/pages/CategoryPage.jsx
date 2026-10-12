@@ -1,5 +1,6 @@
 import { useLoaderData } from 'react-router';
 import PostCard from '../components/PostCard.jsx';
+import CallBanner from '../components/CallBanner.jsx';
 import Pagination from '../components/Pagination.jsx';
 import { useDocumentTitle } from '../a11y/hooks.js';
 
@@ -8,6 +9,7 @@ export default function CategoryPage({ category }) {
   const { posts, meta } = useLoaderData();
   const { page, totalPages, total } = meta;
   const pageLabel = totalPages > 1 ? `página ${page} de ${totalPages}` : null;
+  const isCalls = category.slug === 'convocatorias';
 
   // En páginas 2+ el título lo dice: así el lector confirma en qué página quedó.
   useDocumentTitle(pageLabel ? `${category.label} (${pageLabel})` : category.label);
@@ -27,10 +29,11 @@ export default function CategoryPage({ category }) {
       </div>
 
       {posts.length ? (
-        <ul className="post-list">
+        // Convocatorias: con el formato de la portada (igual que en Inicio).
+        <ul className={isCalls ? 'call-list' : 'post-list'}>
           {posts.map((post) => (
             <li key={post.id}>
-              <PostCard post={post} headingLevel={2} />
+              {isCalls ? <CallBanner post={post} headingLevel={2} /> : <PostCard post={post} headingLevel={2} />}
             </li>
           ))}
         </ul>

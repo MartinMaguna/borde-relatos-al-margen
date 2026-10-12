@@ -20,7 +20,6 @@ export default function PostCard({ post, headingLevel = 2 }) {
   const Heading = `h${headingLevel}`;
   const isCall = post.category === 'convocatorias';
   const href = `/${post.category}/${post.slug}`;
-  const hasMedia = Boolean(post.audio?.url || post.signVideoId);
 
   return (
     <article className={`post-card${post.image?.url ? ' post-card--with-image' : ''}`}>
@@ -46,17 +45,23 @@ export default function PostCard({ post, headingLevel = 2 }) {
       )}
       {post.summary && <p className="post-card__summary">{post.summary}</p>}
 
-      {hasMedia && (
-        <div className="post-card__media">
-          {post.audio?.url && <AudioButton src={post.audio.url} title={post.title} />}
-          {post.signVideoId && (
-            <Link to={`${href}#${SIGN_SECTION_ID}`} className="sign-link">
-              <SignLanguageIcon />
-              Lengua de señas <span className="visually-hidden">«{post.title}»</span>
-            </Link>
-          )}
-        </div>
-      )}
+      <CardMedia post={post} href={href} />
     </article>
+  );
+}
+
+/** Audio y enlace a la versión en lengua de señas, al pie de una tarjeta (si los hay). */
+export function CardMedia({ post, href }) {
+  if (!post.audio?.url && !post.signVideoId) return null;
+  return (
+    <div className="post-card__media">
+      {post.audio?.url && <AudioButton src={post.audio.url} title={post.title} />}
+      {post.signVideoId && (
+        <Link to={`${href}#${SIGN_SECTION_ID}`} className="sign-link">
+          <SignLanguageIcon />
+          Lengua de señas <span className="visually-hidden">«{post.title}»</span>
+        </Link>
+      )}
+    </div>
   );
 }
