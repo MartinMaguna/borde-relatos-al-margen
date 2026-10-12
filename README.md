@@ -370,7 +370,7 @@ Sin esas variables el formulario funciona igual y los mensajes quedan solo en el
 
 ## Logos al pie
 
-En el panel → **Logos** se cargan quienes impulsan, apoyan, organizan o colaboran: nombre (también es el texto alternativo), grupo, logo (archivo o dirección) y enlace opcional. Se muestran al pie de todas las páginas, agrupados; sin logos, la sección no aparece.
+En el panel → **Logos** se cargan quienes impulsan, apoyan, organizan o colaboran: nombre (también es el texto alternativo), grupo, logo (archivo o dirección) y enlace opcional. Se muestran al pie de todas las páginas, agrupados, tal como se cargan sobre una franja oscura: conviene subir la versión clara (blanca) en PNG con fondo transparente. Sin logos, la sección no aparece.
 
 ## Créditos
 

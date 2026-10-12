@@ -128,7 +128,10 @@ export default function SupportersAdminPage() {
               <ul className="admin-list">
                 {g.items.map((s) => (
                   <li key={s.id} className="admin-item supporter-admin">
-                    <img className="supporters__logo" src={s.logoUrl} alt="" />
+                    {/* Vista previa sobre el mismo fondo oscuro del sitio. */}
+                    <span className="supporter-admin__preview">
+                      <img className="supporters__logo" src={s.logoUrl} alt="" />
+                    </span>
                     <div>
                       <p className="admin-item__title">{s.name}</p>
                       {s.link && <p className="post-meta">{s.link}</p>}
@@ -173,7 +176,7 @@ export default function SupportersAdminPage() {
             urlName="logoUrl"
             altName={null}
             legend="Logo"
-            hint="Subí el archivo (mejor PNG con fondo transparente) o pegá la dirección de una imagen. Se muestra sobre fondo blanco."
+            hint="Se muestra tal cual, sobre la franja oscura del pie: usá la versión clara (blanca) del logo, en PNG con fondo transparente. También podés pegar la dirección de una imagen."
             initialUrl={editing?.logoUrl ?? ''}
             errors={fieldErrors}
           />

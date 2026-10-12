@@ -1602,26 +1602,43 @@ main:focus {
   margin: 0;
 }
 
+/*
+ * Franja oscura fija (en los dos temas), como los créditos de un afiche:
+ * los logos se muestran tal como se cargan, sin tarjeta ni fondo propio.
+ * Pensada para logos claros (blancos) con fondo transparente. Los tokens se
+ * redefinen acá para que textos y foco tengan contraste sobre el oscuro.
+ */
 .supporters {
-  padding-block: var(--space-5);
-  border-bottom: var(--stroke-hairline) solid var(--line);
+  --ink: #f2f0f8;
+  --ink-muted: #bcb6d2;
+  --focus: #a69fff;
+  --focus-ring: var(--stroke-focus) solid var(--focus);
+  padding-block: var(--space-6);
+  background: #120f22;
   color: var(--ink);
 }
 
-.supporters__title {
-  margin: 0 0 var(--space-4);
-  font-size: 1.5rem;
+/*
+ * Alto contraste de Windows: el sistema cambiaría el fondo por el suyo (a
+ * menudo blanco) y los logos blancos desaparecerían. La franja conserva sus
+ * colores, que ya cumplen contraste AA; el foco usa el color del sistema.
+ */
+@media (forced-colors: active) {
+  .supporters {
+    forced-color-adjust: none;
+    --focus: Highlight;
+  }
 }
 
 /* Los grupos uno al lado del otro mientras entren; en celular, uno debajo del otro. */
 .supporters__groups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4) var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-5) var(--space-6);
 }
 
 .supporters__label {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   font-family: var(--font-text);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -1636,7 +1653,8 @@ main:focus {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-4) var(--space-5);
 }
 
 .supporters__item > a,
@@ -1644,25 +1662,17 @@ main:focus {
   display: flex;
 }
 
-.supporters__item > a {
-  border-radius: var(--radius-lg);
-}
-
-/* Fondo claro fijo en los dos temas: muchos logos tienen letras oscuras. */
+/* El logo tal cual: sin fondo, borde ni recorte; solo se limita el tamaño. */
 .supporters__logo {
-  box-sizing: content-box;
   width: auto;
-  height: 4rem;
-  max-width: 10rem;
+  height: auto;
+  max-height: 4.5rem;
+  max-width: min(100%, 15rem);
   object-fit: contain;
-  padding: var(--space-2) var(--space-3);
-  background: #fff;
-  border: var(--stroke-hairline) solid var(--line);
-  border-radius: var(--radius-lg);
 }
 
 .supporters__item > a:hover .supporters__logo {
-  box-shadow: var(--shadow-sheet);
+  opacity: 0.8;
 }
 
 /* Panel → Logos: miniatura del logo junto a su nombre y acciones. */
@@ -1671,6 +1681,13 @@ main:focus {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
+}
+
+.supporter-admin__preview {
+  display: flex;
+  padding: var(--space-3);
+  background: #120f22;
+  border-radius: var(--radius-sm);
 }
 
 .supporter-admin .admin-item__title {

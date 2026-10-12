@@ -9,8 +9,8 @@ import { SUPPORTER_GROUPS } from '../lib/site.js';
  * - Si no hay logos, o la API no responde, no se muestra nada: el sitio no depende de esto.
  * - El texto alternativo de cada logo es el nombre de la institución. Con enlace,
  *   ese nombre es también el nombre del enlace (una imagen sola dentro de un <a>).
- * - Los logos van sobre un fondo claro en los dos temas: muchos tienen
- *   letras oscuras que desaparecerían sobre el fondo oscuro.
+ * - Los logos se muestran tal como se cargan, sobre una franja oscura fija
+ *   (como los créditos de un afiche): conviene cargar versiones claras.
  */
 export default function SupportersSection() {
   const [supporters, setSupporters] = useState([]);
@@ -31,7 +31,8 @@ export default function SupportersSection() {
   return (
     <section className="supporters" aria-labelledby="acompanan">
       <div className="container">
-        <h2 id="acompanan" className="supporters__title">
+        {/* Título solo para lectores de pantalla: nombra la región sin mostrarse. */}
+        <h2 id="acompanan" className="visually-hidden">
           Acompañan a Borde
         </h2>
         <div className="supporters__groups">

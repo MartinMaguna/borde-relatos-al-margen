@@ -199,7 +199,7 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 10 | Vista previa generada por el servidor, con las mismas reglas que al publicar, en una región con nombre y botón con `aria-expanded` | Lo que se revisa es lo que se publica. |
 | 10 | Imagen en las tarjetas con `alt=""` y `loading="lazy"` | En un listado la foto es decorativa: describir cada una antes de cada título vuelve lenta la navegación. Su descripción completa está en la publicación. |
 | 12 | Logos al pie dentro del `<footer>` (contentinfo), en una región con título y una lista por grupo nombrada por su subtítulo; el texto alternativo de cada logo es el nombre (y el nombre del enlace, si lo tiene) | Todo el contenido queda en landmarks; el lector anuncia "Impulsan, lista, 2 elementos". |
-| 12 | Logos sobre fondo blanco en los dos temas | Muchos logos tienen letras oscuras que desaparecerían en modo oscuro. |
+| 12 | Logos tal como se cargan sobre una franja oscura fija (en los dos temas), con título de región solo para lectores de pantalla | Estilo de créditos de afiche pedido por el equipo; el título oculto mantiene la región con nombre. Los textos y el foco de la franja usan los tokens del tema oscuro (contraste AA). |
 | 12 | Poesía y cuentos en una columna centrada de ~65 caracteres | Línea cómoda para la lectura prolongada. |
 | 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde. Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
