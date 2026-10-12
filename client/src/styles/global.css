@@ -1778,3 +1778,51 @@ main:focus {
   margin: 0 0 var(--space-1);
   font-weight: 700;
 }
+
+/* ---------- Portada: en las tarjetas la imagen ocupa la mayor parte (hay poco texto) ---------- */
+.post-list--grid .post-card__image {
+  aspect-ratio: 4 / 5;
+}
+
+/* ---------- Pie: nombre y redes sociales ---------- */
+.site-footer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.site-footer__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.social-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Objetivo táctil de 44px, aunque el ícono sea más chico. */
+.social-links__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  color: var(--ink);
+  border-radius: var(--radius-pill);
+}
+
+.social-links__link .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.social-links__link:hover {
+  color: var(--magenta);
+}

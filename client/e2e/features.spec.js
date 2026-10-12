@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { expectNoA11yViolations, hasHorizontalScroll, login, waitForView } from './helpers.js';
 
-test.describe('Artículos: guardar, compartir, comentar; contacto; postulaciones', () => {
-  test('acciones del artículo: guardar, panel de compartir y foco a comentarios, sin violaciones', async ({ page }) => {
+test.describe('Artículos: guardar y compartir; contacto; postulaciones', () => {
+  test('acciones del artículo: guardar, panel de compartir y acceso a Mis guardados, sin violaciones', async ({ page }) => {
     await page.goto('/poesia/orilla');
     await waitForView(page);
     await expect(page.getByText(/minutos? de lectura/)).toBeVisible();
@@ -19,36 +19,10 @@ test.describe('Artículos: guardar, compartir, comentar; contacto; postulaciones
     await expect(share).toBeFocused();
     await expect(page.getByRole('link', { name: /WhatsApp/ })).toBeHidden();
 
-    await page.getByRole('link', { name: 'Comentar' }).click();
-    await expect(page.getByRole('heading', { level: 2, name: /Comentarios/ })).toBeFocused();
-
-    await page.goto('/guardados');
+    await page.getByRole('link', { name: 'Mis guardados' }).click();
     await waitForView(page);
     await expect(page.getByRole('link', { name: 'Orilla' })).toBeVisible();
     await expectNoA11yViolations(page);
-  });
-
-  test('comentario: se envía, queda pendiente, se aprueba en el panel y aparece publicado', async ({ page }, testInfo) => {
-    const text = `Comentario de prueba ${testInfo.project.name} ${testInfo.retry}`;
-    await page.goto('/poesia/inventario-de-la-casa-vacia');
-    await waitForView(page);
-    await page.getByLabel('Tu nombre').fill('Lectora E2E');
-    await page.getByLabel('Comentario', { exact: true }).fill(text);
-    await page.getByRole('button', { name: 'Enviar comentario' }).click();
-    await expect(page.locator('p.notice', { hasText: 'se publicará cuando el equipo lo revise' })).toBeFocused();
-    await expect(page.getByText(text)).toBeHidden();
-
-    await login(page);
-    await page.goto('/panel/comentarios');
-    await waitForView(page);
-    await expectNoA11yViolations(page);
-    const item = page.locator('.admin-item', { hasText: text });
-    await item.getByRole('button', { name: /^Aprobar/ }).click();
-    await expect(page.locator('.admin-item', { hasText: text })).toHaveCount(0);
-
-    await page.goto('/poesia/inventario-de-la-casa-vacia');
-    await waitForView(page);
-    await expect(page.getByText(text)).toBeVisible();
   });
 
   test('postulación: el formulario aparece al activarlo, se envía y se descarga en CSV', async ({ page }, testInfo) => {

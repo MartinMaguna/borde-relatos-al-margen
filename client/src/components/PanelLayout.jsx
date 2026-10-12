@@ -8,7 +8,6 @@ import { LOGIN_PATH } from '../routes/panelLoaders.js';
 const PANEL_NAV = [
   { to: '/panel', label: 'Publicaciones', end: true },
   { to: '/panel/publicaciones/nueva', label: 'Nueva publicación' },
-  { to: '/panel/comentarios', label: 'Comentarios' },
   { to: '/panel/mensajes', label: 'Mensajes' },
   { to: '/panel/logos', label: 'Logos' },
   { to: '/panel/acerca', label: 'Página Acerca' },
@@ -50,7 +49,7 @@ export default function PanelLayout() {
       <header className="site-header panel-header">
         <div className="container site-header__bar">
           <p className="site-title">
-            <span className="site-title__name">Borde.</span>{' '}
+            <span className="site-title__name">Borde</span>{' '}
             <span className="site-title__sub">Panel de edición</span>
           </p>
           <p className="panel-header__site">

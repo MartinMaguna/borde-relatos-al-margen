@@ -1,4 +1,4 @@
-# Accesibilidad — Borde. Relatos al Margen
+# Accesibilidad — Borde Relatos al Margen
 
 Objetivo: **WCAG 2.2 nivel AA**, con prioridad en personas ciegas que usan lector de pantalla.
 
@@ -57,7 +57,7 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 
 #### A. Estructura y orientación (sitio público)
 
-- [ ] Al cargar `/`, el lector anuncia el título "Borde. Relatos al Margen" y el idioma de voz es español.
+- [ ] Al cargar `/`, el lector anuncia el título "Borde Relatos al Margen" y el idioma de voz es español.
 - [ ] El primer Tab enfoca "Saltar al contenido", visible en pantalla. Al activarlo, la lectura sigue en el contenido principal (no en el menú).
 - [ ] La lista de puntos de referencia muestra: banner, navegación "Principal", principal (main) e información de contenido (footer). En el detalle también "Ruta de navegación"; en listados largos, "Paginación".
 - [ ] La lista de encabezados de la portada es: un nivel 1 (nombre del sitio), cuatro nivel 2 (Poesía, Cuentos, Talleres, Convocatorias) y nivel 3 para cada publicación. Sin saltos de nivel.
@@ -66,7 +66,7 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 
 #### B. Navegación entre páginas
 
-- [ ] Al elegir "Cuentos" en el menú, se anuncia "Cuentos, encabezado nivel 1" (el foco va al título) y el título de la pestaña cambia a "Cuentos · Borde. Relatos al Margen".
+- [ ] Al elegir "Cuentos" en el menú, se anuncia "Cuentos, encabezado nivel 1" (el foco va al título) y el título de la pestaña cambia a "Cuentos · Borde Relatos al Margen".
 - [ ] La lectura continúa desde el título hacia abajo, no desde el principio de la página ni desde el menú.
 - [ ] En el menú, la página actual se anuncia como "actual" / "página actual".
 - [ ] Con conexión lenta (DevTools → Network → Slow 3G) se anuncia "Cargando…" una sola vez.
@@ -201,7 +201,10 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 12 | Logos al pie dentro del `<footer>` (contentinfo), en una región con título y una lista por grupo nombrada por su subtítulo; el texto alternativo de cada logo es el nombre (y el nombre del enlace, si lo tiene) | Todo el contenido queda en landmarks; el lector anuncia "Impulsan, lista, 2 elementos". |
 | 12 | Logos tal como se cargan sobre una franja oscura fija (en los dos temas), con título de región solo para lectores de pantalla | Estilo de créditos de afiche pedido por el equipo; el título oculto mantiene la región con nombre. Los textos y el foco de la franja usan los tokens del tema oscuro (contraste AA). |
 | 12 | Poesía y cuentos en una columna centrada de ~65 caracteres | Línea cómoda para la lectura prolongada. |
-| 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde. Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
+| 13 | Se quitan los comentarios; "Mis guardados" pasa a las acciones de cada publicación | El pie ya no tiene enlaces: Guardados sigue teniendo un acceso visible. |
+| 13 | Redes sociales como íconos con nombre accesible ("Borde en Instagram") en una lista nombrada, con objetivo táctil de 44px | Un ícono solo no tiene texto: el nombre lo da `aria-label`. WCAG 2.5.8. |
+| 13 | En la publicación, la imagen va antes del título | Pedido del equipo; la imagen conserva su texto alternativo y el foco sigue yendo al h1 al navegar. |
+| 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
 | 3 | Objetivos táctiles ≥ 2.75rem (44 px) en menú y paginación | WCAG 2.5.8. |
 | 4 | Etiqueta visible y asociada (`label for`) en cada campo; pistas y errores vinculados con `aria-describedby` | El lector lee etiqueta, pista y error al enfocar el campo. Nada de placeholder como etiqueta. |

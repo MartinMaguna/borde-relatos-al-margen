@@ -1,4 +1,4 @@
-# Borde. Relatos al Margen
+# Borde Relatos al Margen
 
 Sitio editorial de lectura (poesía, cuentos, talleres y convocatorias) con panel de edición.
 Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores de pantalla).
@@ -178,10 +178,7 @@ Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_s
 | PUT | `/admin/posts/:id` | Editar (se envía la publicación completa) |
 | DELETE | `/admin/posts/:id` | Eliminar |
 | GET / PUT | `/admin/pages/acerca` | Leer / guardar la página Acerca |
-| GET | `/posts/:category/:slug/comments` | Comentarios aprobados de una publicación |
-| POST | `/posts/:category/:slug/comments` | Enviar un comentario `{ name, text }`: queda **pendiente** de moderación. Límite: 5 cada 15 min por IP |
 | POST | `/posts/convocatorias/:slug/applications` | Postularse `{ name, email, workTitle, text?, link?, message?, consent: true }`. Solo si la convocatoria tiene el formulario activado y está abierta. Límite: 5 por hora por IP |
-| GET / PATCH / DELETE | `/admin/comments[/:id]` | Moderar comentarios (`?status=pending\|approved\|rejected`; PATCH `{ status }`) |
 | GET | `/admin/posts/:id/applications[.csv]` | Postulaciones de una convocatoria (JSON o CSV para planilla) |
 | DELETE | `/admin/applications/:id` | Eliminar una postulación |
 | POST | `/contact` | Formulario de contacto `{ name, email, message }`: se guarda y se reenvía por correo al equipo. Límite: 5 por hora por IP |
@@ -291,7 +288,7 @@ Producción actual:
    | `RESEND_API_KEY` | clave de [Resend](https://resend.com) para que los mensajes de Contacto lleguen por correo (ver *Formulario de contacto*) |
    | `CONTACT_TO_EMAIL` | correo del equipo que recibe los mensajes de Contacto (no se muestra en el sitio) |
    | `CONTACT_FROM_EMAIL` | opcional; remitente, `Borde <onboarding@resend.dev>` por defecto |
-   | `COMMENT_RATE_LIMIT`, `APPLICATION_RATE_LIMIT`, `CONTACT_RATE_LIMIT` | opcionales (5 envíos por IP) |
+   | `APPLICATION_RATE_LIMIT`, `CONTACT_RATE_LIMIT` | opcionales (5 envíos por IP) |
    | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo hasta crear el primer editor (ver paso 5) |
 
    `PORT` no se define: Railway la inyecta.
@@ -349,14 +346,15 @@ En el navegador: la portada muestra las secciones (o "Todavía no hay…" si la 
 
 La identidad visual (colores, tipografía, formas y componentes) está documentada en el design system **Borde**: https://claude.ai/artifact/16SMTbxRSUEukMddJrCsFg. Los tokens de `client/src/styles/global.css` usan los mismos nombres; si se cambia un valor allá, se cambia acá con el mismo nombre. Las fuentes (Archivo y Atkinson Hyperlegible Next) se alojan en el propio sitio con `@fontsource`.
 
-## Lectores: guardar, compartir, comentar, postularse y contacto
+## Lectores: guardar, compartir, postularse y contacto
 
-- **Guardar**: sin cuentas; se guarda en el navegador de la persona (`localStorage`) y se ve en `/guardados`.
+- **Guardar**: sin cuentas; se guarda en el navegador de la persona (`localStorage`) y se ve en `/guardados` (botón "Mis guardados" en cada publicación).
+- **Comentarios**: no hay (se quitaron).
 - **Compartir**: copiar enlace, WhatsApp, correo, Facebook, LinkedIn y, en móviles, el menú de compartir del sistema.
-- **Comentarios**: se publican solo después de aprobarlos en el panel (`/panel/comentarios`). Tienen campo trampa contra bots y límite de envíos por IP.
-- **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones y comentarios.
+- **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones.
 - **Contacto**: `/contacto`, formulario (nombre, correo, mensaje). El correo del equipo no aparece en el sitio. Ver abajo.
-- Todavía **no se envían avisos por correo** de nuevos comentarios o postulaciones: se revisan en el panel.
+- Todavía **no se envían avisos por correo** de nuevas postulaciones: se revisan en el panel.
+- **Redes sociales** (pie): las direcciones de Instagram y YouTube están en `SOCIAL_LINKS`, en `client/src/lib/site.js`.
 
 ### Formulario de contacto
 

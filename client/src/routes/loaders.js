@@ -44,15 +44,8 @@ export function categoryLoader(category) {
 
 export function postLoader(category) {
   return async ({ params, request }) => {
-    const path = `/posts/${category}/${encodeURIComponent(params.slug)}`;
-    // Los comentarios se cargan en paralelo; si fallan, la publicación se muestra igual.
-    const [{ data: post }, comments] = await Promise.all([
-      load(path, request.signal),
-      api(`${path}/comments`, { signal: request.signal })
-        .then((r) => r.data)
-        .catch(() => []),
-    ]);
-    return { post, comments };
+    const { data: post } = await load(`/posts/${category}/${encodeURIComponent(params.slug)}`, request.signal);
+    return { post };
   };
 }
 

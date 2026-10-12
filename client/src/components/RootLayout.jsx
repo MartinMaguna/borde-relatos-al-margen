@@ -1,6 +1,10 @@
 import { Link, Outlet, ScrollRestoration } from 'react-router';
 import MainNav from './MainNav.jsx';
 import SupportersSection from './SupportersSection.jsx';
+import { InstagramIcon, YoutubeIcon } from './icons.jsx';
+import { SITE_NAME, SOCIAL_LINKS } from '../lib/site.js';
+
+const SOCIAL_ICONS = { instagram: InstagramIcon, youtube: YoutubeIcon };
 import { useLoadingAnnouncement, useRouteFocus } from '../a11y/hooks.js';
 
 /**
@@ -24,7 +28,7 @@ export default function RootLayout() {
       <header className="site-header">
         <div className="container site-header__bar">
           <Link to="/" className="site-title">
-            <span className="site-title__name">Borde.</span>{' '}
+            <span className="site-title__name">Borde</span>{' '}
             <span className="site-title__sub">Relatos al Margen</span>
           </Link>
           <MainNav />
@@ -40,10 +44,20 @@ export default function RootLayout() {
       <footer className="site-footer">
         <SupportersSection />
         <div className="container site-footer__bar">
-          <p>
-            Borde. Relatos al Margen · {new Date().getFullYear()} · <Link to="/acerca">Acerca del proyecto</Link> ·{' '}
-            <Link to="/guardados">Guardados</Link>
-          </p>
+          <p className="site-footer__name">{SITE_NAME}</p>
+          {/* Íconos con nombre accesible: "Borde en Instagram". */}
+          <ul className="social-links" aria-label="Redes sociales">
+            {SOCIAL_LINKS.map((s) => {
+              const Icon = SOCIAL_ICONS[s.network];
+              return (
+                <li key={s.network}>
+                  <a href={s.url} className="social-links__link" aria-label={`Borde en ${s.label}`}>
+                    <Icon />
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </footer>
 

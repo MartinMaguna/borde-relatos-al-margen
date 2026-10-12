@@ -1,15 +1,9 @@
 import { z } from 'zod';
-import { emptyToUndefined, httpUrl, objectId, pagination } from './common.js';
+import { emptyToUndefined, httpUrl, objectId } from './common.js';
 
 // Campo trampa: invisible para personas (oculto también al lector de pantalla);
 // los bots que completan todo lo llenan y el envío se descarta.
 const honeypot = z.string().max(200).optional();
-
-export const commentInput = z.object({
-  name: z.string({ error: 'Escribí tu nombre' }).trim().min(1, 'Escribí tu nombre').max(80, 'El nombre admite hasta 80 caracteres'),
-  text: z.string({ error: 'Escribí tu comentario' }).trim().min(1, 'Escribí tu comentario').max(2000, 'El comentario admite hasta 2000 caracteres'),
-  website: honeypot,
-});
 
 export const applicationInput = z.object({
   name: z.string({ error: 'Escribí tu nombre' }).trim().min(1, 'Escribí tu nombre').max(120),
@@ -30,12 +24,6 @@ export const applicationInput = z.object({
   // Se evalúa aunque haya otros errores: la persona ve todos los problemas de una vez.
   when: () => true,
 });
-
-export const adminCommentsQuery = pagination.extend({
-  status: emptyToUndefined(z.enum(['pending', 'approved', 'rejected']).optional()),
-});
-
-export const commentStatusInput = z.object({ status: z.enum(['approved', 'rejected', 'pending']) });
 
 export const idParams = z.object({ id: objectId });
 

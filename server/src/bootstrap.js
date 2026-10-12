@@ -6,7 +6,7 @@ import { Post } from './models/Post.js';
 
 export const DEFAULT_ABOUT = {
   title: 'Acerca de Borde',
-  body: 'Borde. Relatos al Margen es un espacio de lectura para voces que escriben desde los márgenes.\n\nEste texto se puede editar desde el panel.',
+  body: 'Borde Relatos al Margen es un espacio de lectura para voces que escriben desde los márgenes.\n\nEste texto se puede editar desde el panel.',
 };
 
 const editorEnv = z.object({

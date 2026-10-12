@@ -3,7 +3,7 @@ import { expectNoA11yViolations, hasHorizontalScroll, waitForView } from './help
 
 /** Vistas públicas con datos del seed de ejemplo (scripts/demo-posts.js). */
 const PAGES = [
-  { path: '/', h1: 'Borde. Relatos al Margen' },
+  { path: '/', h1: 'Borde Relatos al Margen' },
   { path: '/poesia', h1: 'Poesía' },
   { path: '/cuentos', h1: 'Cuentos' },
   { path: '/talleres', h1: 'Talleres' },
@@ -61,7 +61,7 @@ test.describe('Teclado y foco', () => {
 
     await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Cuentos' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Cuentos' })).toBeFocused();
-    await expect(page).toHaveTitle('Cuentos · Borde. Relatos al Margen');
+    await expect(page).toHaveTitle('Cuentos · Borde Relatos al Margen');
   });
 
   test('menú: en móvil se abre y cierra con el botón y Escape; en escritorio siempre visible', async ({ page, isMobile }) => {

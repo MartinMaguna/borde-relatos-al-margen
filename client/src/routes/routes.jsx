@@ -11,14 +11,12 @@ import LoginPage from '../pages/panel/LoginPage.jsx';
 import PostsAdminPage from '../pages/panel/PostsAdminPage.jsx';
 import PostFormPage from '../pages/panel/PostFormPage.jsx';
 import AboutEditPage from '../pages/panel/AboutEditPage.jsx';
-import CommentsAdminPage from '../pages/panel/CommentsAdminPage.jsx';
 import ApplicationsAdminPage from '../pages/panel/ApplicationsAdminPage.jsx';
 import MessagesAdminPage from '../pages/panel/MessagesAdminPage.jsx';
 import SupportersAdminPage from '../pages/panel/SupportersAdminPage.jsx';
 import { CATEGORIES, SITE_NAME } from '../lib/site.js';
 import { aboutLoader, categoryLoader, homeLoader, notFoundLoader, postLoader } from './loaders.js';
 import {
-  adminCommentsLoader,
   adminMessagesLoader,
   adminSupportersLoader,
   adminPostsLoader,
@@ -63,7 +61,6 @@ export const routes = [
               { path: 'publicaciones/nueva', element: <PostFormPage /> },
               { path: 'publicaciones/:id', loader: editPostLoader, element: <PostFormPage /> },
               { path: 'publicaciones/:id/postulaciones', loader: applicationsLoader, element: <ApplicationsAdminPage /> },
-              { path: 'comentarios', loader: adminCommentsLoader, element: <CommentsAdminPage /> },
               { path: 'mensajes', loader: adminMessagesLoader, element: <MessagesAdminPage /> },
               { path: 'logos', loader: adminSupportersLoader, element: <SupportersAdminPage /> },
               { path: 'acerca', loader: editAboutLoader, element: <AboutEditPage /> },

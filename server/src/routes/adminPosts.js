@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { Post } from '../models/Post.js';
 import { deleteImageIfUnused } from '../utils/images.js';
-import { Comment } from '../models/Comment.js';
 import { Application } from '../models/Application.js';
 import { HttpError } from '../middleware/errors.js';
 import { validate } from '../middleware/validate.js';
@@ -88,8 +87,8 @@ router.put('/:id', validate({ params: idParams, body: postInputSchema }), async 
 router.delete('/:id', validate({ params: idParams }), async (req, res) => {
   const post = await findPostOr404(req.valid.params.id);
   await post.deleteOne();
-  // Sus comentarios y postulaciones se van con ella (no quedan datos personales huérfanos).
-  await Promise.all([Comment.deleteMany({ post: post.id }), Application.deleteMany({ post: post.id })]);
+  // Sus postulaciones se van con ella (no quedan datos personales huérfanos).
+  await Application.deleteMany({ post: post.id });
   if (post.image?.url) await deleteImageIfUnused(post.image.url);
   sendOk(res, { id: post.id, title: post.title });
 });

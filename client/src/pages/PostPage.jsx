@@ -4,7 +4,6 @@ import { CallStatus, PostMeta } from '../components/PostMeta.jsx';
 import { SIGN_SECTION_ID } from '../components/PostCard.jsx';
 import { SignLanguageIcon } from '../components/icons.jsx';
 import ArticleActions from '../components/ArticleActions.jsx';
-import CommentsSection from '../components/CommentsSection.jsx';
 import ApplicationForm from '../components/ApplicationForm.jsx';
 import { useDocumentTitle } from '../a11y/hooks.js';
 import { formatDate } from '../lib/format.js';
@@ -67,7 +66,7 @@ function PostMedia({ post }) {
 
 /** Detalle de una publicación, pensado para lectura prolongada. */
 export default function PostPage() {
-  const { post, comments } = useLoaderData();
+  const { post } = useLoaderData();
   const category = CATEGORY_BY_SLUG[post.category];
   useDocumentTitle(`${post.title} · ${category.label}`);
 
@@ -82,7 +81,14 @@ export default function PostPage() {
         ]}
       />
 
+      {/* Orden: imagen → título → audio → lengua de señas → texto. */}
       <article className="article">
+        {post.image && (
+          <figure className="article__figure">
+            <img src={post.image.url} alt={post.image.alt} decoding="async" />
+          </figure>
+        )}
+
         <header className="article__header">
           <h1 tabIndex={-1}>{post.title}</h1>
           <PostMeta post={post} withReadingTime />
@@ -119,19 +125,11 @@ export default function PostPage() {
           </section>
         )}
 
-        {post.image && (
-          <figure className="article__figure">
-            <img src={post.image.url} alt={post.image.alt} loading="lazy" decoding="async" />
-          </figure>
-        )}
-
         {/* HTML generado y sanitizado en el servidor a partir del Markdown (sin scripts ni atributos peligrosos). */}
         <div className={`prose prose--${post.category}`} dangerouslySetInnerHTML={{ __html: post.bodyHtml }} />
 
         {post.category === 'convocatorias' && post.acceptsApplications && <ApplicationForm post={post} />}
       </article>
-
-      <CommentsSection post={post} comments={comments} />
 
       <p className="back-link">
         <Link to={`/${category.slug}`}>Volver a {category.label}</Link>

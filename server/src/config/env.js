@@ -14,8 +14,7 @@ const envSchema = z.object({
   SESSION_TTL_HOURS: z.coerce.number().positive().default(8),
   // Intentos de login permitidos por IP cada 15 minutos.
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
-  // Envíos públicos por IP: comentarios cada 15 minutos y postulaciones por hora.
-  COMMENT_RATE_LIMIT: z.coerce.number().int().positive().default(5),
+  // Postulaciones por IP, por hora.
   APPLICATION_RATE_LIMIT: z.coerce.number().int().positive().default(5),
   // Mensajes del formulario de contacto por IP, por hora.
   CONTACT_RATE_LIMIT: z.coerce.number().int().positive().default(5),

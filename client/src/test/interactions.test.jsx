@@ -21,7 +21,9 @@ describe('Acciones del artículo', () => {
     expect(screen.getByText(/Por Lucía Ferreyra · 3 minutos de lectura ·/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Guardar' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Compartir' })).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByRole('link', { name: 'Comentar' })).toHaveAttribute('href', '#comentarios');
+    expect(screen.getByRole('link', { name: 'Mis guardados' })).toHaveAttribute('href', '/guardados');
+    expect(screen.queryByRole('link', { name: 'Comentar' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Comentarios/ })).toBeNull();
     expect(await axeViolations()).toEqual([]);
   });
 
@@ -70,53 +72,6 @@ describe('Acciones del artículo', () => {
     await waitFor(() => expect(screen.getByTestId('announcer-polite')).toHaveTextContent('Enlace copiado.'));
   });
 
-  test('Comentar lleva el foco a la sección de comentarios', async () => {
-    mockApi({ '/posts/poesia/orilla': ok(poemWithTime) });
-    await renderRoute('/poesia/orilla');
-    Element.prototype.scrollIntoView = vi.fn();
-    await userEvent.setup().click(screen.getByRole('link', { name: 'Comentar' }));
-    expect(screen.getByRole('heading', { level: 2, name: /Comentarios/ })).toHaveFocus();
-  });
-});
-
-describe('Comentarios', () => {
-  test('lista los aprobados y envía uno nuevo, que queda pendiente', async () => {
-    const calls = mockApi({
-      '/posts/poesia/orilla': ok(poemWithTime),
-      '/posts/poesia/orilla/comments': ok([{ id: 'c1', name: 'Lu', text: 'Hermoso', createdAt: '2026-10-08T12:00:00.000Z' }]),
-      'POST /posts/poesia/orilla/comments': { status: 201, body: { ok: true, data: { status: 'pending' } } },
-    });
-    await renderRoute('/poesia/orilla');
-    const user = userEvent.setup();
-
-    expect(screen.getByRole('heading', { level: 2, name: 'Comentarios (1)' })).toBeInTheDocument();
-    expect(screen.getByText('Hermoso')).toBeInTheDocument();
-
-    await user.type(screen.getByLabelText('Tu nombre'), 'Ana');
-    await user.type(screen.getByLabelText('Comentario'), 'Me encantó');
-    await user.click(screen.getByRole('button', { name: 'Enviar comentario' }));
-
-    expect(await screen.findByText(/se publicará cuando el equipo lo revise/, { selector: 'p.notice' })).toBeInTheDocument();
-    expect(calls.find((c) => c.method === 'POST').body).toMatchObject({ name: 'Ana', text: 'Me encantó' });
-    expect(screen.getByLabelText('Tu nombre')).toHaveValue('');
-  });
-
-  test('los errores de la API se muestran en sus campos', async () => {
-    mockApi({
-      '/posts/poesia/orilla': ok(poemWithTime),
-      'POST /posts/poesia/orilla/comments': fail(400, 'Hay datos inválidos.', {
-        code: 'VALIDATION_ERROR',
-        details: [{ field: 'text', message: 'Escribí tu comentario' }],
-      }),
-    });
-    await renderRoute('/poesia/orilla');
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Enviar comentario' }));
-    const field = await screen.findByLabelText('Comentario');
-    await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
-    expect(field).toHaveAccessibleDescription(/Error: Escribí tu comentario/);
-    expect(screen.getByRole('link', { name: 'Escribí tu comentario' })).toHaveAttribute('href', '#campo-comment-text');
-  });
 });
 
 describe('Postulación a convocatorias', () => {
@@ -257,25 +212,7 @@ describe('Logos al pie y portada', () => {
   });
 });
 
-describe('Panel: comentarios y postulaciones', () => {
-  test('moderar: aprobar un comentario pendiente lo anuncia', async () => {
-    const calls = mockApi({
-      ...ME,
-      '/admin/comments?status=pending&page=1&limit=10': ok(
-        [{ id: 'c1', name: 'Lu', text: 'Hermoso', status: 'pending', createdAt: '2026-10-08T12:00:00.000Z', post: { title: 'Orilla', slug: 'orilla', category: 'poesia' } }],
-        { page: 1, limit: 10, total: 1, totalPages: 1 },
-      ),
-      'PATCH /admin/comments/c1': ok({ id: 'c1', status: 'approved' }),
-    });
-    await renderRoute('/panel/comentarios');
-    expect(screen.getByRole('link', { name: 'Pendientes' })).toHaveAttribute('aria-current', 'page');
-    expect(await axeViolations()).toEqual([]);
-
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Aprobar el comentario de Lu' }));
-    await waitFor(() => expect(screen.getByTestId('announcer-polite')).toHaveTextContent('Se aprobó el comentario de Lu'));
-    expect(calls.find((c) => c.method === 'PATCH').body).toEqual({ status: 'approved' });
-  });
-
+describe('Panel: postulaciones', () => {
   test('postulaciones: lista con datos, texto desplegable y descarga en CSV', async () => {
     mockApi({
       ...ME,
@@ -341,5 +278,43 @@ describe('Panel: mensajes y logos', () => {
     });
     expect(await screen.findByRole('button', { name: 'Editar Municipio' })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: 'Cargados' })).toHaveFocus());
+  });
+});
+
+describe('Pie y orden del artículo', () => {
+  test('el pie dice solo "Borde Relatos al Margen" y tiene Instagram y YouTube', async () => {
+    mockApi({ '/posts/poesia/orilla': ok(poem) });
+    await renderRoute('/poesia/orilla');
+    const footer = screen.getByRole('contentinfo');
+    expect(within(footer).getByText('Borde Relatos al Margen')).toBeInTheDocument();
+    const social = within(footer).getByRole('list', { name: 'Redes sociales' });
+    expect(within(social).getByRole('link', { name: 'Borde en Instagram' })).toBeInTheDocument();
+    expect(within(social).getByRole('link', { name: 'Borde en YouTube' })).toBeInTheDocument();
+    expect(within(footer).queryByRole('link', { name: /Acerca|Guardados|Ingreso/ })).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Borde\./);
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('imagen → título → audio → lengua de señas → texto', async () => {
+    const full = {
+      ...poem,
+      image: { url: 'https://example.com/orilla.jpg', alt: 'Una orilla al atardecer' },
+      audio: { url: 'https://example.com/orilla.mp3', label: 'Lectura de la autora' },
+      signVideoId: 'abcdefghijk',
+      signVideoUrl: 'https://www.youtube.com/watch?v=abcdefghijk',
+    };
+    mockApi({ '/posts/poesia/orilla': ok(full) });
+    await renderRoute('/poesia/orilla');
+    const article = screen.getByRole('article');
+    const order = [
+      within(article).getByRole('img', { name: 'Una orilla al atardecer' }),
+      within(article).getByRole('heading', { level: 1 }),
+      within(article).getByRole('heading', { name: /Escuchar/ }),
+      within(article).getByRole('heading', { name: /lengua de señas/ }),
+      article.querySelector('.prose'),
+    ];
+    for (let i = 1; i < order.length; i++) {
+      expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
   });
 });

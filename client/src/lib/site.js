@@ -1,4 +1,4 @@
-export const SITE_NAME = 'Borde. Relatos al Margen';
+export const SITE_NAME = 'Borde Relatos al Margen';
 
 /**
  * Categorías en el orden del menú. `slug` coincide con la URL y con el valor de la API.
@@ -60,3 +60,12 @@ export const SUPPORTER_GROUPS = [
 ];
 
 export const PAGE_SIZE = 10;
+
+/**
+ * Redes sociales del pie. PENDIENTE: reemplazar por las cuentas reales de Borde
+ * (por ahora llevan a la portada de cada red).
+ */
+export const SOCIAL_LINKS = [
+  { network: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/' },
+  { network: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/' },
+];

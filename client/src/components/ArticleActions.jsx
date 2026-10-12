@@ -1,27 +1,26 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { useAnnounce } from '../a11y/Announcer.jsx';
 import { useSaved } from '../lib/saved.js';
 import {
   BookmarkIcon,
-  CommentIcon,
   CopyIcon,
   FacebookIcon,
   LinkedinIcon,
+  ListIcon,
   MailIcon,
   ShareIcon,
   WhatsappIcon,
 } from './icons.jsx';
 
-export const COMMENTS_SECTION_ID = 'comentarios';
-
 /**
- * Guardar · Compartir · Comentar, arriba del texto de una publicación.
+ * Guardar · Compartir · Mis guardados, arriba del texto de una publicación.
  *
  * - Guardar: botón cuyo texto dice lo que hace ("Guardar" / "Quitar de guardados").
  * - Compartir: botón que despliega opciones (patrón "disclosure": aria-expanded
  *   y aria-controls), no un menú ARIA: son enlaces y botones comunes, que se
  *   recorren con Tab como cualquier otro. Escape cierra y devuelve el foco.
- * - Comentar: lleva a la sección de comentarios y le da el foco.
+ * - Mis guardados: enlace a la página Guardados (es su único acceso).
  */
 export default function ArticleActions({ post }) {
   const { isSaved, save, remove } = useSaved();
@@ -38,14 +37,6 @@ export default function ArticleActions({ post }) {
     }
   }
 
-  function goToComments(event) {
-    const target = document.getElementById(COMMENTS_SECTION_ID);
-    if (!target) return;
-    event.preventDefault();
-    target.scrollIntoView({ block: 'start' });
-    target.focus({ preventScroll: true });
-  }
-
   return (
     <div className="article-actions">
       <button type="button" className="action-button" onClick={toggleSaved}>
@@ -53,10 +44,10 @@ export default function ArticleActions({ post }) {
         {saved ? 'Quitar de guardados' : 'Guardar'}
       </button>
       <ShareMenu post={post} />
-      <a className="action-button" href={`#${COMMENTS_SECTION_ID}`} onClick={goToComments}>
-        <CommentIcon />
-        Comentar
-      </a>
+      <Link className="action-button" to="/guardados">
+        <ListIcon />
+        Mis guardados
+      </Link>
     </div>
   );
 }
@@ -70,7 +61,7 @@ function ShareMenu({ post }) {
 
   // Dirección canónica de la publicación (sin #ancla ni parámetros).
   const url = `${window.location.origin}/${post.category}/${post.slug}`;
-  const text = `${post.title}, de ${post.author}. En Borde. Relatos al Margen.`;
+  const text = `${post.title}, de ${post.author}. En Borde Relatos al Margen.`;
   const enc = encodeURIComponent;
   const canShareNatively = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 

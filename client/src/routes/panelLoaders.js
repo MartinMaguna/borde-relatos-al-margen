@@ -66,15 +66,6 @@ export async function editPostLoader({ params, request }) {
   return { post };
 }
 
-export async function adminCommentsLoader({ request }) {
-  const params = new URL(request.url).searchParams;
-  const status = ['pending', 'approved', 'rejected'].includes(params.get('estado')) ? params.get('estado') : 'pending';
-  const n = Number(params.get('pagina'));
-  const page = Number.isInteger(n) && n > 0 ? n : 1;
-  const { data: comments, meta } = await adminLoad(`/admin/comments?status=${status}&page=${page}&limit=${PAGE_SIZE}`, request);
-  return { comments, meta, status };
-}
-
 export async function applicationsLoader({ params, request }) {
   const { data } = await adminLoad(`/admin/posts/${encodeURIComponent(params.id)}/applications`, request);
   return data;

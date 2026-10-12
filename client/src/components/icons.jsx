@@ -1,6 +1,6 @@
-import { faHandsAslInterpreting, faBookmark as faBookmarkSolid, faLink, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
-import { faBookmark, faComment, faEnvelope, faCopy } from '@fortawesome/free-regular-svg-icons';
-import { faWhatsapp, faFacebook, faLinkedin } from '@fortawesome/free-brands-svg-icons';
+import { faHandsAslInterpreting, faBookmark as faBookmarkSolid, faLink, faArrowUpFromBracket, faListUl } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark, faEnvelope, faCopy } from '@fortawesome/free-regular-svg-icons';
+import { faWhatsapp, faFacebook, faLinkedin, faInstagram, faYoutube } from '@fortawesome/free-brands-svg-icons';
 
 /**
  * Íconos decorativos: siempre acompañan un texto visible, así que se ocultan
@@ -58,10 +58,12 @@ export function SignLanguageIcon() {
 
 export const BookmarkIcon = ({ filled = false }) => <FaIcon def={filled ? faBookmarkSolid : faBookmark} />;
 export const ShareIcon = () => <FaIcon def={faArrowUpFromBracket} />;
-export const CommentIcon = () => <FaIcon def={faComment} />;
+export const ListIcon = () => <FaIcon def={faListUl} />;
 export const LinkIcon = () => <FaIcon def={faLink} />;
 export const CopyIcon = () => <FaIcon def={faCopy} />;
 export const MailIcon = () => <FaIcon def={faEnvelope} />;
 export const WhatsappIcon = () => <FaIcon def={faWhatsapp} />;
 export const FacebookIcon = () => <FaIcon def={faFacebook} />;
 export const LinkedinIcon = () => <FaIcon def={faLinkedin} />;
+export const InstagramIcon = () => <FaIcon def={faInstagram} />;
+export const YoutubeIcon = () => <FaIcon def={faYoutube} />;

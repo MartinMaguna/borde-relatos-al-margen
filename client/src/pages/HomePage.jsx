@@ -18,9 +18,9 @@ export default function HomePage() {
     <>
       <div className="hero">
         <div className="hero__text">
-          {/* El espacio entre las dos partes mantiene el nombre accesible "Borde. Relatos al Margen". */}
+          {/* El espacio entre las dos partes mantiene el nombre accesible "Borde Relatos al Margen". */}
           <h1 tabIndex={-1} className="hero__title">
-            Borde.{' '}
+            Borde{' '}
             <span className="hero__title-sub">Relatos al Margen</span>
           </h1>
           <p className="lead hero__lead">
