@@ -12,8 +12,8 @@ import { paginationMeta, sendOk } from '../utils/respond.js';
  */
 const router = Router();
 const PUBLISHED = { status: 'published' };
-const LIST_FIELDS = '-body -bodyHtml -createdBy -updatedBy';
-const DETAIL_FIELDS = '-body -createdBy -updatedBy';
+const LIST_FIELDS = '-body -bodyHtml -chapters -createdBy -updatedBy';
+const DETAIL_FIELDS = '-body -chapters.body -createdBy -updatedBy';
 
 // GET /api/posts?category=poesia&page=1&limit=10
 router.get('/', validate({ query: publicListQuery }), async (req, res) => {

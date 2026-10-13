@@ -21,14 +21,16 @@ export function PostMeta({ post, withReadingTime = false }) {
 }
 
 /**
- * Estado de una convocatoria. Se comunica con texto ("Abierta"/"Cerrada"),
- * no solo con color: el borde además cambia de continuo a punteado.
+ * Estado de una convocatoria. Se comunica con texto ("Próximamente" /
+ * "Abierta" / "Cerrada"), no solo con color: el borde además cambia de estilo.
  */
+const CALL_STATUS_LABEL = { proxima: 'Próximamente', abierta: 'Abierta', cerrada: 'Cerrada' };
+
 export function CallStatus({ post }) {
   if (!post.callStatus) return null;
   return (
     <p className={`call-status call-status--${post.callStatus}`}>
-      <span className="visually-hidden">Estado de la convocatoria:</span> {post.callStatus === 'abierta' ? 'Abierta' : 'Cerrada'}
+      <span className="visually-hidden">Estado de la convocatoria:</span> {CALL_STATUS_LABEL[post.callStatus]}
     </p>
   );
 }
@@ -38,6 +40,15 @@ export function Deadline({ post }) {
   return (
     <p className="post-meta">
       Fecha límite: <time dateTime={post.deadline}>{formatDate(post.deadline)}</time>
+    </p>
+  );
+}
+
+export function OpensAt({ post }) {
+  if (!post.opensAt) return null;
+  return (
+    <p className="post-meta">
+      Apertura: <time dateTime={post.opensAt}>{formatDate(post.opensAt)}</time>
     </p>
   );
 }

@@ -204,6 +204,11 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 13 | Se quitan los comentarios; "Mis guardados" pasa a las acciones de cada publicación | El pie ya no tiene enlaces: Guardados sigue teniendo un acceso visible. |
 | 13 | Redes sociales como íconos con nombre accesible ("Borde en Instagram") en una lista nombrada, con objetivo táctil de 44px | Un ícono solo no tiene texto: el nombre lo da `aria-label`. WCAG 2.5.8. |
 | 13 | En la publicación, la imagen va antes del título | Pedido del equipo; la imagen conserva su texto alternativo y el foco sigue yendo al h1 al navegar. |
+| 14 | Capítulos: índice en un `<nav>` con nombre y cada capítulo como sección con h2 ("Capítulo 2 El regreso") que recibe el foco desde el índice | Se recorren con la lista de encabezados y con los enlaces del índice. |
+| 14 | Editor de capítulos: cada uno en un `<fieldset>` numerado; Subir/Bajar/Quitar dicen a qué capítulo afectan; el foco sigue al capítulo movido y el cambio se anuncia | El orden se puede cambiar solo con teclado y sin perder la ubicación. |
+| 14 | Estado "Próximamente" con texto y borde punteado, además del color | WCAG 1.4.1. |
+| 14 | Botones Guardar/Compartir/Mis guardados de 32px de alto | Más discretos y por encima del mínimo de 24px (WCAG 2.5.8). |
+| 14 | "|" del pie oculto al lector (`aria-hidden`) | Se lee "Borde Relatos al margen", sin "barra vertical". |
 | 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
 | 3 | Objetivos táctiles ≥ 2.75rem (44 px) en menú y paginación | WCAG 2.5.8. |

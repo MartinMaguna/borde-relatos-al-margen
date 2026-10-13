@@ -9,7 +9,7 @@ export default function CategoryPage({ category }) {
   const { posts, meta } = useLoaderData();
   const { page, totalPages, total } = meta;
   const pageLabel = totalPages > 1 ? `página ${page} de ${totalPages}` : null;
-  const isCalls = category.slug === 'convocatorias';
+  const isCalls = Boolean(category.banner);
 
   // En páginas 2+ el título lo dice: así el lector confirma en qué página quedó.
   useDocumentTitle(pageLabel ? `${category.label} (${pageLabel})` : category.label);
@@ -29,7 +29,7 @@ export default function CategoryPage({ category }) {
       </div>
 
       {posts.length ? (
-        // Convocatorias: con el formato de la portada (igual que en Inicio).
+        // Talleres y convocatorias: con el formato de la portada (igual que en Inicio).
         <ul className={isCalls ? 'call-list' : 'post-list'}>
           {posts.map((post) => (
             <li key={post.id}>

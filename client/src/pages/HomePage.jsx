@@ -34,8 +34,8 @@ export default function HomePage() {
       {CATEGORIES.map((category) => {
         const posts = latest[category.slug] ?? [];
         const headingId = `seccion-${category.slug}`;
-        // Convocatorias: cada una a todo el ancho, con el formato de la portada.
-        const isCalls = category.slug === 'convocatorias';
+        // Talleres y convocatorias: cada uno a todo el ancho, con el formato de la portada.
+        const isCalls = Boolean(category.banner);
         return (
           <section key={category.slug} className="section" aria-labelledby={headingId}>
             <div className="section__header">

@@ -29,6 +29,16 @@ const audioSchema = new mongoose.Schema(
   { _id: false },
 );
 
+// Solo cuentos: capítulos, cada uno con su título y su texto (Markdown y HTML sanitizado).
+const chapterSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    body: { type: String, required: true },
+    bodyHtml: { type: String, default: '' },
+  },
+  { _id: false },
+);
+
 const postSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 200 },
@@ -37,8 +47,17 @@ const postSchema = new mongoose.Schema(
     // Autor/a del texto publicado (no necesariamente quien lo carga en el panel).
     author: { type: String, required: true, trim: true, maxlength: 120 },
     summary: { type: String, trim: true, maxlength: 500, default: '' },
-    body: { type: String, required: true }, // Markdown original, para editar
+    // Markdown original, para editar. En un cuento con capítulos puede quedar vacío (o ser la introducción).
+    body: {
+      type: String,
+      default: '',
+      required: [
+        function () { return !(this.category === 'cuentos' && this.chapters?.length); },
+        'El texto es obligatorio',
+      ],
+    },
     bodyHtml: { type: String, default: '' }, // HTML sanitizado, para leer
+    chapters: { type: [chapterSchema], default: [] },
     image: { type: imageSchema, default: null },
     audio: { type: audioSchema, default: null },
     // Versión en lengua de señas: video de YouTube (guardado en forma canónica).
@@ -49,7 +68,8 @@ const postSchema = new mongoose.Schema(
     acceptsApplications: { type: Boolean, default: false },
     status: { type: String, enum: POST_STATUS, default: 'draft' },
     publishedAt: { type: Date, default: null },
-    // Solo convocatorias
+    // Solo convocatorias. Apertura opcional (antes de esa fecha, "Próximamente").
+    opensAt: { type: Date, default: null },
     deadline: {
       type: Date,
       default: null,
@@ -71,7 +91,9 @@ postSchema.index({ category: 1, status: 1, publishedAt: -1 });
 /** Estado de una convocatoria, calculado en el momento (no se guarda, así nunca queda desactualizado). */
 postSchema.virtual('callStatus').get(function () {
   if (this.category !== 'convocatorias' || !this.deadline) return undefined;
-  return this.deadline.getTime() >= Date.now() ? 'abierta' : 'cerrada';
+  const now = Date.now();
+  if (this.opensAt && this.opensAt.getTime() > now) return 'proxima';
+  return this.deadline.getTime() >= now ? 'abierta' : 'cerrada';
 });
 
 /** Id del video de YouTube, para que el sitio lo inserte sin tener que interpretar la URL. */
@@ -80,14 +102,17 @@ postSchema.virtual('signVideoId').get(function () {
 });
 
 postSchema.pre('validate', function () {
-  if (this.isModified('body') || this.readingMinutes == null) {
-    this.bodyHtml = renderMarkdown(this.body);
-    this.readingMinutes = readingMinutes(this.body);
+  if (this.category !== 'cuentos') this.chapters = [];
+  if (this.isModified('body') || this.isModified('chapters') || this.readingMinutes == null) {
+    this.bodyHtml = this.body ? renderMarkdown(this.body) : '';
+    for (const chapter of this.chapters) chapter.bodyHtml = renderMarkdown(chapter.body);
+    this.readingMinutes = readingMinutes([this.body, ...this.chapters.map((c) => c.body)].join(' '));
   }
   // La primera vez que se publica, registramos la fecha. Si vuelve a borrador, se conserva.
   if (this.status === 'published' && !this.publishedAt) this.publishedAt = new Date();
   if (this.category !== 'convocatorias') {
     this.deadline = null;
+    this.opensAt = null;
     this.basesUrl = null;
     this.acceptsApplications = false;
   }

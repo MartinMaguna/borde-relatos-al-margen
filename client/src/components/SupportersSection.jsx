@@ -37,7 +37,7 @@ export default function SupportersSection() {
         </h2>
         <div className="supporters__groups">
           {groups.map((group) => (
-            <div key={group.role} className="supporters__group">
+            <div key={group.role} className={`supporters__group supporters__group--${group.role}`}>
               <h3 id={`acompanan-${group.role}`} className="supporters__label">
                 {group.label}
               </h3>

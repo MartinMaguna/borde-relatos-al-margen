@@ -2,10 +2,10 @@ import { Link, Outlet, ScrollRestoration } from 'react-router';
 import MainNav from './MainNav.jsx';
 import SupportersSection from './SupportersSection.jsx';
 import { InstagramIcon, YoutubeIcon } from './icons.jsx';
-import { SITE_NAME, SOCIAL_LINKS } from '../lib/site.js';
+import { SOCIAL_LINKS } from '../lib/site.js';
+import { useLoadingAnnouncement, useRouteFocus } from '../a11y/hooks.js';
 
 const SOCIAL_ICONS = { instagram: InstagramIcon, youtube: YoutubeIcon };
-import { useLoadingAnnouncement, useRouteFocus } from '../a11y/hooks.js';
 
 /**
  * Estructura común a todas las vistas públicas:
@@ -44,7 +44,10 @@ export default function RootLayout() {
       <footer className="site-footer">
         <SupportersSection />
         <div className="container site-footer__bar">
-          <p className="site-footer__name">{SITE_NAME}</p>
+          {/* La barra es decorativa: el lector lee "Borde Relatos al margen". */}
+          <p className="site-footer__name">
+            Borde <span aria-hidden="true">|</span> Relatos al margen
+          </p>
           {/* Íconos con nombre accesible: "Borde en Instagram". */}
           <ul className="social-links" aria-label="Redes sociales">
             {SOCIAL_LINKS.map((s) => {

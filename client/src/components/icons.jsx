@@ -1,5 +1,6 @@
-import { faHandsAslInterpreting, faBookmark as faBookmarkSolid, faLink, faArrowUpFromBracket, faListUl } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark as faBookmarkSolid, faLink, faArrowUpFromBracket, faListUl } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark, faEnvelope, faCopy } from '@fortawesome/free-regular-svg-icons';
+import { SIGN_HAND_FILL_RULE, SIGN_HAND_PATH, SIGN_HAND_VIEWBOX } from './signHand.js';
 import { faWhatsapp, faFacebook, faLinkedin, faInstagram, faYoutube } from '@fortawesome/free-brands-svg-icons';
 
 /**
@@ -7,8 +8,8 @@ import { faWhatsapp, faFacebook, faLinkedin, faInstagram, faYoutube } from '@for
  * a los lectores de pantalla (aria-hidden) y no reciben foco.
  *
  * Varios provienen de Font Awesome Free (https://fontawesome.com), licencia
- * CC BY 4.0: el de lengua de señas es su "hands-asl-interpreting", el símbolo
- * internacional de interpretación en lengua de señas.
+ * CC BY 4.0. El de lengua de señas es una seña de la mano, vectorizada a
+ * partir de la ilustración que aportó el equipo (ver signHand.js).
  */
 const base = {
   viewBox: '0 0 24 24',
@@ -53,7 +54,11 @@ export function PauseIcon() {
 
 /** Símbolo internacional de interpretación en lengua de señas (dos manos). */
 export function SignLanguageIcon() {
-  return <FaIcon def={faHandsAslInterpreting} className="icon icon--wide" />;
+  return (
+    <svg viewBox={SIGN_HAND_VIEWBOX} className="icon icon--sign" aria-hidden="true" focusable="false">
+      <path d={SIGN_HAND_PATH} fillRule={SIGN_HAND_FILL_RULE} fill="currentColor" />
+    </svg>
+  );
 }
 
 export const BookmarkIcon = ({ filled = false }) => <FaIcon def={filled ? faBookmarkSolid : faBookmark} />;

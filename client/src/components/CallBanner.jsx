@@ -1,12 +1,13 @@
 import { Link } from 'react-router';
 import GeometricArt from './GeometricArt.jsx';
 import { CardMedia } from './PostCard.jsx';
-import { CallStatus, Deadline } from './PostMeta.jsx';
+import { CallStatus, Deadline, OpensAt, PostMeta } from './PostMeta.jsx';
 
 /**
- * Convocatoria en formato "hero" (como la portada): título grande, estado,
- * fecha límite y resumen a la izquierda; a la derecha, la imagen de la
- * convocatoria en un círculo o, si no tiene, la composición geométrica.
+ * Convocatoria o taller en formato "hero" (como la portada): título grande,
+ * datos (estado y fechas en convocatorias; autor y fecha en talleres) y
+ * resumen a la izquierda; a la derecha, la imagen en un círculo o, si no
+ * tiene, la composición geométrica.
  * Sin tarjeta: se separan con una línea fina.
  *
  * Mismo contenido y orden de lectura que una tarjeta: el título es el
@@ -16,6 +17,7 @@ import { CallStatus, Deadline } from './PostMeta.jsx';
 export default function CallBanner({ post, headingLevel = 2 }) {
   const Heading = `h${headingLevel}`;
   const href = `/${post.category}/${post.slug}`;
+  const isCall = post.category === 'convocatorias';
 
   return (
     <article className="call-banner">
@@ -24,8 +26,15 @@ export default function CallBanner({ post, headingLevel = 2 }) {
           <Link to={href}>{post.title}</Link>
         </Heading>
         <div className="call-banner__meta">
-          <CallStatus post={post} />
-          <Deadline post={post} />
+          {isCall ? (
+            <>
+              <CallStatus post={post} />
+              <OpensAt post={post} />
+              <Deadline post={post} />
+            </>
+          ) : (
+            <PostMeta post={post} />
+          )}
         </div>
         {post.summary && <p className="lead call-banner__lead">{post.summary}</p>}
         <CardMedia post={post} href={href} />

@@ -350,6 +350,9 @@ La identidad visual (colores, tipografía, formas y componentes) está documenta
 
 - **Guardar**: sin cuentas; se guarda en el navegador de la persona (`localStorage`) y se ve en `/guardados` (botón "Mis guardados" en cada publicación).
 - **Comentarios**: no hay (se quitaron).
+- **Capítulos** (solo cuentos): en el panel, "Agregar capítulo" (título y texto, se pueden reordenar). En el sitio se muestran con un índice; el texto principal queda como introducción.
+- **Convocatorias**: fecha de apertura opcional y fecha límite. Antes de la apertura figuran como "Próximamente" y no reciben postulaciones.
+- **Talleres y convocatorias**: a todo el ancho, con el formato de la portada.
 - **Compartir**: copiar enlace, WhatsApp, correo, Facebook, LinkedIn y, en móviles, el menú de compartir del sistema.
 - **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones.
 - **Contacto**: `/contacto`, formulario (nombre, correo, mensaje). El correo del equipo no aparece en el sitio. Ver abajo.
@@ -372,7 +375,7 @@ En el panel → **Logos** se cargan quienes impulsan, apoyan, organizan o colabo
 
 ## Créditos
 
-Íconos de lengua de señas, compartir, guardar y comentar: [Font Awesome Free](https://fontawesome.com) (licencia de íconos CC BY 4.0).
+Íconos de compartir, guardar y redes: [Font Awesome Free](https://fontawesome.com) (licencia de íconos CC BY 4.0). Ícono de lengua de señas: vectorizado a partir de una ilustración aportada por el equipo de Borde (`client/src/components/signHand.js`).
 
 ## Accesibilidad
 

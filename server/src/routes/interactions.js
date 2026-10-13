@@ -43,6 +43,9 @@ export function createPublicInteractionsRouter() {
       if (!post.acceptsApplications) {
         throw new HttpError(403, 'Esta convocatoria no recibe postulaciones por el sitio. Revisá sus bases.', { code: 'APPLICATIONS_CLOSED' });
       }
+      if (post.callStatus === 'proxima') {
+        throw new HttpError(403, 'La convocatoria todavía no abrió: las postulaciones empiezan en la fecha de apertura.', { code: 'APPLICATIONS_CLOSED' });
+      }
       if (post.callStatus !== 'abierta') {
         throw new HttpError(403, 'La convocatoria ya cerró: la fecha límite pasó.', { code: 'APPLICATIONS_CLOSED' });
       }

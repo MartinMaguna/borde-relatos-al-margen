@@ -14,6 +14,17 @@ const deadlineDate = z.preprocess(
   z.coerce.date({ error: 'Fecha inválida' }),
 );
 
+/** Fecha de apertura: desde el comienzo de ese día (UTC-3). */
+const openingDate = z.preprocess(
+  (v) => (typeof v === 'string' && DATE_ONLY.test(v) ? `${v}T00:00:00.000-03:00` : v),
+  z.coerce.date({ error: 'Fecha inválida' }),
+);
+
+const chapterSchema = z.object({
+  title: z.string({ error: 'Escribí el título del capítulo' }).trim().min(1, 'Escribí el título del capítulo').max(200),
+  body: z.string({ error: 'Escribí el texto del capítulo' }).trim().min(1, 'Escribí el texto del capítulo').max(100_000),
+});
+
 // Una imagen subida desde el panel ("/api/images/<id>") o una dirección externa http(s).
 const imageUrl = z.union([z.string().regex(/^\/api\/images\/[a-f\d]{24}$/i), httpUrl], {
   error: 'Subí una imagen o escribí una dirección que empiece con http:// o https://',
@@ -84,20 +95,36 @@ export const postInputSchema = z
     category: z.enum(CATEGORIES, { error: 'Elegí una categoría válida' }),
     author: z.string({ error: 'El nombre de autor/a es obligatorio' }).trim().min(1, 'El nombre de autor/a es obligatorio').max(120),
     summary: z.string().trim().max(500, 'El resumen admite hasta 500 caracteres').default(''),
-    body: z.string({ error: 'El texto es obligatorio' }).trim().min(1, 'El texto es obligatorio').max(100_000),
+    body: z.string().trim().max(100_000).default(''),
+    chapters: z.array(chapterSchema).max(60, 'Hasta 60 capítulos').default([]),
     image: imageSchema.nullable().default(null),
     audio: audioSchema.nullable().default(null),
     signVideoUrl: emptyToUndefined(signVideoUrl.nullable().optional()),
     acceptsApplications: z.boolean().default(false),
     status: z.enum(POST_STATUS).default('draft'),
+    opensAt: emptyToUndefined(openingDate.nullable().optional()),
     deadline: emptyToUndefined(deadlineDate.nullable().optional()),
     basesUrl: emptyToUndefined(httpUrl.nullable().optional()),
   })
-  .superRefine((data, ctx) => {
-    if (data.category === 'convocatorias' && !data.deadline) {
-      ctx.addIssue({ code: 'custom', path: ['deadline'], message: 'La fecha límite es obligatoria en convocatorias' });
-    }
-  });
+  // `when: () => true`: se evalúan aunque haya otros errores, así el formulario los muestra todos juntos.
+  .refine((data) => Boolean(data.body) || (data.category === 'cuentos' && data.chapters?.length > 0), {
+    path: ['body'],
+    message: 'El texto es obligatorio',
+    when: () => true,
+  })
+  .refine((data) => data.category !== 'convocatorias' || Boolean(data.deadline), {
+    path: ['deadline'],
+    message: 'La fecha límite es obligatoria en convocatorias',
+    when: () => true,
+  })
+  .refine(
+    (data) =>
+      data.category !== 'convocatorias' ||
+      !(data.opensAt instanceof Date) ||
+      !(data.deadline instanceof Date) ||
+      data.opensAt <= data.deadline,
+    { path: ['opensAt'], message: 'La fecha de apertura tiene que ser anterior a la fecha límite', when: () => true },
+  );
 
 export const publicListQuery = pagination.extend({
   category: z.enum(CATEGORIES).optional(),

@@ -28,6 +28,7 @@ export const CATEGORIES = [
     intro: 'Espacios de escritura y lectura compartida.',
     seeAll: 'Ver todos los talleres',
     empty: 'Por ahora no hay talleres anunciados.',
+    banner: true, // a todo el ancho, con el formato de la portada
   },
   {
     slug: 'convocatorias',
@@ -35,6 +36,7 @@ export const CATEGORIES = [
     intro: 'Llamados abiertos para enviar textos, con su fecha límite y sus bases.',
     seeAll: 'Ver todas las convocatorias',
     empty: 'Por ahora no hay convocatorias.',
+    banner: true,
   },
 ];
 

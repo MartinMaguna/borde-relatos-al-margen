@@ -282,11 +282,13 @@ describe('Panel: mensajes y logos', () => {
 });
 
 describe('Pie y orden del artículo', () => {
-  test('el pie dice solo "Borde Relatos al Margen" y tiene Instagram y YouTube', async () => {
+  test('el pie dice "Borde | Relatos al margen" (la barra no se lee) y tiene Instagram y YouTube', async () => {
     mockApi({ '/posts/poesia/orilla': ok(poem) });
     await renderRoute('/poesia/orilla');
     const footer = screen.getByRole('contentinfo');
-    expect(within(footer).getByText('Borde Relatos al Margen')).toBeInTheDocument();
+    const name = footer.querySelector('.site-footer__name');
+    expect(name).toHaveTextContent('Borde | Relatos al margen');
+    expect(within(name).getByText('|')).toHaveAttribute('aria-hidden', 'true');
     const social = within(footer).getByRole('list', { name: 'Redes sociales' });
     expect(within(social).getByRole('link', { name: 'Borde en Instagram' })).toBeInTheDocument();
     expect(within(social).getByRole('link', { name: 'Borde en YouTube' })).toBeInTheDocument();
@@ -316,5 +318,80 @@ describe('Pie y orden del artículo', () => {
     for (let i = 1; i < order.length; i++) {
       expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
+  });
+});
+
+describe('Capítulos, apertura y talleres', () => {
+  test('un cuento con capítulos muestra un índice y cada capítulo como sección', async () => {
+    const story = {
+      ...poem,
+      category: 'cuentos',
+      slug: 'novela',
+      title: 'Novela',
+      bodyHtml: '',
+      chapters: [
+        { title: 'La partida', bodyHtml: '<p>Uno</p>' },
+        { title: 'El regreso', bodyHtml: '<p>Dos</p>' },
+      ],
+    };
+    mockApi({ '/posts/cuentos/novela': ok(story) });
+    await renderRoute('/cuentos/novela');
+    const index = screen.getByRole('navigation', { name: 'Capítulos' });
+    expect(within(index).getByRole('link', { name: 'El regreso' })).toHaveAttribute('href', '#capitulo-2');
+    expect(screen.getByRole('heading', { level: 2, name: 'Capítulo 2 El regreso' })).toHaveAttribute('id', 'capitulo-2');
+    expect(screen.getByRole('region', { name: 'Capítulo 1 La partida' })).toHaveTextContent('Uno');
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('una convocatoria que todavía no abrió dice "Próximamente", muestra la apertura y no el formulario', async () => {
+    const soon = { ...openCall, callStatus: 'proxima', opensAt: '2026-11-01T03:00:00.000Z', acceptsApplications: true };
+    mockApi({ '/posts/convocatorias/convocatoria-antologia': ok(soon) });
+    await renderRoute('/convocatorias/convocatoria-antologia');
+    expect(screen.getAllByText('Próximamente').length).toBeGreaterThan(0);
+    expect(screen.getByText('Apertura')).toBeInTheDocument();
+    expect(screen.getByText(/todavía no abrió/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enviar postulación' })).toBeNull();
+  });
+
+  test('en la portada, talleres y convocatorias van a todo el ancho; poesía en tarjetas', async () => {
+    const workshop = { ...poem, id: 't1', category: 'talleres', slug: 'taller', title: 'Taller de escritura' };
+    mockApi({ '/posts/latest?perCategory=3': ok({ poesia: [poem], cuentos: [], talleres: [workshop], convocatorias: [openCall] }) });
+    await renderRoute('/');
+    const talleres = screen.getByRole('region', { name: 'Talleres' });
+    expect(talleres.querySelector('.call-banner')).not.toBeNull();
+    expect(within(talleres).getByText(/Por Lucía Ferreyra/)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Poesía' }).querySelector('.post-card')).not.toBeNull();
+    expect(await axeViolations()).toEqual([]);
+  });
+});
+
+describe('Panel: capítulos', () => {
+  test('agregar, reordenar y quitar capítulos; se envían en orden', async () => {
+    const calls = mockApi({ ...ME, 'POST /admin/posts': { status: 201, body: { ok: true, data: { title: 'Novela', status: 'draft' } } }, '/admin/posts?page=1&limit=10': ok([], { page: 1, limit: 10, total: 0, totalPages: 0 }) });
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Categoría' }), 'cuentos');
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'Novela');
+    await user.type(screen.getByRole('textbox', { name: 'Autor o autora' }), 'Ana');
+
+    await user.click(screen.getByRole('button', { name: 'Agregar capítulo' }));
+    expect(screen.getByRole('textbox', { name: 'Título del capítulo 1' })).toHaveFocus();
+    await user.keyboard('Primero');
+    await user.type(screen.getByRole('textbox', { name: 'Texto del capítulo 1' }), 'Texto uno');
+    await user.click(screen.getByRole('button', { name: 'Agregar capítulo' }));
+    await user.keyboard('Segundo');
+    await user.type(screen.getByRole('textbox', { name: 'Texto del capítulo 2' }), 'Texto dos');
+
+    await user.click(screen.getByRole('button', { name: 'Subir el capítulo 2' }));
+    expect(screen.getByRole('textbox', { name: 'Título del capítulo 1' })).toHaveValue('Segundo');
+    await waitFor(() => expect(screen.getByTestId('announcer-polite')).toHaveTextContent('El capítulo pasó al lugar 1.'));
+    expect(await axeViolations()).toEqual([]);
+
+    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(calls.find((c) => c.method === 'POST').body.chapters).toEqual([
+      { title: 'Segundo', body: 'Texto dos' },
+      { title: 'Primero', body: 'Texto uno' },
+    ]);
   });
 });

@@ -5,6 +5,7 @@ import ErrorSummary from './forms/ErrorSummary.jsx';
 import Honeypot from './forms/Honeypot.jsx';
 import { TextArea, TextField, fieldId } from './forms/fields.jsx';
 import { errorsByField, errorsFromApi } from './forms/errors.js';
+import { formatDate } from '../lib/format.js';
 
 const prefixed = (errors) => errors.map((e) => (e.field ? { ...e, field: `application.${e.field}` } : e));
 
@@ -34,7 +35,16 @@ export default function ApplicationForm({ post }) {
     return (
       <section className="application" aria-labelledby="postular">
         <h2 id="postular">Postulación</h2>
-        <p className="notice">Esta convocatoria ya cerró: no se reciben más postulaciones.</p>
+        <p className="notice">
+          {post.callStatus === 'proxima' ? (
+            <>
+              Esta convocatoria todavía no abrió. El formulario aparece acá desde el{' '}
+              <time dateTime={post.opensAt}>{formatDate(post.opensAt)}</time>.
+            </>
+          ) : (
+            'Esta convocatoria ya cerró: no se reciben más postulaciones.'
+          )}
+        </p>
       </section>
     );
   }

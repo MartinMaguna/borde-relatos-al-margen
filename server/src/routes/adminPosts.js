@@ -74,6 +74,7 @@ router.put('/:id', validate({ params: idParams, body: postInputSchema }), async 
   post.set({
     ...data,
     slug,
+    opensAt: data.opensAt ?? null,
     deadline: data.deadline ?? null,
     basesUrl: data.basesUrl ?? null,
     signVideoUrl: data.signVideoUrl ?? null,

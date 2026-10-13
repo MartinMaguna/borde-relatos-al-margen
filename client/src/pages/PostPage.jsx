@@ -64,6 +64,41 @@ function PostMedia({ post }) {
   );
 }
 
+/**
+ * Capítulos de un cuento: primero un índice (navegación con nombre) y después
+ * cada capítulo como sección con su h2, así se recorren también con la lista
+ * de encabezados del lector de pantalla. Los enlaces del índice llevan el foco
+ * al título del capítulo.
+ */
+function Chapters({ post }) {
+  return (
+    <div className="chapters-read">
+      <nav className="chapters-index" aria-labelledby="indice-capitulos">
+        <h2 id="indice-capitulos" className="chapters-index__title">
+          Capítulos
+        </h2>
+        <ol>
+          {post.chapters.map((chapter, i) => (
+            <li key={i}>
+              <a href={`#capitulo-${i + 1}`}>{chapter.title}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {post.chapters.map((chapter, i) => (
+        <section key={i} className="chapter-read" aria-labelledby={`capitulo-${i + 1}`}>
+          {/* tabIndex -1: destino de los enlaces del índice (recibe el foco al llegar). */}
+          <h2 id={`capitulo-${i + 1}`} tabIndex={-1} className="chapter-read__title">
+            <span className="chapter-read__number">Capítulo {i + 1}</span> {chapter.title}
+          </h2>
+          <div className="prose prose--cuentos" dangerouslySetInnerHTML={{ __html: chapter.bodyHtml }} />
+        </section>
+      ))}
+    </div>
+  );
+}
+
 /** Detalle de una publicación, pensado para lectura prolongada. */
 export default function PostPage() {
   const { post } = useLoaderData();
@@ -107,6 +142,14 @@ export default function PostPage() {
               <dd>
                 <CallStatus post={post} />
               </dd>
+              {post.opensAt && (
+                <>
+                  <dt>Apertura</dt>
+                  <dd>
+                    <time dateTime={post.opensAt}>{formatDate(post.opensAt)}</time>
+                  </dd>
+                </>
+              )}
               <dt>Fecha límite</dt>
               <dd>
                 <time dateTime={post.deadline}>{formatDate(post.deadline)}</time>
@@ -126,7 +169,9 @@ export default function PostPage() {
         )}
 
         {/* HTML generado y sanitizado en el servidor a partir del Markdown (sin scripts ni atributos peligrosos). */}
-        <div className={`prose prose--${post.category}`} dangerouslySetInnerHTML={{ __html: post.bodyHtml }} />
+        {post.bodyHtml && <div className={`prose prose--${post.category}`} dangerouslySetInnerHTML={{ __html: post.bodyHtml }} />}
+
+        {post.chapters?.length > 0 && <Chapters post={post} />}
 
         {post.category === 'convocatorias' && post.acceptsApplications && <ApplicationForm post={post} />}
       </article>

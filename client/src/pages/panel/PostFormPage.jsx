@@ -6,6 +6,7 @@ import ErrorSummary from '../../components/forms/ErrorSummary.jsx';
 import ImageField from '../../components/forms/ImageField.jsx';
 import MediaFields from '../../components/forms/MediaFields.jsx';
 import MarkdownEditor from '../../components/forms/MarkdownEditor.jsx';
+import ChaptersField, { chaptersFrom } from '../../components/forms/ChaptersField.jsx';
 import { Fieldset, SelectField, TextArea, TextField } from '../../components/forms/fields.jsx';
 import { errorsByField, errorsFromApi } from '../../components/forms/errors.js';
 import { CATEGORY_OPTIONS, STATUS_LABELS, toDateInput } from '../../lib/admin.js';
@@ -17,8 +18,10 @@ const EMPTY_POST = {
   author: '',
   summary: '',
   body: '',
+  chapters: [],
   status: 'draft',
   image: null,
+  opensAt: null,
   deadline: null,
   basesUrl: '',
 };
@@ -34,6 +37,7 @@ function payloadFrom(form, status) {
     author: get('author'),
     summary: get('summary'),
     body: get('body'),
+    chapters: get('category') === 'cuentos' ? chaptersFrom(form) : [],
     status,
     // Sin URL no hay imagen; si hay URL, el texto alternativo es obligatorio (lo valida la API).
     image: imageUrl ? { url: imageUrl, alt: get('image.alt') } : null,
@@ -41,6 +45,7 @@ function payloadFrom(form, status) {
     audio: get('audio.url') ? { url: get('audio.url'), label: get('audio.label') } : null,
     signVideoUrl: get('signVideoUrl'),
     acceptsApplications: form.get('acceptsApplications') === 'on',
+    opensAt: get('opensAt'),
     deadline: get('deadline'),
     basesUrl: get('basesUrl'),
   };
@@ -125,7 +130,7 @@ export default function PostFormPage() {
         <SelectField
           name="category"
           label="Categoría"
-          hint="Si elegís Convocatorias, aparecen debajo los campos de fecha límite y bases."
+          hint="Si elegís Cuentos, podés dividirlo en capítulos; si elegís Convocatorias, aparecen los campos de fechas y bases."
           options={CATEGORY_OPTIONS}
           defaultValue={post.category}
           onChange={(e) => setCategory(e.target.value)}
@@ -156,14 +161,25 @@ export default function PostFormPage() {
           name="body"
           label="Texto"
           rows={16}
-          hint="Cada salto de línea se respeta, ideal para versos; para separar párrafos o estrofas, dejá una línea en blanco. Usá la barra de formato (antes del campo) o los atajos Control+B negrita, Control+I cursiva y Control+K enlace."
+          hint={`${category === 'cuentos' ? 'Si el cuento tiene capítulos (más abajo), este texto es la introducción y puede quedar vacío. ' : ''}Cada salto de línea se respeta, ideal para versos; para separar párrafos o estrofas, dejá una línea en blanco. Usá la barra de formato (antes del campo) o los atajos Control+B negrita, Control+I cursiva y Control+K enlace.`}
           defaultValue={post.body}
           error={fieldErrors.body}
           previewClassName={`prose prose--${category}`}
         />
 
+        {category === 'cuentos' && <ChaptersField initial={post.chapters ?? []} errors={fieldErrors} />}
+
         {category === 'convocatorias' && (
           <Fieldset legend="Datos de la convocatoria">
+            <TextField
+              name="opensAt"
+              label="Fecha de apertura"
+              type="date"
+              optional
+              hint="Desde ese día se reciben postulaciones. Antes, la convocatoria figura como «Próximamente». Si la dejás vacía, está abierta desde que se publica."
+              defaultValue={toDateInput(post.opensAt)}
+              error={fieldErrors.opensAt}
+            />
             <TextField
               name="deadline"
               label="Fecha límite"

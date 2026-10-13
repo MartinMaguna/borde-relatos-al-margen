@@ -104,3 +104,61 @@ describe('Postulaciones', () => {
     assert.equal(await conn.collection('applications').countDocuments(), 0);
   });
 });
+
+describe('Capítulos (cuentos)', () => {
+  test('un cuento puede tener capítulos: se guardan, se renderizan y suman al tiempo de lectura', async () => {
+    const words = Array(400).fill('palabra').join(' ');
+    const story = await createPost({
+      title: 'Novela corta',
+      body: '',
+      chapters: [
+        { title: 'Uno', body: `**Empieza** ${words}` },
+        { title: 'Dos', body: words },
+      ],
+    });
+    assert.equal(story.chapters.length, 2);
+    assert.match(story.chapters[0].bodyHtml, /<strong>Empieza<\/strong>/);
+    assert.equal(story.readingMinutes, 4);
+
+    const pub = (await request(app).get(`/api/posts/cuentos/${story.slug}`)).body.data;
+    assert.deepEqual(pub.chapters.map((c) => c.title), ['Uno', 'Dos']);
+    assert.equal(pub.chapters[0].body, undefined, 'el público recibe solo el HTML');
+    const list = (await request(app).get('/api/posts?category=cuentos')).body.data;
+    assert.equal(list[0].chapters, undefined, 'los listados no cargan capítulos');
+  });
+
+  test('sin texto ni capítulos, el texto es obligatorio; cada capítulo exige título y texto', async () => {
+    const res = await agent.post('/api/admin/posts').send(postData({ body: '', chapters: [{ title: '', body: '' }] }));
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body.error.details.map((d) => d.field).sort(), ['chapters.0.body', 'chapters.0.title']);
+    const empty = await agent.post('/api/admin/posts').send(postData({ body: '' }));
+    assert.deepEqual(empty.body.error.details.map((d) => d.field), ['body']);
+  });
+
+  test('solo los cuentos guardan capítulos', async () => {
+    const poem = await createPost({ title: 'Poema', category: 'poesia', chapters: [{ title: 'X', body: 'Y' }] });
+    assert.deepEqual(poem.chapters, []);
+  });
+});
+
+describe('Fecha de apertura (convocatorias)', () => {
+  test('antes de la apertura está "proxima" y no recibe postulaciones', async () => {
+    const c = await call({ opensAt: '2999-01-01' });
+    assert.equal(c.callStatus, 'proxima');
+    assert.match(c.opensAt, /^2999-01-01T03:00:00/);
+    const res = await request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send(application());
+    assert.equal(res.status, 403);
+    assert.match(res.body.error.message, /todavía no abrió/);
+  });
+
+  test('con la apertura pasada está abierta', async () => {
+    const c = await call({ opensAt: '2020-01-01' });
+    assert.equal(c.callStatus, 'abierta');
+  });
+
+  test('la apertura no puede ser posterior a la fecha límite', async () => {
+    const res = await agent.post('/api/admin/posts').send(postData({ title: 'C', category: 'convocatorias', opensAt: '2999-12-31', deadline: '2999-01-01' }));
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body.error.details.map((d) => d.field), ['opensAt']);
+  });
+});
