@@ -1,4 +1,4 @@
-# Accesibilidad — Borde Relatos al Margen
+# Accesibilidad — Borde Relatos al margen
 
 Objetivo: **WCAG 2.2 nivel AA**, con prioridad en personas ciegas que usan lector de pantalla.
 
@@ -57,7 +57,7 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 
 #### A. Estructura y orientación (sitio público)
 
-- [ ] Al cargar `/`, el lector anuncia el título "Borde Relatos al Margen" y el idioma de voz es español.
+- [ ] Al cargar `/`, el lector anuncia el título "Borde Relatos al margen" y el idioma de voz es español.
 - [ ] El primer Tab enfoca "Saltar al contenido", visible en pantalla. Al activarlo, la lectura sigue en el contenido principal (no en el menú).
 - [ ] La lista de puntos de referencia muestra: banner, navegación "Principal", principal (main) e información de contenido (footer). En el detalle también "Ruta de navegación"; en listados largos, "Paginación".
 - [ ] La lista de encabezados de la portada es: un nivel 1 (nombre del sitio), cuatro nivel 2 (Poesía, Cuentos, Talleres, Convocatorias) y nivel 3 para cada publicación. Sin saltos de nivel.
@@ -66,7 +66,7 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 
 #### B. Navegación entre páginas
 
-- [ ] Al elegir "Cuentos" en el menú, se anuncia "Cuentos, encabezado nivel 1" (el foco va al título) y el título de la pestaña cambia a "Cuentos · Borde Relatos al Margen".
+- [ ] Al elegir "Cuentos" en el menú, se anuncia "Cuentos, encabezado nivel 1" (el foco va al título) y el título de la pestaña cambia a "Cuentos · Borde Relatos al margen".
 - [ ] La lectura continúa desde el título hacia abajo, no desde el principio de la página ni desde el menú.
 - [ ] En el menú, la página actual se anuncia como "actual" / "página actual".
 - [ ] Con conexión lenta (DevTools → Network → Slow 3G) se anuncia "Cargando…" una sola vez.
@@ -209,7 +209,7 @@ Marcá cada punto con el lector y navegador usados. Si algo falla, anotá qué s
 | 14 | Estado "Próximamente" con texto y borde punteado, además del color | WCAG 1.4.1. |
 | 14 | Botones Guardar/Compartir/Mis guardados de 32px de alto | Más discretos y por encima del mínimo de 24px (WCAG 2.5.8). |
 | 14 | "|" del pie oculto al lector (`aria-hidden`) | Se lee "Borde Relatos al margen", sin "barra vertical". |
-| 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde Relatos al Margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
+| 9 | Composición geométrica de la portada con `aria-hidden` y fuera del área de texto; el `h1` conserva el nombre "Borde Relatos al margen" | La decoración no interfiere con la lectura ni con el lector de pantalla. |
 | 3 | `prefers-color-scheme`, `prefers-reduced-motion` y `forced-colors` | Tema oscuro automático; sin animaciones si se piden reducidas; foco con colores del sistema en alto contraste de Windows. |
 | 3 | Objetivos táctiles ≥ 2.75rem (44 px) en menú y paginación | WCAG 2.5.8. |
 | 4 | Etiqueta visible y asociada (`label for`) en cada campo; pistas y errores vinculados con `aria-describedby` | El lector lee etiqueta, pista y error al enfocar el campo. Nada de placeholder como etiqueta. |

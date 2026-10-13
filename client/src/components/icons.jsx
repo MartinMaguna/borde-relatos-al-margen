@@ -52,7 +52,7 @@ export function PauseIcon() {
   );
 }
 
-/** Símbolo internacional de interpretación en lengua de señas (dos manos). */
+/** Seña de la mano (Lengua de Señas Uruguaya), del mismo color que el texto que la acompaña. */
 export function SignLanguageIcon() {
   return (
     <svg viewBox={SIGN_HAND_VIEWBOX} className="icon icon--sign" aria-hidden="true" focusable="false">

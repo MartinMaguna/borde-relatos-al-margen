@@ -18,15 +18,11 @@ export default function HomePage() {
     <>
       <div className="hero">
         <div className="hero__text">
-          {/* El espacio entre las dos partes mantiene el nombre accesible "Borde Relatos al Margen". */}
+          {/* El espacio entre las dos partes mantiene el nombre accesible "Borde Relatos al margen". */}
           <h1 tabIndex={-1} className="hero__title">
             Borde{' '}
-            <span className="hero__title-sub">Relatos al Margen</span>
+            <span className="hero__title-sub">Relatos al margen</span>
           </h1>
-          <p className="lead hero__lead">
-            Un espacio de lectura para voces que escriben desde los márgenes: poesía, cuentos, talleres y
-            convocatorias abiertas.
-          </p>
         </div>
         <GeometricArt className="hero__art" />
       </div>

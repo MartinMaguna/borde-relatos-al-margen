@@ -1,4 +1,4 @@
-import { Link, Outlet, ScrollRestoration } from 'react-router';
+import { Link, Outlet, ScrollRestoration, useLocation } from 'react-router';
 import MainNav from './MainNav.jsx';
 import SupportersSection from './SupportersSection.jsx';
 import { InstagramIcon, YoutubeIcon } from './icons.jsx';
@@ -14,6 +14,8 @@ const SOCIAL_ICONS = { instagram: InstagramIcon, youtube: YoutubeIcon };
  * Un único <main>, un único <nav aria-label="Principal">.
  */
 export default function RootLayout() {
+  const { pathname } = useLocation();
+  const isPoemOrStory = /^\/(poesia|cuentos)\/[^/]+\/?$/.test(pathname);
   useRouteFocus();
   const isLoading = useLoadingAnnouncement();
 
@@ -29,7 +31,7 @@ export default function RootLayout() {
         <div className="container site-header__bar">
           <Link to="/" className="site-title">
             <span className="site-title__name">Borde</span>{' '}
-            <span className="site-title__sub">Relatos al Margen</span>
+            <span className="site-title__sub">Relatos al margen</span>
           </Link>
           <MainNav />
         </div>
@@ -42,7 +44,8 @@ export default function RootLayout() {
 
       {/* Los logos van dentro del footer (contentinfo): todo el contenido queda en un landmark. */}
       <footer className="site-footer">
-        <SupportersSection />
+        {/* Al final de un poema o un cuento no van los logos: la lectura termina en el texto. */}
+        {!isPoemOrStory && <SupportersSection />}
         <div className="container site-footer__bar">
           {/* La barra es decorativa: el lector lee "Borde Relatos al margen". */}
           <p className="site-footer__name">

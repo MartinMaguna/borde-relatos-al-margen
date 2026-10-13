@@ -74,10 +74,10 @@ test.describe('Audio y lengua de señas en navegador real', () => {
     await expectNoA11yViolations(page);
 
     // Lengua de señas → detalle, con foco en la sección del video.
-    await page.getByRole('link', { name: `Lengua de señas «${title}»` }).click();
+    await page.getByRole('link', { name: `Lengua de Señas Uruguaya «${title}»` }).click();
     await expect(page).toHaveURL(/#lengua-de-senas$/);
-    await expect(page.getByRole('heading', { level: 2, name: 'Versión en lengua de señas' })).toBeFocused();
-    const video = page.frameLocator(`iframe[title="Versión en lengua de señas de «${title}» (video de YouTube)"]`);
+    await expect(page.getByRole('heading', { level: 2, name: 'Lengua de Señas Uruguaya' })).toBeFocused();
+    const video = page.frameLocator(`iframe[title="Versión en Lengua de Señas Uruguaya de «${title}» (video de YouTube)"]`);
     await expect(video.getByText('Video de prueba')).toBeVisible();
 
     // Reproductor nativo del detalle, con su nombre.

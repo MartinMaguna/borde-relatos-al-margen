@@ -1,4 +1,4 @@
-export const SITE_NAME = 'Borde Relatos al Margen';
+export const SITE_NAME = 'Borde Relatos al margen';
 
 /**
  * Categorías en el orden del menú. `slug` coincide con la URL y con el valor de la API.

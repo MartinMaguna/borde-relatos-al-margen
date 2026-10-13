@@ -1,4 +1,4 @@
-# Borde Relatos al Margen
+# Borde Relatos al margen
 
 Sitio editorial de lectura (poesía, cuentos, talleres y convocatorias) con panel de edición.
 Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores de pantalla).

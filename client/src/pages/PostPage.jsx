@@ -40,13 +40,13 @@ function PostMedia({ post }) {
         <section className="post-media__block" aria-labelledby={SIGN_SECTION_ID}>
           {/* tabIndex -1: destino del enlace "Lengua de señas" de las tarjetas (recibe el foco al llegar). */}
           <h2 id={SIGN_SECTION_ID} className="post-media__title" tabIndex={-1}>
-            <SignLanguageIcon /> Versión en lengua de señas
+            <SignLanguageIcon /> Lengua de Señas Uruguaya
           </h2>
           <div className="video-frame">
             {/* youtube-nocookie: YouTube no guarda cookies de seguimiento hasta que se reproduce el video. */}
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${post.signVideoId}`}
-              title={`Versión en lengua de señas de «${post.title}» (video de YouTube)`}
+              title={`Versión en Lengua de Señas Uruguaya de «${post.title}» (video de YouTube)`}
               loading="lazy"
               allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
@@ -55,7 +55,7 @@ function PostMedia({ post }) {
           </div>
           <p className="post-media__note">
             <a href={post.signVideoUrl}>
-              Ver en YouTube <span className="visually-hidden">la versión en lengua de señas</span>
+              Ver en YouTube <span className="visually-hidden">la versión en Lengua de Señas Uruguaya</span>
             </a>
           </p>
         </section>
@@ -176,9 +176,10 @@ export default function PostPage() {
         {post.category === 'convocatorias' && post.acceptsApplications && <ApplicationForm post={post} />}
       </article>
 
-      <p className="back-link">
+      <nav className="back-links" aria-label="Volver">
+        <Link to="/">Volver a Inicio</Link>
         <Link to={`/${category.slug}`}>Volver a {category.label}</Link>
-      </p>
+      </nav>
     </div>
   );
 }

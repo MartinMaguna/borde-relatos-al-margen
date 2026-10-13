@@ -3,7 +3,7 @@ import { useLocation, useNavigation } from 'react-router';
 import { SITE_NAME } from '../lib/site.js';
 import { useAnnounce } from './Announcer.jsx';
 
-/** Actualiza document.title: "Poesía · Borde Relatos al Margen". Es lo primero que lee el lector al cambiar de vista. */
+/** Actualiza document.title: "Poesía · Borde Relatos al margen". Es lo primero que lee el lector al cambiar de vista. */
 export function useDocumentTitle(title) {
   useEffect(() => {
     document.title = title ? `${title} · ${SITE_NAME}` : SITE_NAME;

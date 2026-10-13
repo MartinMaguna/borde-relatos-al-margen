@@ -61,7 +61,7 @@ function ShareMenu({ post }) {
 
   // Dirección canónica de la publicación (sin #ancla ni parámetros).
   const url = `${window.location.origin}/${post.category}/${post.slug}`;
-  const text = `${post.title}, de ${post.author}. En Borde Relatos al Margen.`;
+  const text = `${post.title}, de ${post.author}. En Borde Relatos al margen.`;
   const enc = encodeURIComponent;
   const canShareNatively = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 

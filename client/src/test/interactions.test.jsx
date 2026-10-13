@@ -181,8 +181,9 @@ describe('Logos al pie y portada', () => {
   ];
 
   test('se muestran agrupados dentro del pie, con el nombre como texto alternativo', async () => {
-    mockApi({ '/posts/poesia/orilla': ok(poem), '/supporters': ok(supporters) });
-    await renderRoute('/poesia/orilla');
+    const workshop = { ...poem, category: 'talleres', slug: 'taller', title: 'Taller' };
+    mockApi({ '/posts/talleres/taller': ok(workshop), '/supporters': ok(supporters) });
+    await renderRoute('/talleres/taller');
     const footer = screen.getByRole('contentinfo');
     const region = await within(footer).findByRole('region', { name: 'Acompañan a Borde' });
     expect(within(region).getByRole('list', { name: 'Impulsan' })).toBeInTheDocument();
@@ -312,7 +313,7 @@ describe('Pie y orden del artículo', () => {
       within(article).getByRole('img', { name: 'Una orilla al atardecer' }),
       within(article).getByRole('heading', { level: 1 }),
       within(article).getByRole('heading', { name: /Escuchar/ }),
-      within(article).getByRole('heading', { name: /lengua de señas/ }),
+      within(article).getByRole('heading', { name: /Lengua de Señas Uruguaya/ }),
       article.querySelector('.prose'),
     ];
     for (let i = 1; i < order.length; i++) {
@@ -393,5 +394,28 @@ describe('Panel: capítulos', () => {
       { title: 'Segundo', body: 'Texto dos' },
       { title: 'Primero', body: 'Texto uno' },
     ]);
+  });
+});
+
+describe('Final de poemas y cuentos', () => {
+  const supporters = [{ id: 's1', name: 'Municipio', role: 'impulsan', logoUrl: '/api/images/aaaaaaaaaaaaaaaaaaaaaaaa', link: null }];
+
+  test('en un poema no van los logos y hay "Volver a Inicio" y "Volver a Poesía"', async () => {
+    const calls = mockApi({ '/posts/poesia/orilla': ok(poem), '/supporters': ok(supporters) });
+    await renderRoute('/poesia/orilla');
+    const back = screen.getByRole('navigation', { name: 'Volver' });
+    expect(within(back).getByRole('link', { name: 'Volver a Inicio' })).toHaveAttribute('href', '/');
+    expect(within(back).getByRole('link', { name: 'Volver a Poesía' })).toHaveAttribute('href', '/poesia');
+    expect(screen.queryByRole('region', { name: 'Acompañan a Borde' })).toBeNull();
+    expect(calls.some((c) => c.path === '/supporters')).toBe(false);
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('la tarjeta dice "Lengua de Señas Uruguaya"; la portada no tiene la frase de presentación', async () => {
+    mockApi({ '/posts/latest?perCategory=3': ok({ poesia: [{ ...poem, signVideoId: 'abcdefghijk' }], cuentos: [], talleres: [], convocatorias: [] }) });
+    await renderRoute('/');
+    expect(screen.getByRole('link', { name: 'Lengua de Señas Uruguaya «Orilla»' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Borde Relatos al margen');
+    expect(screen.queryByText(/Un espacio de lectura/)).toBeNull();
   });
 });

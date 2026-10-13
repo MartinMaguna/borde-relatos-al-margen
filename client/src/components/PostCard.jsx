@@ -59,7 +59,7 @@ export function CardMedia({ post, href }) {
       {post.signVideoId && (
         <Link to={`${href}#${SIGN_SECTION_ID}`} className="sign-link">
           <SignLanguageIcon />
-          Lengua de señas <span className="visually-hidden">«{post.title}»</span>
+          Lengua de Señas Uruguaya <span className="visually-hidden">«{post.title}»</span>
         </Link>
       )}
     </div>

@@ -35,7 +35,7 @@
   --link: #8a1a5c;
   --focus: #3b32c9;
   --success: #1d6b4a;
-  --sign-ink: var(--indigo); /* ícono de lengua de señas */
+  --sign-ink: var(--ink-muted); /* Lengua de Señas Uruguaya: ícono y texto, mismo tono que "Relatos al margen" */
   --shadow-sheet: 0 18px 40px -12px rgba(22, 18, 43, 0.28);
 
   --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
@@ -569,6 +569,7 @@ main:focus {
   min-height: 2.75rem;
   padding: var(--space-1) var(--space-2);
   font-weight: 700;
+  color: var(--sign-ink);
 }
 
 .post-media {
@@ -763,11 +764,25 @@ main:focus {
   margin-top: 1.6em;
 }
 
-.back-link {
+.back-link,
+.back-links {
   margin-top: var(--space-5);
   padding-top: var(--space-4);
   border-top: 1px solid var(--line);
   max-width: var(--measure);
+}
+
+/* "Volver a Inicio" y "Volver a Poesía", uno al lado del otro (debajo en pantallas angostas). */
+.back-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.back-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
 }
 
 /* ---------- Paginación ---------- */

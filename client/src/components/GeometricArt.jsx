@@ -8,21 +8,24 @@ import { useId } from 'react';
 export default function GeometricArt({ className }) {
   const gradientId = useId();
   return (
-    <svg className={className} viewBox="0 0 320 300" aria-hidden="true" focusable="false">
+    // Disposición de la referencia del equipo: punto índigo arriba a la izquierda,
+    // círculo con degradado arriba a la derecha, dos anillos concéntricos con un
+    // anillo coral adentro abajo a la izquierda y un cuarto de disco coral en la esquina.
+    <svg className={className} viewBox="0 0 340 290" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" style={{ stopColor: 'var(--indigo)' }} />
-          <stop offset="0.4" style={{ stopColor: 'var(--violet)' }} />
-          <stop offset="0.7" style={{ stopColor: 'var(--magenta)' }} />
+          <stop offset="0.38" style={{ stopColor: 'var(--violet)' }} />
+          <stop offset="0.72" style={{ stopColor: 'var(--magenta)' }} />
           <stop offset="1" style={{ stopColor: 'var(--orange)' }} />
         </linearGradient>
       </defs>
-      <circle cx="100" cy="190" r="70" fill="none" style={{ stroke: 'var(--line-soft)' }} strokeWidth="1" />
-      <circle cx="100" cy="190" r="100" fill="none" style={{ stroke: 'var(--line-soft)' }} strokeWidth="1" />
-      <circle cx="210" cy="110" r="90" fill={`url(#${gradientId})`} />
-      <path d="M150 300 a90 90 0 0 1 180 0 z" style={{ fill: 'var(--coral)' }} />
-      <circle cx="70" cy="70" r="18" style={{ fill: 'var(--indigo)' }} />
-      <circle cx="120" cy="240" r="22" fill="none" style={{ stroke: 'var(--coral)' }} strokeWidth="2" />
+      <circle cx="63" cy="68" r="16.5" style={{ fill: 'var(--indigo)' }} />
+      <circle cx="239" cy="90" r="81" fill={`url(#${gradientId})`} />
+      <circle cx="97" cy="199" r="78" fill="none" style={{ stroke: 'var(--line-soft)' }} strokeWidth="1.5" />
+      <circle cx="97" cy="199" r="55" fill="none" style={{ stroke: 'var(--line-soft)' }} strokeWidth="1.5" />
+      <circle cx="86" cy="214" r="19" fill="none" style={{ stroke: 'var(--coral)' }} strokeWidth="2.5" />
+      <path d="M340 290 H240 A100 100 0 0 1 340 190 Z" style={{ fill: 'var(--coral)' }} />
     </svg>
   );
 }

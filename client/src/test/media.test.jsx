@@ -33,9 +33,9 @@ describe('Tarjetas con audio y lengua de señas', () => {
     await renderRoute('/poesia');
 
     expect(screen.getByRole('button', { name: 'Escuchar «Orilla»' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Lengua de señas «Orilla»' })).toHaveAttribute('href', '/poesia/orilla#lengua-de-senas');
+    expect(screen.getByRole('link', { name: 'Lengua de Señas Uruguaya «Orilla»' })).toHaveAttribute('href', '/poesia/orilla#lengua-de-senas');
     expect(screen.queryByRole('button', { name: /Escuchar «El último colectivo»/ })).toBeNull();
-    expect(screen.queryByRole('link', { name: /Lengua de señas «El último colectivo»/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Lengua de Señas Uruguaya «El último colectivo»/ })).toBeNull();
     expect(await axeViolations()).toEqual([]);
   });
 
@@ -77,15 +77,15 @@ describe('Detalle con audio y lengua de señas', () => {
 
     const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent.trim());
     expect(h2).toContain('Escuchar: Lectura de la autora');
-    expect(h2).toContain('Versión en lengua de señas');
+    expect(h2).toContain('Lengua de Señas Uruguaya');
 
     const audio = container.querySelector('audio[controls]');
     expect(audio).toHaveAttribute('src', AUDIO);
     expect(audio).toHaveAttribute('preload', 'none');
 
-    const iframe = screen.getByTitle('Versión en lengua de señas de «Orilla» (video de YouTube)');
+    const iframe = screen.getByTitle('Versión en Lengua de Señas Uruguaya de «Orilla» (video de YouTube)');
     expect(iframe).toHaveAttribute('src', `https://www.youtube-nocookie.com/embed/${VIDEO_ID}`);
-    expect(screen.getByRole('link', { name: 'Ver en YouTube la versión en lengua de señas' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Ver en YouTube la versión en Lengua de Señas Uruguaya' })).toHaveAttribute(
       'href',
       withMedia.signVideoUrl,
     );
@@ -100,8 +100,8 @@ describe('Detalle con audio y lengua de señas', () => {
     await renderRoute('/poesia');
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('link', { name: 'Lengua de señas «Orilla»' }));
-    const section = await screen.findByRole('heading', { level: 2, name: 'Versión en lengua de señas' });
+    await user.click(screen.getByRole('link', { name: 'Lengua de Señas Uruguaya «Orilla»' }));
+    const section = await screen.findByRole('heading', { level: 2, name: 'Lengua de Señas Uruguaya' });
     await waitFor(() => expect(section).toHaveFocus());
   });
 });
