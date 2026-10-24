@@ -36,7 +36,6 @@ export default function HomePage() {
           <section key={category.slug} className="section" aria-labelledby={headingId}>
             <div className="section__header">
               <h2 id={headingId}>{category.label}</h2>
-              <Link to={`/${category.slug}`}>{category.seeAll}</Link>
             </div>
             {posts.length ? (
               <ul className={isCalls ? 'call-list' : 'post-list post-list--grid'}>
@@ -49,6 +48,10 @@ export default function HomePage() {
             ) : (
               <p className="muted">{category.empty}</p>
             )}
+            {/* Después de las publicaciones: primero se ve qué hay, después cómo seguir. */}
+            <p className="section__more">
+              <Link to={`/${category.slug}`}>{category.seeAll}</Link>
+            </p>
           </section>
         );
       })}

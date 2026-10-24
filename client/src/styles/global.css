@@ -446,8 +446,29 @@ main:focus {
   padding-bottom: var(--space-2);
 }
 
+/* Títulos de sección de la portada: más grandes y con una marca de color, para ubicarse de un vistazo. */
 .section__header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   margin: 0;
+  font-size: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.section__header h2::before {
+  content: '';
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: var(--radius-circle);
+  background: linear-gradient(135deg, var(--indigo), var(--violet) 38%, var(--magenta) 72%, var(--orange));
+}
+
+.section__more {
+  margin: var(--space-4) 0 0;
+  font-weight: 700;
 }
 
 .muted {
@@ -583,6 +604,13 @@ main:focus {
   border: var(--stroke-hairline) solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
+}
+
+/* Video en Lengua de Señas Uruguaya: sin tarjeta alrededor. */
+.post-media__block--plain {
+  padding: 0;
+  border: 0;
+  background: none;
 }
 
 .post-media__title {

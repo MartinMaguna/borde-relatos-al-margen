@@ -419,3 +419,20 @@ describe('Final de poemas y cuentos', () => {
     expect(screen.queryByText(/Un espacio de lectura/)).toBeNull();
   });
 });
+
+describe('Portada y centrado', () => {
+  test('"Ver toda la poesía" va después de las tarjetas', async () => {
+    mockApi({ '/posts/latest?perCategory=3': ok({ poesia: [poem], cuentos: [], talleres: [], convocatorias: [] }) });
+    await renderRoute('/');
+    const region = screen.getByRole('region', { name: 'Poesía' });
+    const card = within(region).getByRole('link', { name: 'Orilla' });
+    const more = within(region).getByRole('link', { name: 'Ver toda la poesía' });
+    expect(card.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  test('un taller también se lee en una columna centrada', async () => {
+    mockApi({ '/posts/talleres/taller': ok({ ...poem, category: 'talleres', slug: 'taller', title: 'Taller' }) });
+    await renderRoute('/talleres/taller');
+    expect(screen.getByRole('article').closest('.column-centered')).not.toBeNull();
+  });
+});

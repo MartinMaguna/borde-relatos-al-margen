@@ -19,7 +19,7 @@ export default function CategoryPage({ category }) {
     <div className={category.centered ? 'column-centered' : undefined}>
       <div className="page-intro">
         <h1 tabIndex={-1}>{category.label}</h1>
-        <p className="lead">{category.intro}</p>
+        {category.intro && <p className="lead">{category.intro}</p>}
         {total > 0 && (
           <p className="muted">
             {total === 1 ? '1 publicación' : `${total} publicaciones`}

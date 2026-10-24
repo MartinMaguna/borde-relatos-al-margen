@@ -37,7 +37,7 @@ function PostMedia({ post }) {
       )}
 
       {post.signVideoId && (
-        <section className="post-media__block" aria-labelledby={SIGN_SECTION_ID}>
+        <section className="post-media__block post-media__block--plain" aria-labelledby={SIGN_SECTION_ID}>
           {/* tabIndex -1: destino del enlace "Lengua de señas" de las tarjetas (recibe el foco al llegar). */}
           <h2 id={SIGN_SECTION_ID} className="post-media__title" tabIndex={-1}>
             <SignLanguageIcon /> Lengua de Señas Uruguaya
@@ -106,8 +106,8 @@ export default function PostPage() {
   useDocumentTitle(`${post.title} · ${category.label}`);
 
   return (
-    // Poesía y cuentos: todo en una columna centrada, cómoda para leer.
-    <div className={category.centered ? 'column-centered' : undefined}>
+    // Todas las publicaciones en una columna centrada, cómoda para leer.
+    <div className="column-centered">
       <Breadcrumbs
         items={[
           { to: '/', label: 'Inicio' },

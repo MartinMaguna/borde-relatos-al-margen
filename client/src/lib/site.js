@@ -9,15 +9,15 @@ export const CATEGORIES = [
   {
     slug: 'poesia',
     label: 'Poesía',
-    intro: 'Poemas de voces que escriben desde los márgenes.',
+    intro: '',
     seeAll: 'Ver toda la poesía',
     empty: 'Todavía no hay poemas publicados.',
-    centered: true, // listado y lectura en una columna centrada
+    centered: true, // listado en una columna centrada (las publicaciones se centran siempre)
   },
   {
     slug: 'cuentos',
     label: 'Cuentos',
-    intro: 'Narrativa breve: historias para leer de una sentada.',
+    intro: '',
     seeAll: 'Ver todos los cuentos',
     empty: 'Todavía no hay cuentos publicados.',
     centered: true,
