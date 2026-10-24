@@ -5,7 +5,8 @@ import { Post } from '../models/Post.js';
 import { Application } from '../models/Application.js';
 import { HttpError } from '../middleware/errors.js';
 import { validate } from '../middleware/validate.js';
-import { applicationInput, callSlugParams, idParams } from '../validators/interactions.js';
+import { applicationInputFor, callSlugParams, idParams } from '../validators/interactions.js';
+import { resolveApplicationForm } from '../utils/applicationForm.js';
 import { sendOk } from '../utils/respond.js';
 
 /** Límite de envíos públicos por IP (postulaciones). */
@@ -37,7 +38,7 @@ export function createPublicInteractionsRouter() {
   router.post(
     '/convocatorias/:slug/applications',
     applicationLimit,
-    validate({ params: callSlugParams, body: applicationInput }),
+    validate({ params: callSlugParams }),
     async (req, res) => {
       const post = await publishedPostOr404('convocatorias', req.valid.params.slug);
       if (!post.acceptsApplications) {
@@ -49,8 +50,26 @@ export function createPublicInteractionsRouter() {
       if (post.callStatus !== 'abierta') {
         throw new HttpError(403, 'La convocatoria ya cerró: la fecha límite pasó.', { code: 'APPLICATIONS_CLOSED' });
       }
-      const { website, ...data } = req.valid.body;
-      if (!website) await Application.create({ ...data, link: data.link ?? null, post: post.id });
+      // El formulario depende de cómo lo armó el equipo en esta convocatoria.
+      const result = applicationInputFor(post).safeParse(req.body ?? {});
+      if (!result.success) {
+        const details = result.error.issues.map((i) => ({ field: i.path.join('.') || 'body', message: i.message }));
+        throw new HttpError(400, 'Hay datos inválidos. Revisá los campos marcados.', { code: 'VALIDATION_ERROR', details });
+      }
+      const { website, answers, ...data } = result.data;
+      const { questions } = resolveApplicationForm(post.applicationForm);
+      if (!website) {
+        await Application.create({
+          ...data,
+          workTitle: data.workTitle ?? '',
+          text: data.text ?? '',
+          message: data.message ?? '',
+          link: data.link ?? null,
+          // Se guarda también la pregunta: si después se edita el formulario, la respuesta conserva su contexto.
+          answers: questions.map((q) => ({ key: q.key, label: q.label, answer: answers[q.key] ?? '' })),
+          post: post.id,
+        });
+      }
       sendOk(res, { received: true }, { status: 201 });
     },
   );
@@ -78,13 +97,19 @@ function csvCell(value) {
 
 // GET /api/admin/posts/:id/applications.csv — descarga para abrir en una planilla.
 adminInteractionsRouter.get('/posts/:id/applications.csv', validate({ params: idParams }), async (req, res) => {
-  const post = await Post.findById(req.valid.params.id).select('slug');
+  const post = await Post.findById(req.valid.params.id).select('slug applicationForm');
   if (!post) throw new HttpError(404, 'No encontramos esa publicación', { code: 'NOT_FOUND' });
   const applications = await Application.find({ post: post.id }).sort({ createdAt: 1 });
-  const header = ['Fecha', 'Nombre', 'Correo', 'Título de la obra', 'Enlace', 'Mensaje', 'Texto'];
-  const rows = applications.map((a) =>
-    [a.createdAt.toISOString(), a.name, a.email, a.workTitle, a.link ?? '', a.message, a.text].map(csvCell).join(','),
-  );
+  // Una columna por pregunta propia: las del formulario actual y las de respuestas a preguntas que ya se quitaron.
+  const questions = new Map(resolveApplicationForm(post.applicationForm).questions.map((q) => [q.key, q.label]));
+  for (const a of applications) for (const ans of a.answers ?? []) if (!questions.has(ans.key)) questions.set(ans.key, ans.label);
+  const header = ['Fecha', 'Nombre', 'Correo', 'Título de la obra', 'Enlace', 'Mensaje', 'Texto', ...questions.values()];
+  const rows = applications.map((a) => {
+    const byKey = new Map((a.answers ?? []).map((ans) => [ans.key, ans.answer]));
+    return [a.createdAt.toISOString(), a.name, a.email, a.workTitle, a.link ?? '', a.message, a.text, ...[...questions.keys()].map((k) => byKey.get(k) ?? '')]
+      .map(csvCell)
+      .join(',');
+  });
   res.set({
     'Content-Type': 'text/csv; charset=utf-8',
     'Content-Disposition': `attachment; filename="postulaciones-${post.slug}.csv"`,

@@ -20,6 +20,32 @@ const openingDate = z.preprocess(
   z.coerce.date({ error: 'Fecha inválida' }),
 );
 
+const fieldMode = z.enum(['required', 'optional', 'off']);
+const applicationFormSchema = z.object({
+  intro: z.string().trim().max(2000, 'La introducción admite hasta 2000 caracteres').default(''),
+  fields: z
+    .object({
+      workTitle: fieldMode.default('required'),
+      text: fieldMode.default('optional'),
+      link: fieldMode.default('optional'),
+      message: fieldMode.default('optional'),
+    })
+    .default({ workTitle: 'required', text: 'optional', link: 'optional', message: 'optional' }),
+  questions: z
+    .array(
+      z.object({
+        key: z.string().regex(/^[a-z0-9-]{1,40}$/i, 'Identificador inválido'),
+        label: z.string({ error: 'Escribí la pregunta' }).trim().min(1, 'Escribí la pregunta').max(200),
+        hint: z.string().trim().max(300).default(''),
+        type: z.enum(['short', 'long']).default('short'),
+        required: z.boolean().default(false),
+      }),
+    )
+    .max(15, 'Hasta 15 preguntas')
+    .default([])
+    .refine((qs) => new Set(qs.map((q) => q.key)).size === qs.length, 'Hay preguntas repetidas'),
+});
+
 const chapterSchema = z.object({
   title: z.string({ error: 'Escribí el título del capítulo' }).trim().min(1, 'Escribí el título del capítulo').max(200),
   body: z.string({ error: 'Escribí el texto del capítulo' }).trim().min(1, 'Escribí el texto del capítulo').max(100_000),
@@ -101,6 +127,7 @@ export const postInputSchema = z
     audio: audioSchema.nullable().default(null),
     signVideoUrl: emptyToUndefined(signVideoUrl.nullable().optional()),
     acceptsApplications: z.boolean().default(false),
+    applicationForm: applicationFormSchema.nullable().default(null),
     status: z.enum(POST_STATUS).default('draft'),
     opensAt: emptyToUndefined(openingDate.nullable().optional()),
     deadline: emptyToUndefined(deadlineDate.nullable().optional()),

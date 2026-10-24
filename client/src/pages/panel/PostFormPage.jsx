@@ -7,6 +7,7 @@ import ImageField from '../../components/forms/ImageField.jsx';
 import MediaFields from '../../components/forms/MediaFields.jsx';
 import MarkdownEditor from '../../components/forms/MarkdownEditor.jsx';
 import ChaptersField, { chaptersFrom } from '../../components/forms/ChaptersField.jsx';
+import ApplicationFormEditor, { applicationFormFrom } from '../../components/forms/ApplicationFormEditor.jsx';
 import { Fieldset, SelectField, TextArea, TextField } from '../../components/forms/fields.jsx';
 import { errorsByField, errorsFromApi } from '../../components/forms/errors.js';
 import { CATEGORY_OPTIONS, STATUS_LABELS, toDateInput } from '../../lib/admin.js';
@@ -27,7 +28,7 @@ const EMPTY_POST = {
 };
 
 /** Arma el cuerpo que espera la API a partir del formulario. */
-function payloadFrom(form, status) {
+function payloadFrom(form, status, previousApplicationForm) {
   const get = (name) => String(form.get(name) ?? '').trim();
   const imageUrl = get('image.url');
   return {
@@ -45,6 +46,8 @@ function payloadFrom(form, status) {
     audio: get('audio.url') ? { url: get('audio.url'), label: get('audio.label') } : null,
     signVideoUrl: get('signVideoUrl'),
     acceptsApplications: form.get('acceptsApplications') === 'on',
+    // Con el formulario desactivado, su configuración se conserva para cuando se vuelva a activar.
+    applicationForm: form.has('applicationForm.intro') ? applicationFormFrom(form) : (previousApplicationForm ?? null),
     opensAt: get('opensAt'),
     deadline: get('deadline'),
     basesUrl: get('basesUrl'),
@@ -81,6 +84,8 @@ export default function PostFormPage() {
   const isPublished = isEdit && post.status === 'published';
   // Solo la categoría necesita estado: decide si se muestran los campos de convocatoria.
   const [category, setCategory] = useState(post.category);
+  // Decide si se muestra el editor del formulario de postulación.
+  const [acceptsApplications, setAcceptsApplications] = useState(Boolean(post.acceptsApplications));
   const fieldErrors = errorsByField(errors);
 
   const pageTitle = isEdit ? `Editar «${post.title}»` : 'Nueva publicación';
@@ -94,7 +99,7 @@ export default function PostFormPage() {
     const status = event.nativeEvent.submitter?.value || intent.current || (isPublished ? 'published' : 'draft');
     intent.current = null; // un Enter posterior no debe repetir un «Publicar» anterior
     setSubmitting(status);
-    const body = payloadFrom(new FormData(event.currentTarget), status);
+    const body = payloadFrom(new FormData(event.currentTarget), status, post.applicationForm);
     try {
       const { data: saved } = await api(isEdit ? `/admin/posts/${post.id}` : '/admin/posts', {
         method: isEdit ? 'PUT' : 'POST',
@@ -204,16 +209,21 @@ export default function PostFormPage() {
                   name="acceptsApplications"
                   type="checkbox"
                   defaultChecked={post.acceptsApplications}
+                  onChange={(e) => setAcceptsApplications(e.target.checked)}
                   aria-describedby="campo-acceptsApplications-pista"
                 />
                 <label htmlFor="campo-acceptsApplications">Recibir postulaciones con el formulario del sitio</label>
               </div>
               <p id="campo-acceptsApplications-pista" className="field__hint">
                 Agrega un formulario de postulación al final de la convocatoria mientras esté abierta. Las postulaciones
-                llegan al panel y se pueden descargar en CSV.
+                llegan al panel y se pueden descargar en CSV. Al marcarla aparece, debajo, el editor del formulario.
               </p>
             </div>
           </Fieldset>
+        )}
+
+        {category === 'convocatorias' && acceptsApplications && (
+          <ApplicationFormEditor initial={post.applicationForm} errors={fieldErrors} />
         )}
 
         <ImageField initialUrl={post.image?.url ?? ''} initialAlt={post.image?.alt ?? ''} errors={fieldErrors} />

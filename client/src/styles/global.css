@@ -446,24 +446,12 @@ main:focus {
   padding-bottom: var(--space-2);
 }
 
-/* Títulos de sección de la portada: más grandes y con una marca de color, para ubicarse de un vistazo. */
+/* Títulos de sección de la portada: más grandes, para ubicarse de un vistazo. */
 .section__header h2 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
   margin: 0;
   font-size: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
   font-weight: 800;
   letter-spacing: -0.015em;
-}
-
-.section__header h2::before {
-  content: '';
-  flex: none;
-  width: 0.6em;
-  height: 0.6em;
-  border-radius: var(--radius-circle);
-  background: linear-gradient(135deg, var(--indigo), var(--violet) 38%, var(--magenta) 72%, var(--orange));
 }
 
 .section__more {
@@ -1963,4 +1951,39 @@ main:focus {
     right: 0;
     min-width: 0;
   }
+}
+
+/* Introducción del formulario de postulación (la escribe el equipo): respeta los saltos de línea. */
+.application__intro {
+  white-space: pre-line;
+  max-width: var(--measure);
+}
+
+/* Panel: editor del formulario de postulación. */
+.form-editor__question {
+  margin-bottom: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--stroke-hairline) solid var(--line-soft);
+}
+
+.form-editor__fixed {
+  margin: 0 0 var(--space-3);
+}
+
+.fieldset__subtitle {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 1.125rem;
+}
+
+/* Panel: respuestas a las preguntas propias de una postulación. */
+.application__answers {
+  margin: 0 0 var(--space-3);
+}
+
+.application__answers dt {
+  font-weight: 700;
+}
+
+.application__answers dd {
+  margin: 0 0 var(--space-2);
 }

@@ -162,3 +162,56 @@ describe('Fecha de apertura (convocatorias)', () => {
     assert.deepEqual(res.body.error.details.map((d) => d.field), ['opensAt']);
   });
 });
+
+describe('Formulario de postulación configurable', () => {
+  const form = {
+    intro: 'Mandá un solo cuento.',
+    fields: { workTitle: 'off', text: 'required', link: 'off', message: 'optional' },
+    questions: [
+      { key: 'barrio', label: '¿De qué barrio sos?', type: 'short', required: true },
+      { key: 'bio', label: 'Contanos de vos', type: 'long', required: false },
+    ],
+  };
+
+  test('se guarda con la convocatoria y se publica', async () => {
+    const c = await call({ applicationForm: form });
+    assert.equal(c.applicationForm.intro, 'Mandá un solo cuento.');
+    assert.equal(c.applicationForm.fields.workTitle, 'off');
+    const pub = (await request(app).get(`/api/posts/convocatorias/${c.slug}`)).body.data;
+    assert.deepEqual(pub.applicationForm.questions.map((q) => q.key), ['barrio', 'bio']);
+  });
+
+  test('valida según la configuración: campos obligatorios, no pedidos y preguntas propias', async () => {
+    const c = await call({ applicationForm: form });
+    const bad = await request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send({ name: 'Ana', email: 'ana@ejemplo.com', consent: true });
+    assert.equal(bad.status, 400);
+    assert.deepEqual(bad.body.error.details.map((d) => d.field).sort(), ['answers.barrio', 'text']);
+
+    const ok = await request(app)
+      .post(`/api/posts/convocatorias/${c.slug}/applications`)
+      .send({ name: 'Ana', email: 'ana@ejemplo.com', consent: true, text: 'Mi cuento', workTitle: 'ignorado', answers: { barrio: 'Cordón' } });
+    assert.equal(ok.status, 201);
+
+    const { applications } = (await agent.get(`/api/admin/posts/${c.id}/applications`)).body.data;
+    assert.equal(applications[0].workTitle, '', 'un campo no pedido no se guarda');
+    assert.deepEqual(applications[0].answers, [
+      { key: 'barrio', label: '¿De qué barrio sos?', answer: 'Cordón' },
+      { key: 'bio', label: 'Contanos de vos', answer: '' },
+    ]);
+
+    const csv = await agent.get(`/api/admin/posts/${c.id}/applications.csv`);
+    const [header, row] = csv.text.slice(1).split('\r\n');
+    assert.match(header, /"¿De qué barrio sos\?","Contanos de vos"$/);
+    assert.match(row, /"Cordón",""$/);
+  });
+
+  test('preguntas sin texto o repetidas no se aceptan', async () => {
+    const res = await agent.post('/api/admin/posts').send(
+      postData({ title: 'C', category: 'convocatorias', deadline: '2999-01-01', applicationForm: { questions: [{ key: 'a', label: '' }, { key: 'a', label: 'X' }] } }),
+    );
+    assert.equal(res.status, 400);
+    const fields = res.body.error.details.map((d) => d.field);
+    assert.ok(fields.includes('applicationForm.questions.0.label'));
+    assert.ok(fields.includes('applicationForm.questions'));
+  });
+});

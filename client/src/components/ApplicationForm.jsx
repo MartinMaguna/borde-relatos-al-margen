@@ -6,6 +6,7 @@ import Honeypot from './forms/Honeypot.jsx';
 import { TextArea, TextField, fieldId } from './forms/fields.jsx';
 import { errorsByField, errorsFromApi } from './forms/errors.js';
 import { formatDate } from '../lib/format.js';
+import { resolveApplicationForm } from '../lib/applicationForm.js';
 
 const prefixed = (errors) => errors.map((e) => (e.field ? { ...e, field: `application.${e.field}` } : e));
 
@@ -25,6 +26,11 @@ export default function ApplicationForm({ post }) {
   const fieldErrors = errorsByField(errors);
   const consentId = fieldId('application.consent');
   const consentError = fieldErrors['application.consent'];
+  // Cómo lo armó el equipo en el panel (o el formulario original).
+  const form = resolveApplicationForm(post.applicationForm);
+  const { fields } = form;
+  const show = (key) => fields[key] !== 'off';
+  const optional = (key) => fields[key] === 'optional';
 
   // La confirmación reemplaza al formulario: recibe el foco cuando ya está en pantalla.
   useEffect(() => {
@@ -65,6 +71,7 @@ export default function ApplicationForm({ post }) {
           text: get('text'),
           link: get('link'),
           message: get('message'),
+          answers: Object.fromEntries(form.questions.map((q) => [q.key, get(`answers.${q.key}`)])),
           consent: f.get('application.consent') === 'on',
           website: f.get('website'),
         },
@@ -92,10 +99,15 @@ export default function ApplicationForm({ post }) {
         </div>
       ) : (
         <>
-          <p className="field__hint">
-            Completá el formulario para postularte. No hace falta adjuntar archivos: pegá tu texto o compartí un enlace
-            (por ejemplo, a un documento de Google Drive con acceso de lectura).
-          </p>
+          {form.intro ? (
+            // Texto que escribió el equipo para esta convocatoria; respeta los saltos de línea.
+            <p className="application__intro">{form.intro}</p>
+          ) : (
+            <p className="field__hint">
+              Completá el formulario para postularte. No hace falta adjuntar archivos: pegá tu texto o compartí un enlace
+              (por ejemplo, a un documento de Google Drive con acceso de lectura).
+            </p>
+          )}
           <ErrorSummary errors={errors} />
           <form className="form" onSubmit={handleSubmit} noValidate>
             <TextField name="application.name" label="Nombre y apellido" autoComplete="name" maxLength={120} error={fieldErrors['application.name']} />
@@ -108,25 +120,65 @@ export default function ApplicationForm({ post }) {
               hint="Te vamos a escribir a este correo."
               error={fieldErrors['application.email']}
             />
-            <TextField name="application.workTitle" label="Título de la obra" maxLength={200} error={fieldErrors['application.workTitle']} />
-            <TextArea
-              name="application.text"
-              label="Texto"
-              optional
-              rows={12}
-              maxLength={30000}
-              hint="Pegá acá tu texto (hasta 30.000 caracteres), o dejalo vacío si compartís un enlace."
-              error={fieldErrors['application.text']}
-            />
-            <TextField
-              name="application.link"
-              label="Enlace al texto"
-              type="url"
-              optional
-              hint="Dirección completa, por ejemplo https://docs.google.com/…"
-              error={fieldErrors['application.link']}
-            />
-            <TextArea name="application.message" label="Mensaje para el equipo" optional rows={3} maxLength={2000} error={fieldErrors['application.message']} />
+            {show('workTitle') && (
+              <TextField
+                name="application.workTitle"
+                label="Título de la obra"
+                optional={optional('workTitle')}
+                maxLength={200}
+                error={fieldErrors['application.workTitle']}
+              />
+            )}
+            {show('text') && (
+              <TextArea
+                name="application.text"
+                label="Texto"
+                optional={fields.text === 'optional'}
+                rows={12}
+                maxLength={30000}
+                hint={
+                  form.needsTextOrLink
+                    ? 'Pegá acá tu texto (hasta 30.000 caracteres), o dejalo vacío si compartís un enlace.'
+                    : 'Pegá acá tu texto (hasta 30.000 caracteres).'
+                }
+                error={fieldErrors['application.text']}
+              />
+            )}
+            {show('link') && (
+              <TextField
+                name="application.link"
+                label="Enlace al texto"
+                type="url"
+                optional={fields.link === 'optional'}
+                hint="Dirección completa, por ejemplo https://docs.google.com/…"
+                error={fieldErrors['application.link']}
+              />
+            )}
+            {show('message') && (
+              <TextArea
+                name="application.message"
+                label="Mensaje para el equipo"
+                optional={optional('message')}
+                rows={3}
+                maxLength={2000}
+                error={fieldErrors['application.message']}
+              />
+            )}
+            {form.questions.map((q) => {
+              const Field = q.type === 'long' ? TextArea : TextField;
+              return (
+                <Field
+                  key={q.key}
+                  name={`application.answers.${q.key}`}
+                  label={q.label}
+                  optional={!q.required}
+                  hint={q.hint || undefined}
+                  maxLength={q.type === 'long' ? 5000 : 300}
+                  {...(q.type === 'long' ? { rows: 5 } : {})}
+                  error={fieldErrors[`application.answers.${q.key}`]}
+                />
+              );
+            })}
 
             <div className={`field${consentError ? ' field--error' : ''}`}>
               {consentError && (

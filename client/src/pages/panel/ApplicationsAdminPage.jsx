@@ -68,7 +68,8 @@ export default function ApplicationsAdminPage() {
           {applications.map((a) => (
             <li key={a.id} className="admin-item">
               <h2 className="admin-item__title">
-                {a.name}: «{a.workTitle}»
+                {a.name}
+                {a.workTitle && `: «${a.workTitle}»`}
               </h2>
               <dl className="admin-item__meta">
                 <div>
@@ -94,6 +95,16 @@ export default function ApplicationsAdminPage() {
                   </div>
                 )}
               </dl>
+              {a.answers?.length > 0 && (
+                <dl className="application__answers">
+                  {a.answers.map((ans) => (
+                    <div key={ans.key}>
+                      <dt>{ans.label}</dt>
+                      <dd className="comment__text">{ans.answer || <span className="muted">Sin respuesta</span>}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
               {a.message && <p className="comment__text">{a.message}</p>}
               {a.text && (
                 <details className="application__text">

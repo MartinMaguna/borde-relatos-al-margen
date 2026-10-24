@@ -436,3 +436,67 @@ describe('Portada y centrado', () => {
     expect(screen.getByRole('article').closest('.column-centered')).not.toBeNull();
   });
 });
+
+describe('Formulario de postulación configurable', () => {
+  const configured = {
+    ...openCall,
+    acceptsApplications: true,
+    applicationForm: {
+      intro: 'Mandá un solo cuento.',
+      fields: { workTitle: 'off', text: 'required', link: 'off', message: 'optional' },
+      questions: [{ key: 'barrio', label: '¿De qué barrio sos?', hint: 'Por ejemplo, Cordón.', type: 'short', required: true }],
+    },
+  };
+
+  test('el sitio muestra la introducción, los campos elegidos y las preguntas propias', async () => {
+    const calls = mockApi({
+      '/posts/convocatorias/convocatoria-antologia': ok(configured),
+      'POST /posts/convocatorias/convocatoria-antologia/applications': { status: 201, body: { ok: true, data: { received: true } } },
+    });
+    await renderRoute('/convocatorias/convocatoria-antologia');
+    expect(screen.getByText('Mandá un solo cuento.')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /Título de la obra/ })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: /Enlace al texto/ })).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Texto' })).toHaveAttribute('aria-required', 'true');
+    const barrio = screen.getByRole('textbox', { name: '¿De qué barrio sos?' });
+    expect(barrio).toHaveAttribute('aria-required', 'true');
+    expect(barrio).toHaveAccessibleDescription('Por ejemplo, Cordón.');
+    expect(await axeViolations()).toEqual([]);
+
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Nombre y apellido' }), 'Ana');
+    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico' }), 'ana@ejemplo.com');
+    await user.type(screen.getByRole('textbox', { name: 'Texto' }), 'Mi cuento');
+    await user.type(barrio, 'Cordón');
+    await user.click(screen.getByLabelText(/Leí las bases/));
+    await user.click(screen.getByRole('button', { name: 'Enviar postulación' }));
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(calls.find((c) => c.method === 'POST').body.answers).toEqual({ barrio: 'Cordón' });
+  });
+
+  test('panel: el editor aparece al activar las postulaciones y envía la configuración', async () => {
+    const calls = mockApi({ ...ME, 'POST /admin/posts': { status: 201, body: { ok: true, data: { title: 'C', status: 'draft' } } }, '/admin/posts?page=1&limit=10': ok([], { page: 1, limit: 10, total: 0, totalPages: 0 }) });
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Categoría' }), 'convocatorias');
+    expect(screen.queryByRole('group', { name: 'Formulario de postulación' })).toBeNull();
+    await user.click(screen.getByLabelText('Recibir postulaciones con el formulario del sitio'));
+    const editor = screen.getByRole('group', { name: /Formulario de postulación/ });
+
+    await user.type(within(editor).getByRole('textbox', { name: /Introducción/ }), 'Solo inéditos.');
+    await user.selectOptions(within(editor).getByRole('combobox', { name: 'Enlace al texto' }), 'off');
+    await user.click(within(editor).getByRole('button', { name: 'Agregar una pregunta' }));
+    expect(within(editor).getByRole('textbox', { name: 'Texto de la pregunta 1' })).toHaveFocus();
+    await user.keyboard('¿Edad?');
+    await user.click(within(editor).getByLabelText('Respuesta obligatoria'));
+    expect(await axeViolations()).toEqual([]);
+
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'C');
+    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    const sent = calls.find((c) => c.method === 'POST').body.applicationForm;
+    expect(sent.intro).toBe('Solo inéditos.');
+    expect(sent.fields).toEqual({ workTitle: 'required', text: 'optional', link: 'off', message: 'optional' });
+    expect(sent.questions).toEqual([{ key: expect.stringMatching(/^p[a-z0-9]+$/), label: '¿Edad?', hint: '', type: 'short', required: true }]);
+  });
+});

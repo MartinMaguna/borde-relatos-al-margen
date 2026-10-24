@@ -354,7 +354,7 @@ La identidad visual (colores, tipografía, formas y componentes) está documenta
 - **Convocatorias**: fecha de apertura opcional y fecha límite. Antes de la apertura figuran como "Próximamente" y no reciben postulaciones.
 - **Talleres y convocatorias**: a todo el ancho, con el formato de la portada.
 - **Compartir**: copiar enlace, WhatsApp, correo, Facebook, LinkedIn y, en móviles, el menú de compartir del sistema.
-- **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones.
+- **Postulaciones**: en cada convocatoria, la casilla "Recibir postulaciones con el formulario del sitio" agrega un formulario mientras esté abierta. Al marcarla aparece el editor **Formulario de postulación**: introducción, qué campos se piden (título, texto, enlace, mensaje: obligatorio, opcional o no pedirlo) y preguntas propias (corta o larga, obligatoria u opcional; se pueden reordenar). Nombre, correo y consentimiento van siempre. Las respuestas se ven en el panel y salen en el CSV, una columna por pregunta. Sin adjuntos (texto pegado o enlace). Se ven en el panel ("Postulaciones" en el listado) y se descargan en CSV. Al eliminar la convocatoria se eliminan sus postulaciones.
 - **Contacto**: `/contacto`, formulario (nombre, correo, mensaje). El correo del equipo no aparece en el sitio. Ver abajo.
 - Todavía **no se envían avisos por correo** de nuevas postulaciones: se revisan en el panel.
 - **Redes sociales** (pie): las direcciones de Instagram y YouTube están en `SOCIAL_LINKS`, en `client/src/lib/site.js`.
