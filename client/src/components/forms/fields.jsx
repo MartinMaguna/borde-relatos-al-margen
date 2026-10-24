@@ -115,25 +115,33 @@ export function SelectField({ name, label, hint, error, optional = false, option
 /**
  * Grupo de radios dentro de <fieldset>/<legend>: el lector anuncia la pregunta
  * ("Estado") al entrar al grupo. El id apunta al primer radio, para que el
- * enlace del resumen de errores pueda enfocarlo.
+ * enlace del resumen de errores pueda enfocarlo. Con `required`, el grupo es un
+ * radiogroup con aria-required (el lector anuncia "obligatorio").
  */
-export function RadioGroup({ name, legend, hint, error, options, defaultValue }) {
+export function RadioGroup({ name, legend, hint, error, options, defaultValue, optional = false, required = false }) {
   const id = fieldId(name);
   return (
-    <fieldset className={`field fieldset${error ? ' field--error' : ''}`} aria-describedby={describedBy(id, hint, error)}>
-      <legend className="field__label">{legend}</legend>
+    <fieldset
+      className={`field fieldset${error ? ' field--error' : ''}`}
+      aria-describedby={describedBy(id, hint, error)}
+      {...(required ? { role: 'radiogroup', 'aria-required': true, 'aria-invalid': error ? true : undefined } : {})}
+    >
+      <legend className="field__label">
+        {legend}
+        {optional && <span className="field__optional"> (opcional)</span>}
+      </legend>
       <HintAndError id={id} hint={hint} error={error} />
       <div className="radios">
         {options.map((o, i) => (
           <div className="radio" key={o.value}>
             <input
-              id={i === 0 ? id : `${id}-${o.value}`}
+              id={i === 0 ? id : `${id}-${i}`}
               type="radio"
               name={name}
               value={o.value}
               defaultChecked={defaultValue === o.value}
             />
-            <label htmlFor={i === 0 ? id : `${id}-${o.value}`}>{o.label}</label>
+            <label htmlFor={i === 0 ? id : `${id}-${i}`}>{o.label}</label>
           </div>
         ))}
       </div>

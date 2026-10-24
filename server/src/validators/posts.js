@@ -3,6 +3,7 @@ import { CATEGORIES, POST_STATUS } from '../constants.js';
 import { emptyToUndefined, httpUrl, objectId, pagination } from './common.js';
 import { normalizeAudioUrl } from '../utils/audio.js';
 import { canonicalYouTubeUrl, youTubeId } from '../utils/youtube.js';
+import { CORE_KEYS, ITEM_TYPES } from '../utils/applicationForm.js';
 
 /**
  * Una fecha sola ("2026-11-30") significa "hasta el final de ese día".
@@ -20,30 +21,31 @@ const openingDate = z.preprocess(
   z.coerce.date({ error: 'Fecha inválida' }),
 );
 
-const fieldMode = z.enum(['required', 'optional', 'off']);
+// Formulario de postulación: secciones y preguntas, en orden (ver utils/applicationForm.js).
+const formItemSchema = z
+  .object({
+    key: z.string().regex(/^[a-z0-9-]{1,40}$/i, 'Identificador inválido'),
+    type: z.enum(ITEM_TYPES),
+    label: z.string({ error: 'Escribí el texto' }).trim().min(1, 'Escribí el texto').max(200),
+    hint: z.string().trim().max(500).default(''),
+    required: z.boolean().default(false),
+    options: z.array(z.string().trim().min(1).max(200)).max(40).default([]),
+  })
+  .refine((item) => !['select', 'choice'].includes(item.type) || item.options.length >= 2, {
+    path: ['options'],
+    message: 'Escribí al menos dos opciones, una por línea',
+    when: () => true,
+  });
+
 const applicationFormSchema = z.object({
   intro: z.string().trim().max(2000, 'La introducción admite hasta 2000 caracteres').default(''),
-  fields: z
-    .object({
-      workTitle: fieldMode.default('required'),
-      text: fieldMode.default('optional'),
-      link: fieldMode.default('optional'),
-      message: fieldMode.default('optional'),
-    })
-    .default({ workTitle: 'required', text: 'optional', link: 'optional', message: 'optional' }),
-  questions: z
-    .array(
-      z.object({
-        key: z.string().regex(/^[a-z0-9-]{1,40}$/i, 'Identificador inválido'),
-        label: z.string({ error: 'Escribí la pregunta' }).trim().min(1, 'Escribí la pregunta').max(200),
-        hint: z.string().trim().max(300).default(''),
-        type: z.enum(['short', 'long']).default('short'),
-        required: z.boolean().default(false),
-      }),
-    )
-    .max(15, 'Hasta 15 preguntas')
-    .default([])
-    .refine((qs) => new Set(qs.map((q) => q.key)).size === qs.length, 'Hay preguntas repetidas'),
+  consentText: z.string().trim().max(500).default(''),
+  privacyText: z.string().trim().max(3000).default(''),
+  items: z
+    .array(formItemSchema)
+    .max(60, 'Hasta 60 elementos')
+    .refine((items) => new Set(items.map((i) => i.key)).size === items.length, 'Hay elementos repetidos')
+    .refine((items) => CORE_KEYS.every((k) => items.some((i) => i.key === k)), 'Faltan «Nombre y apellido» o «Medio de contacto»'),
 });
 
 const chapterSchema = z.object({

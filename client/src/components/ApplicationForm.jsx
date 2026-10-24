@@ -3,18 +3,49 @@ import { api } from '../api/client.js';
 import { useAnnounce } from '../a11y/Announcer.jsx';
 import ErrorSummary from './forms/ErrorSummary.jsx';
 import Honeypot from './forms/Honeypot.jsx';
-import { TextArea, TextField, fieldId } from './forms/fields.jsx';
+import { RadioGroup, SelectField, TextArea, TextField, fieldId } from './forms/fields.jsx';
 import { errorsByField, errorsFromApi } from './forms/errors.js';
 import { formatDate } from '../lib/format.js';
-import { resolveApplicationForm } from '../lib/applicationForm.js';
+import { questionsOf, resolveApplicationForm } from '../lib/applicationForm.js';
 
 const prefixed = (errors) => errors.map((e) => (e.field ? { ...e, field: `application.${e.field}` } : e));
+const fieldName = (key) => `application.answers.${key}`;
+
+/** Atributos propios de cada tipo de respuesta. */
+const INPUT_PROPS = {
+  short: { maxLength: 300 },
+  number: { inputMode: 'numeric', maxLength: 3, autoComplete: 'off' },
+  email: { type: 'email', autoComplete: 'email', spellCheck: false, maxLength: 254 },
+  link: { type: 'url', inputMode: 'url', spellCheck: false },
+};
+const AUTOCOMPLETE = { name: 'name' };
+
+/** Una pregunta del formulario, según su tipo. Las obligatorias llevan aria-required; las opcionales dicen "(opcional)". */
+function Question({ item, error }) {
+  const common = { name: fieldName(item.key), hint: item.hint || undefined, error, optional: !item.required };
+  if (item.type === 'long') return <TextArea {...common} label={item.label} rows={item.key === 'presentacion' ? 6 : 5} maxLength={30000} />;
+  if (item.type === 'select') {
+    return (
+      <SelectField
+        {...common}
+        label={item.label}
+        defaultValue=""
+        options={[{ value: '', label: 'Seleccioná' }, ...item.options.map((o) => ({ value: o, label: o }))]}
+      />
+    );
+  }
+  if (item.type === 'choice') {
+    return <RadioGroup {...common} legend={item.label} required={item.required} options={item.options.map((o) => ({ value: o, label: o }))} />;
+  }
+  return <TextField {...common} label={item.label} autoComplete={AUTOCOMPLETE[item.key]} {...INPUT_PROPS[item.type]} />;
+}
 
 /**
- * Formulario de postulación de una convocatoria (si el equipo lo activó).
- * - Solo mientras la convocatoria está abierta; cerrada, se dice claramente.
- * - Sin adjuntos: el texto se pega o se comparte por enlace.
- * - Consentimiento explícito para guardar los datos.
+ * Formulario de postulación de una convocatoria (si el equipo lo activó),
+ * tal como lo armó en el panel: secciones (título y descripción) y preguntas.
+ * - Solo mientras la convocatoria está abierta; si no, se dice claramente.
+ * - Sin adjuntos: la obra se comparte por enlace (Drive, YouTube, Dropbox…).
+ * - Confirmación explícita al final.
  * - Al enviar, el formulario se reemplaza por la confirmación, que recibe el foco.
  */
 export default function ApplicationForm({ post }) {
@@ -26,11 +57,7 @@ export default function ApplicationForm({ post }) {
   const fieldErrors = errorsByField(errors);
   const consentId = fieldId('application.consent');
   const consentError = fieldErrors['application.consent'];
-  // Cómo lo armó el equipo en el panel (o el formulario original).
   const form = resolveApplicationForm(post.applicationForm);
-  const { fields } = form;
-  const show = (key) => fields[key] !== 'off';
-  const optional = (key) => fields[key] === 'optional';
 
   // La confirmación reemplaza al formulario: recibe el foco cuando ya está en pantalla.
   useEffect(() => {
@@ -60,18 +87,11 @@ export default function ApplicationForm({ post }) {
     if (submitting) return;
     setSubmitting(true);
     const f = new FormData(event.currentTarget);
-    const get = (k) => String(f.get(`application.${k}`) ?? '').trim();
     try {
       await api(`/posts/convocatorias/${post.slug}/applications`, {
         method: 'POST',
         body: {
-          name: get('name'),
-          email: get('email'),
-          workTitle: get('workTitle'),
-          text: get('text'),
-          link: get('link'),
-          message: get('message'),
-          answers: Object.fromEntries(form.questions.map((q) => [q.key, get(`answers.${q.key}`)])),
+          answers: Object.fromEntries(questionsOf(form).map((q) => [q.key, String(f.get(fieldName(q.key)) ?? '').trim()])),
           consent: f.get('application.consent') === 'on',
           website: f.get('website'),
         },
@@ -94,92 +114,27 @@ export default function ApplicationForm({ post }) {
         <div className="notice notice--success" tabIndex={-1} ref={doneRef}>
           <p>
             <strong>Recibimos tu postulación.</strong> El equipo de Borde la va a leer después del cierre de la convocatoria.
-            Si queda seleccionada, te escribimos al correo que dejaste.
+            Te vamos a escribir al medio de contacto que dejaste.
           </p>
         </div>
       ) : (
         <>
-          {form.intro ? (
-            // Texto que escribió el equipo para esta convocatoria; respeta los saltos de línea.
-            <p className="application__intro">{form.intro}</p>
-          ) : (
-            <p className="field__hint">
-              Completá el formulario para postularte. No hace falta adjuntar archivos: pegá tu texto o compartí un enlace
-              (por ejemplo, a un documento de Google Drive con acceso de lectura).
-            </p>
-          )}
+          {form.intro && <p className="application__intro">{form.intro}</p>}
           <ErrorSummary errors={errors} />
           <form className="form" onSubmit={handleSubmit} noValidate>
-            <TextField name="application.name" label="Nombre y apellido" autoComplete="name" maxLength={120} error={fieldErrors['application.name']} />
-            <TextField
-              name="application.email"
-              label="Correo electrónico"
-              type="email"
-              autoComplete="email"
-              spellCheck={false}
-              hint="Te vamos a escribir a este correo."
-              error={fieldErrors['application.email']}
-            />
-            {show('workTitle') && (
-              <TextField
-                name="application.workTitle"
-                label="Título de la obra"
-                optional={optional('workTitle')}
-                maxLength={200}
-                error={fieldErrors['application.workTitle']}
-              />
+            {form.items.map((item) =>
+              item.type === 'section' ? (
+                // Las secciones ordenan el formulario: h3 (dentro de "Postulate") y su descripción.
+                <div key={item.key} className="application__section">
+                  <h3 className="application__section-title">{item.label}</h3>
+                  {item.hint && <p className="application__section-text">{item.hint}</p>}
+                </div>
+              ) : (
+                <Question key={item.key} item={item} error={fieldErrors[fieldName(item.key)]} />
+              ),
             )}
-            {show('text') && (
-              <TextArea
-                name="application.text"
-                label="Texto"
-                optional={fields.text === 'optional'}
-                rows={12}
-                maxLength={30000}
-                hint={
-                  form.needsTextOrLink
-                    ? 'Pegá acá tu texto (hasta 30.000 caracteres), o dejalo vacío si compartís un enlace.'
-                    : 'Pegá acá tu texto (hasta 30.000 caracteres).'
-                }
-                error={fieldErrors['application.text']}
-              />
-            )}
-            {show('link') && (
-              <TextField
-                name="application.link"
-                label="Enlace al texto"
-                type="url"
-                optional={fields.link === 'optional'}
-                hint="Dirección completa, por ejemplo https://docs.google.com/…"
-                error={fieldErrors['application.link']}
-              />
-            )}
-            {show('message') && (
-              <TextArea
-                name="application.message"
-                label="Mensaje para el equipo"
-                optional={optional('message')}
-                rows={3}
-                maxLength={2000}
-                error={fieldErrors['application.message']}
-              />
-            )}
-            {form.questions.map((q) => {
-              const Field = q.type === 'long' ? TextArea : TextField;
-              return (
-                <Field
-                  key={q.key}
-                  name={`application.answers.${q.key}`}
-                  label={q.label}
-                  optional={!q.required}
-                  hint={q.hint || undefined}
-                  maxLength={q.type === 'long' ? 5000 : 300}
-                  {...(q.type === 'long' ? { rows: 5 } : {})}
-                  error={fieldErrors[`application.answers.${q.key}`]}
-                />
-              );
-            })}
 
+            {form.privacyText && <p className="application__privacy">{form.privacyText}</p>}
             <div className={`field${consentError ? ' field--error' : ''}`}>
               {consentError && (
                 <p id={`${consentId}-error`} className="field__error">
@@ -195,9 +150,7 @@ export default function ApplicationForm({ post }) {
                   aria-invalid={consentError ? true : undefined}
                   aria-describedby={consentError ? `${consentId}-error` : undefined}
                 />
-                <label htmlFor={consentId}>
-                  Leí las bases y acepto que Borde guarde estos datos para evaluar mi postulación.
-                </label>
+                <label htmlFor={consentId}>{form.consentText}</label>
               </div>
               {post.basesUrl && (
                 <p className="field__hint">

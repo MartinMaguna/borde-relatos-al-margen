@@ -21,13 +21,21 @@ beforeEach(async () => {
 const createPost = async (data) => (await agent.post('/api/admin/posts').send(postData(data))).body.data;
 const call = (data = {}) =>
   createPost({ title: 'Antología', category: 'convocatorias', deadline: '2999-12-31', acceptsApplications: true, ...data });
-const application = (data = {}) => ({
-  name: 'Ana Pérez',
-  email: 'ana@ejemplo.com',
-  workTitle: 'Orilla',
-  text: 'El agua se fue',
+/** Postulación válida para el formulario modelo de Borde; `answers` reemplaza respuestas puntuales. */
+const application = (answers = {}, extra = {}) => ({
+  answers: {
+    name: 'Ana Pérez',
+    contact: 'ana@ejemplo.com',
+    edad: '27',
+    departamento: 'Montevideo',
+    workTitle: 'Orilla',
+    formato: 'Texto escrito',
+    idioma: 'Español',
+    obra: 'https://drive.google.com/file/d/abc',
+    ...answers,
+  },
   consent: true,
-  ...data,
+  ...extra,
 });
 
 describe('Tiempo de lectura', () => {
@@ -55,18 +63,22 @@ describe('Postulaciones', () => {
 
     const list = await agent.get(`/api/admin/posts/${c.id}/applications`);
     assert.equal(list.body.data.applications.length, 1);
-    assert.equal(list.body.data.applications[0].email, 'ana@ejemplo.com');
+    const [saved] = list.body.data.applications;
+    assert.equal(saved.contact, 'ana@ejemplo.com');
+    assert.equal(saved.workTitle, 'Orilla');
+    assert.equal(saved.answers.find((a) => a.key === 'departamento').answer, 'Montevideo');
 
     const csv = await agent.get(`/api/admin/posts/${c.id}/applications.csv`);
     assert.equal(csv.status, 200);
     assert.match(csv.headers['content-type'], /text\/csv/);
     assert.match(csv.headers['content-disposition'], /attachment; filename="postulaciones-antologia.csv"/);
-    assert.match(csv.text, /"Ana Pérez","ana@ejemplo.com","Orilla"/);
+    assert.match(csv.text, /"Fecha","Nombre","Contacto","Nombre artístico o seudónimo","Edad","Departamento de residencia"/);
+    assert.match(csv.text, /"Ana Pérez","ana@ejemplo.com","","27","Montevideo"/);
   });
 
   test('el CSV neutraliza fórmulas (inyección en planillas)', async () => {
     const c = await call();
-    await request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send(application({ workTitle: '=HYPERLINK("http://x")' }));
+    await request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send(application({ seudonimo: '=HYPERLINK("http://x")' }));
     const csv = await agent.get(`/api/admin/posts/${c.id}/applications.csv`);
     assert.match(csv.text, /"'=HYPERLINK\(""http:\/\/x""\)"/);
   });
@@ -81,14 +93,22 @@ describe('Postulaciones', () => {
     }
   });
 
-  test('exige consentimiento, correo válido y el texto o un enlace', async () => {
+  test('con el formulario modelo valida obligatorios, número, opciones y enlace, todo junto', async () => {
     const c = await call();
     const res = await request(app)
       .post(`/api/posts/convocatorias/${c.slug}/applications`)
-      .send(application({ consent: false, email: 'no-es-correo', text: '' }));
+      .send(application({ name: '', edad: 'veinte', departamento: 'Narnia', formato: '', obra: 'no-es-enlace' }, { consent: false }));
     assert.equal(res.status, 400);
-    const fields = res.body.error.details.map((d) => d.field);
-    for (const f of ['consent', 'email', 'text']) assert.ok(fields.includes(f), `falta error de ${f}`);
+    assert.deepEqual(res.body.error.details.map((d) => d.field).sort(), [
+      'answers.departamento',
+      'answers.edad',
+      'answers.formato',
+      'answers.name',
+      'answers.obra',
+      'consent',
+    ]);
+    const optional = await request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send(application({ seudonimo: '', apoyos: '' }));
+    assert.equal(optional.status, 201, 'las opcionales pueden quedar vacías');
   });
 
   test('acceptsApplications solo vale en convocatorias', async () => {
@@ -166,52 +186,78 @@ describe('Fecha de apertura (convocatorias)', () => {
 describe('Formulario de postulación configurable', () => {
   const form = {
     intro: 'Mandá un solo cuento.',
-    fields: { workTitle: 'off', text: 'required', link: 'off', message: 'optional' },
-    questions: [
-      { key: 'barrio', label: '¿De qué barrio sos?', type: 'short', required: true },
-      { key: 'bio', label: 'Contanos de vos', type: 'long', required: false },
+    consentText: 'Confirmo que el cuento es inédito.',
+    items: [
+      { key: 'name', type: 'short', label: 'Tu nombre', required: true },
+      { key: 's-1', type: 'section', label: 'Contacto' },
+      { key: 'contact', type: 'email', label: 'Correo', required: true },
+      { key: 'barrio', type: 'select', label: 'Barrio', required: true, options: ['Cordón', 'Centro'] },
+      { key: 'bio', type: 'long', label: 'Contanos de vos' },
     ],
   };
 
   test('se guarda con la convocatoria y se publica', async () => {
     const c = await call({ applicationForm: form });
-    assert.equal(c.applicationForm.intro, 'Mandá un solo cuento.');
-    assert.equal(c.applicationForm.fields.workTitle, 'off');
     const pub = (await request(app).get(`/api/posts/convocatorias/${c.slug}`)).body.data;
-    assert.deepEqual(pub.applicationForm.questions.map((q) => q.key), ['barrio', 'bio']);
+    assert.equal(pub.applicationForm.intro, 'Mandá un solo cuento.');
+    assert.deepEqual(pub.applicationForm.items.map((i) => i.key), ['name', 's-1', 'contact', 'barrio', 'bio']);
   });
 
-  test('valida según la configuración: campos obligatorios, no pedidos y preguntas propias', async () => {
+  test('valida según la configuración y guarda las respuestas con su pregunta; el CSV tiene una columna por pregunta', async () => {
     const c = await call({ applicationForm: form });
-    const bad = await request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send({ name: 'Ana', email: 'ana@ejemplo.com', consent: true });
-    assert.equal(bad.status, 400);
-    assert.deepEqual(bad.body.error.details.map((d) => d.field).sort(), ['answers.barrio', 'text']);
-
-    const ok = await request(app)
+    const bad = await request(app)
       .post(`/api/posts/convocatorias/${c.slug}/applications`)
-      .send({ name: 'Ana', email: 'ana@ejemplo.com', consent: true, text: 'Mi cuento', workTitle: 'ignorado', answers: { barrio: 'Cordón' } });
-    assert.equal(ok.status, 201);
+      .send({ answers: { name: 'Ana', contact: 'no-es-correo', barrio: 'Otro' }, consent: true });
+    assert.deepEqual(bad.body.error.details.map((d) => d.field).sort(), ['answers.barrio', 'answers.contact']);
 
-    const { applications } = (await agent.get(`/api/admin/posts/${c.id}/applications`)).body.data;
-    assert.equal(applications[0].workTitle, '', 'un campo no pedido no se guarda');
-    assert.deepEqual(applications[0].answers, [
-      { key: 'barrio', label: '¿De qué barrio sos?', answer: 'Cordón' },
+    const okRes = await request(app)
+      .post(`/api/posts/convocatorias/${c.slug}/applications`)
+      .send({ answers: { name: 'Ana', contact: 'ana@ejemplo.com', barrio: 'Cordón', ignorada: 'x' }, consent: true });
+    assert.equal(okRes.status, 201);
+    const [saved] = (await agent.get(`/api/admin/posts/${c.id}/applications`)).body.data.applications;
+    assert.equal(saved.name, 'Ana');
+    assert.equal(saved.contact, 'ana@ejemplo.com');
+    assert.deepEqual(saved.answers, [
+      { key: 'barrio', label: 'Barrio', answer: 'Cordón' },
       { key: 'bio', label: 'Contanos de vos', answer: '' },
     ]);
 
     const csv = await agent.get(`/api/admin/posts/${c.id}/applications.csv`);
     const [header, row] = csv.text.slice(1).split('\r\n');
-    assert.match(header, /"¿De qué barrio sos\?","Contanos de vos"$/);
-    assert.match(row, /"Cordón",""$/);
+    assert.equal(header, '"Fecha","Nombre","Contacto","Barrio","Contanos de vos"');
+    assert.match(row, /"Ana","ana@ejemplo.com","Cordón",""$/);
   });
 
-  test('preguntas sin texto o repetidas no se aceptan', async () => {
+  test('no se puede guardar sin nombre o contacto, con elementos repetidos ni listas sin opciones', async () => {
     const res = await agent.post('/api/admin/posts').send(
-      postData({ title: 'C', category: 'convocatorias', deadline: '2999-01-01', applicationForm: { questions: [{ key: 'a', label: '' }, { key: 'a', label: 'X' }] } }),
+      postData({
+        title: 'C',
+        category: 'convocatorias',
+        deadline: '2999-01-01',
+        applicationForm: {
+          items: [
+            { key: 'name', type: 'short', label: 'Nombre' },
+            { key: 'x', type: 'choice', label: 'X', options: ['Una'] },
+            { key: 'x', type: 'short', label: 'Y' },
+          ],
+        },
+      }),
     );
     assert.equal(res.status, 400);
     const fields = res.body.error.details.map((d) => d.field);
-    assert.ok(fields.includes('applicationForm.questions.0.label'));
-    assert.ok(fields.includes('applicationForm.questions'));
+    assert.ok(fields.includes('applicationForm.items.1.options'));
+    assert.ok(fields.includes('applicationForm.items'));
+  });
+
+  test('una configuración del formato anterior se sigue entendiendo', async () => {
+    const c = await call();
+    await db.models.Post.updateOne(
+      { _id: c.id },
+      { applicationForm: { fields: { workTitle: 'required', text: 'required', link: 'off', message: 'off' }, questions: [] } },
+    );
+    const res = await request(app)
+      .post(`/api/posts/convocatorias/${c.slug}/applications`)
+      .send({ answers: { name: 'Ana', contact: 'ana@ejemplo.com', workTitle: 'Orilla', text: 'El agua' }, consent: true });
+    assert.equal(res.status, 201);
   });
 });

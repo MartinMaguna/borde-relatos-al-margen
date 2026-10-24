@@ -6,7 +6,7 @@ import { Application } from '../models/Application.js';
 import { HttpError } from '../middleware/errors.js';
 import { validate } from '../middleware/validate.js';
 import { applicationInputFor, callSlugParams, idParams } from '../validators/interactions.js';
-import { resolveApplicationForm } from '../utils/applicationForm.js';
+import { CORE_KEYS, questionsOf, resolveApplicationForm } from '../utils/applicationForm.js';
 import { sendOk } from '../utils/respond.js';
 
 /** Límite de envíos públicos por IP (postulaciones). */
@@ -56,18 +56,17 @@ export function createPublicInteractionsRouter() {
         const details = result.error.issues.map((i) => ({ field: i.path.join('.') || 'body', message: i.message }));
         throw new HttpError(400, 'Hay datos inválidos. Revisá los campos marcados.', { code: 'VALIDATION_ERROR', details });
       }
-      const { website, answers, ...data } = result.data;
-      const { questions } = resolveApplicationForm(post.applicationForm);
+      const { website, answers } = result.data;
       if (!website) {
+        const questions = questionsOf(resolveApplicationForm(post.applicationForm));
         await Application.create({
-          ...data,
-          workTitle: data.workTitle ?? '',
-          text: data.text ?? '',
-          message: data.message ?? '',
-          link: data.link ?? null,
-          // Se guarda también la pregunta: si después se edita el formulario, la respuesta conserva su contexto.
-          answers: questions.map((q) => ({ key: q.key, label: q.label, answer: answers[q.key] ?? '' })),
           post: post.id,
+          name: answers.name,
+          contact: answers.contact,
+          workTitle: answers.workTitle ?? '',
+          consent: true,
+          // Se guarda también la pregunta: si después se edita el formulario, la respuesta conserva su contexto.
+          answers: questions.filter((q) => !CORE_KEYS.includes(q.key)).map((q) => ({ key: q.key, label: q.label, answer: answers[q.key] ?? '' })),
         });
       }
       sendOk(res, { received: true }, { status: 201 });
@@ -100,13 +99,19 @@ adminInteractionsRouter.get('/posts/:id/applications.csv', validate({ params: id
   const post = await Post.findById(req.valid.params.id).select('slug applicationForm');
   if (!post) throw new HttpError(404, 'No encontramos esa publicación', { code: 'NOT_FOUND' });
   const applications = await Application.find({ post: post.id }).sort({ createdAt: 1 });
-  // Una columna por pregunta propia: las del formulario actual y las de respuestas a preguntas que ya se quitaron.
-  const questions = new Map(resolveApplicationForm(post.applicationForm).questions.map((q) => [q.key, q.label]));
+  // Una columna por pregunta: las del formulario actual y las de respuestas a preguntas que ya se quitaron.
+  const questions = new Map(
+    questionsOf(resolveApplicationForm(post.applicationForm))
+      .filter((q) => !CORE_KEYS.includes(q.key))
+      .map((q) => [q.key, q.label]),
+  );
   for (const a of applications) for (const ans of a.answers ?? []) if (!questions.has(ans.key)) questions.set(ans.key, ans.label);
-  const header = ['Fecha', 'Nombre', 'Correo', 'Título de la obra', 'Enlace', 'Mensaje', 'Texto', ...questions.values()];
+  // Postulaciones del formato anterior: sus campos fijos pasan a columnas.
+  const legacy = (a, key) => ({ workTitle: a.workTitle, text: a.text, link: a.link, message: a.message })[key];
+  const header = ['Fecha', 'Nombre', 'Contacto', ...questions.values()];
   const rows = applications.map((a) => {
     const byKey = new Map((a.answers ?? []).map((ans) => [ans.key, ans.answer]));
-    return [a.createdAt.toISOString(), a.name, a.email, a.workTitle, a.link ?? '', a.message, a.text, ...[...questions.keys()].map((k) => byKey.get(k) ?? '')]
+    return [a.createdAt.toISOString(), a.name, a.contact || a.email, ...[...questions.keys()].map((k) => byKey.get(k) ?? legacy(a, k) ?? '')]
       .map(csvCell)
       .join(',');
   });

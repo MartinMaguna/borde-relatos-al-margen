@@ -73,9 +73,14 @@ export default function ApplicationsAdminPage() {
               </h2>
               <dl className="admin-item__meta">
                 <div>
-                  <dt>Correo</dt>
+                  <dt>Contacto</dt>
                   <dd>
-                    <a href={`mailto:${a.email}`}>{a.email}</a>
+                    {/* Si el contacto es un correo, se puede escribir con un clic. */}
+                    {(a.contact || a.email).includes('@') ? (
+                      <a href={`mailto:${a.contact || a.email}`}>{a.contact || a.email}</a>
+                    ) : (
+                      a.contact
+                    )}
                   </dd>
                 </div>
                 <div>

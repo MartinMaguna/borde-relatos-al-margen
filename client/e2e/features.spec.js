@@ -49,21 +49,39 @@ test.describe('Artículos: guardar y compartir; contacto; postulaciones', () => 
     // Enviar vacío: errores juntos, incluido el consentimiento.
     await form.getByRole('button', { name: 'Enviar postulación' }).click();
     await expect(page.locator('.error-summary')).toBeFocused();
-    await expect(form.getByLabel(/Leí las bases/)).toHaveAttribute('aria-invalid', 'true');
+    await expect(form.getByLabel(/Confirmo que deseo presentar/)).toHaveAttribute('aria-invalid', 'true');
+    await expect(form.getByRole('radiogroup', { name: 'Idioma de la obra' })).toHaveAttribute('aria-invalid', 'true');
     await expectNoA11yViolations(page);
 
+    // Formulario modelo de Borde (la convocatoria no tiene uno propio).
     await form.getByLabel('Nombre y apellido').fill('Ana Pérez');
-    await form.getByLabel('Correo electrónico').fill('ana@ejemplo.com');
+    await form.getByLabel('Edad').fill('27');
+    await form.getByLabel('Departamento de residencia').selectOption('Montevideo');
+    await form.getByLabel('Medio de contacto').fill('ana@ejemplo.com');
+    await form.getByRole('radio', { name: 'Por escrito' }).check();
+    await form.getByLabel(/^Tu presentación/).fill('Escribo desde Malvín.');
     await form.getByLabel('Título de la obra').fill('Orilla');
-    await form.getByLabel('Texto (opcional)', { exact: true }).fill('El agua se fue');
-    await form.getByLabel(/Leí las bases/).check();
+    await form.getByRole('radio', { name: 'Texto escrito' }).check();
+    await form.getByRole('radio', { name: 'Español' }).check();
+    await form.getByLabel('Enlace a tu obra').fill('https://drive.google.com/file/d/abc');
+    await form.getByLabel(/Confirmo que deseo presentar/).check();
     await form.getByRole('button', { name: 'Enviar postulación' }).click();
     await expect(page.locator('.notice', { hasText: 'Recibimos tu postulación.' })).toBeFocused();
 
     await page.goto(`/panel/publicaciones/${call.id}/postulaciones`);
     await waitForView(page);
     await expect(page.getByRole('heading', { level: 2, name: 'Ana Pérez: «Orilla»' })).toBeVisible();
+    await expect(page.getByText('Escribo desde Malvín.')).toBeVisible();
     await expectNoA11yViolations(page);
+
+    // El editor del formulario en el panel, sin violaciones.
+    await page.goto(`/panel/publicaciones/${call.id}`);
+    await waitForView(page);
+    await expect(page.getByRole('group', { name: /Formulario de postulación/ })).toBeVisible();
+    await expectNoA11yViolations(page);
+    expect(await hasHorizontalScroll(page)).toBe(false);
+    await page.goto(`/panel/publicaciones/${call.id}/postulaciones`);
+    await waitForView(page);
 
     const download = page.waitForEvent('download');
     await page.getByRole('link', { name: /Descargar todas en CSV/ }).click();

@@ -1960,10 +1960,16 @@ main:focus {
 }
 
 /* Panel: editor del formulario de postulación. */
-.form-editor__question {
+.form-editor__item {
   margin-bottom: var(--space-4);
   padding-top: var(--space-3);
   border-top: var(--stroke-hairline) solid var(--line-soft);
+}
+
+/* Las secciones se distinguen de las preguntas con una barra violeta. */
+.form-editor__item--section {
+  padding-left: var(--space-3);
+  border-left: var(--stroke-rule) solid var(--violet);
 }
 
 .form-editor__fixed {
@@ -1986,4 +1992,29 @@ main:focus {
 
 .application__answers dd {
   margin: 0 0 var(--space-2);
+}
+
+/* Secciones del formulario público de postulación. */
+.application__section {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--stroke-hairline) solid var(--line-soft);
+}
+
+.application__section-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.application__section-text {
+  margin: var(--space-1) 0 0;
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
+.application__privacy {
+  white-space: pre-line;
+  font-size: 0.9375rem;
+  color: var(--ink-muted);
+  max-width: var(--measure);
 }

@@ -1,62 +1,50 @@
 import { z } from 'zod';
-import { emptyToUndefined, httpUrl, objectId } from './common.js';
-import { resolveApplicationForm } from '../utils/applicationForm.js';
+import { httpUrl, objectId } from './common.js';
+import { questionsOf, resolveApplicationForm } from '../utils/applicationForm.js';
 
 // Campo trampa: invisible para personas (oculto también al lector de pantalla);
 // los bots que completan todo lo llenan y el envío se descarta.
 const honeypot = z.string().max(200).optional();
 
-/** Un campo según su modo: obligatorio, opcional o no pedido (se ignora lo que llegue). */
-function byMode(mode, schema, requiredMessage) {
-  if (mode === 'off') return z.unknown().optional().transform(() => undefined);
-  if (mode === 'required') return z.preprocess((v) => (v == null ? '' : v), schema.min(1, requiredMessage));
-  return schema.default('');
+const LIMITS = { short: 300, long: 30000, number: 10, email: 254, link: 2000, select: 200, choice: 200 };
+
+/** Esquema de la respuesta a una pregunta, según su tipo. Vacía y opcional → ''. */
+function answerSchema(item) {
+  const requiredMessage = item.type === 'select' || item.type === 'choice' ? 'Elegí una opción' : 'Completá este campo';
+  const max = LIMITS[item.type] ?? 300;
+  let check;
+  if (item.type === 'number') check = z.string().regex(/^\d{1,3}$/, 'Escribí un número, por ejemplo 27');
+  else if (item.type === 'email') check = z.email({ error: 'Escribí un correo electrónico válido, por ejemplo nombre@ejemplo.com' });
+  else if (item.type === 'link') check = httpUrl;
+  else if (item.type === 'select' || item.type === 'choice') check = z.enum(item.options.length ? item.options : [''], { error: 'Elegí una de las opciones' });
+  else check = z.string().max(max, `Hasta ${max} caracteres`);
+
+  return z.preprocess(
+    (v) => (v == null ? '' : typeof v === 'string' ? v.trim() : v),
+    z.string({ error: 'Completá este campo' }).max(Math.max(max, 2000)).superRefine((value, ctx) => {
+      if (!value) {
+        if (item.required) ctx.addIssue({ code: 'custom', message: requiredMessage });
+        return;
+      }
+      const result = check.safeParse(value);
+      if (!result.success) ctx.addIssue({ code: 'custom', message: result.error.issues[0].message });
+    }),
+  );
 }
 
 /**
- * Esquema de una postulación según cómo armó el formulario el equipo
- * (post.applicationForm). Nombre, correo y consentimiento van siempre.
+ * Esquema de una postulación según el formulario de la convocatoria.
+ * Las respuestas llegan en `answers` ({ clave: valor }); "name" y "contact"
+ * van ahí también, como cualquier otra pregunta.
  */
 export function applicationInputFor(post) {
   const form = resolveApplicationForm(post.applicationForm);
-  const { fields } = form;
-  const linkSchema =
-    fields.link === 'off'
-      ? z.unknown().optional().transform(() => undefined)
-      : fields.link === 'required'
-        ? z.preprocess((v) => (typeof v === 'string' ? v.trim() : v), httpUrl)
-        : emptyToUndefined(httpUrl.optional());
-
-  const answers = {};
-  for (const q of form.questions) {
-    const max = q.type === 'long' ? 5000 : 300;
-    const base = z.string({ error: 'Respondé esta pregunta' }).trim().max(max, `Hasta ${max} caracteres`);
-    answers[q.key] = q.required ? z.preprocess((v) => (v == null ? '' : v), base.min(1, 'Respondé esta pregunta')) : base.default('');
-  }
-
-  return z
-    .object({
-      name: z.string({ error: 'Escribí tu nombre' }).trim().min(1, 'Escribí tu nombre').max(120),
-      email: z
-        .string({ error: 'Escribí tu correo electrónico' })
-        .trim()
-        .toLowerCase()
-        .pipe(z.email({ error: 'Escribí un correo electrónico válido, por ejemplo nombre@ejemplo.com' })),
-      workTitle: byMode(fields.workTitle, z.string().trim().max(200), 'Escribí el título de tu obra'),
-      text: byMode(fields.text, z.string().trim().max(30000, 'El texto admite hasta 30.000 caracteres'), 'Pegá tu texto'),
-      link: linkSchema,
-      message: byMode(fields.message, z.string().trim().max(2000, 'El mensaje admite hasta 2000 caracteres'), 'Escribí tu mensaje'),
-      // preprocess (no default): así se validan las preguntas aunque no llegue ninguna respuesta.
-      answers: z.preprocess((v) => v ?? {}, z.object(answers)),
-      consent: z.literal(true, { error: 'Para postularte tenés que aceptar las bases y el uso de tus datos' }),
-      website: honeypot,
-    })
-    .refine((data) => !form.needsTextOrLink || Boolean(data.text?.trim?.() || data.link), {
-      path: ['text'],
-      message: 'Pegá tu texto o compartí un enlace a él',
-      // Se evalúa aunque haya otros errores: la persona ve todos los problemas de una vez.
-      when: () => true,
-    });
+  const answers = Object.fromEntries(questionsOf(form).map((item) => [item.key, answerSchema(item)]));
+  return z.object({
+    answers: z.preprocess((v) => v ?? {}, z.object(answers)),
+    consent: z.literal(true, { error: 'Para postularte tenés que marcar la confirmación' }),
+    website: honeypot,
+  });
 }
 
 export const idParams = z.object({ id: objectId });

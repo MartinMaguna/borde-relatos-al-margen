@@ -39,34 +39,6 @@ const chapterSchema = new mongoose.Schema(
   { _id: false },
 );
 
-// Solo convocatorias: cómo es el formulario de postulación (ver utils/applicationForm.js).
-const fieldMode = { type: String, enum: ['required', 'optional', 'off'] };
-const applicationFormSchema = new mongoose.Schema(
-  {
-    intro: { type: String, trim: true, maxlength: 2000, default: '' },
-    fields: {
-      workTitle: { ...fieldMode, default: 'required' },
-      text: { ...fieldMode, default: 'optional' },
-      link: { ...fieldMode, default: 'optional' },
-      message: { ...fieldMode, default: 'optional' },
-    },
-    questions: {
-      type: [
-        {
-          key: { type: String, required: true },
-          label: { type: String, required: true, trim: true, maxlength: 200 },
-          hint: { type: String, trim: true, maxlength: 300, default: '' },
-          type: { type: String, enum: ['short', 'long'], default: 'short' },
-          required: { type: Boolean, default: false },
-          _id: false,
-        },
-      ],
-      default: [],
-    },
-  },
-  { _id: false },
-);
-
 const postSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 200 },
@@ -94,7 +66,8 @@ const postSchema = new mongoose.Schema(
     readingMinutes: { type: Number, default: null },
     // Solo convocatorias: si se reciben postulaciones con el formulario del sitio.
     acceptsApplications: { type: Boolean, default: false },
-    applicationForm: { type: applicationFormSchema, default: null },
+    // Solo convocatorias: el formulario de postulación (ver utils/applicationForm.js). Lo valida la API al guardar.
+    applicationForm: { type: mongoose.Schema.Types.Mixed, default: null },
     status: { type: String, enum: POST_STATUS, default: 'draft' },
     publishedAt: { type: Date, default: null },
     // Solo convocatorias. Apertura opcional (antes de esa fecha, "Próximamente").

@@ -77,7 +77,7 @@ describe('Acciones del artículo', () => {
 describe('Postulación a convocatorias', () => {
   const callWithForm = { ...openCall, acceptsApplications: true, readingMinutes: 1 };
 
-  test('con la convocatoria abierta muestra el formulario; al enviar, la confirmación recibe el foco', async () => {
+  test('el formulario modelo de Borde: secciones, lista, opciones y enlace; al enviar, la confirmación recibe el foco', async () => {
     const calls = mockApi({
       '/posts/convocatorias/convocatoria-antologia': ok(callWithForm),
       'POST /posts/convocatorias/convocatoria-antologia/applications': { status: 201, body: { ok: true, data: { received: true } } },
@@ -85,39 +85,62 @@ describe('Postulación a convocatorias', () => {
     await renderRoute('/convocatorias/convocatoria-antologia');
     const user = userEvent.setup();
     const form = screen.getByRole('region', { name: 'Postulate' });
+    for (const title of ['Datos personales', 'Presentación personal', 'Sobre tu obra', 'Accesibilidad y apoyos', 'Confirmación']) {
+      expect(within(form).getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
+    }
+    expect(within(form).getByRole('textbox', { name: /^Nombre artístico o seudónimo/ })).toBeInTheDocument();
+    expect(within(form).queryByRole('textbox', { name: /Correo electrónico/ })).toBeNull();
+    expect(within(form).getByRole('radiogroup', { name: '¿En qué formato presentás tu obra?' })).toHaveAttribute('aria-required', 'true');
     expect(await axeViolations()).toEqual([]);
 
-    await user.type(within(form).getByLabelText('Nombre y apellido'), 'Ana Pérez');
-    await user.type(within(form).getByLabelText('Correo electrónico'), 'ana@ejemplo.com');
-    await user.type(within(form).getByLabelText('Título de la obra'), 'Orilla');
-    await user.type(within(form).getByLabelText('Texto (opcional)'), 'El agua se fue');
-    await user.click(within(form).getByLabelText(/Leí las bases/));
+    await user.type(within(form).getByRole('textbox', { name: 'Nombre y apellido' }), 'Ana Pérez');
+    await user.type(within(form).getByRole('textbox', { name: 'Edad' }), '27');
+    await user.selectOptions(within(form).getByRole('combobox', { name: 'Departamento de residencia' }), 'Rocha');
+    await user.type(within(form).getByRole('textbox', { name: 'Medio de contacto' }), '099 123 456');
+    await user.type(within(form).getByRole('textbox', { name: 'Título de la obra' }), 'Orilla');
+    await user.click(within(form).getByRole('radio', { name: 'Audio' }));
+    await user.click(within(form).getByRole('radio', { name: 'Lengua de Señas Uruguaya (LSU)' }));
+    await user.type(within(form).getByRole('textbox', { name: 'Enlace a tu obra' }), 'https://drive.google.com/x');
+    await user.click(within(form).getByLabelText(/Confirmo que deseo presentar esta obra/));
     await user.click(within(form).getByRole('button', { name: 'Enviar postulación' }));
 
     const done = await screen.findByText('Recibimos tu postulación.');
     await waitFor(() => expect(done.closest('.notice')).toHaveFocus());
-    expect(calls.find((c) => c.method === 'POST').body).toMatchObject({
+    const sent = calls.find((c) => c.method === 'POST').body;
+    expect(sent.consent).toBe(true);
+    expect(sent.answers).toMatchObject({
       name: 'Ana Pérez',
-      email: 'ana@ejemplo.com',
+      edad: '27',
+      departamento: 'Rocha',
+      contact: '099 123 456',
       workTitle: 'Orilla',
-      text: 'El agua se fue',
-      consent: true,
+      formato: 'Audio',
+      idioma: 'Lengua de Señas Uruguaya (LSU)',
+      obra: 'https://drive.google.com/x',
+      seudonimo: '',
     });
   });
 
-  test('el consentimiento sin marcar se muestra como error en la casilla', async () => {
+  test('los errores de la API se muestran en su pregunta (también en las opciones) y en la confirmación', async () => {
     mockApi({
       '/posts/convocatorias/convocatoria-antologia': ok(callWithForm),
       'POST /posts/convocatorias/convocatoria-antologia/applications': fail(400, 'Hay datos inválidos.', {
         code: 'VALIDATION_ERROR',
-        details: [{ field: 'consent', message: 'Para postularte tenés que aceptar las bases y el uso de tus datos' }],
+        details: [
+          { field: 'answers.formato', message: 'Elegí una opción' },
+          { field: 'consent', message: 'Para postularte tenés que marcar la confirmación' },
+        ],
       }),
     });
     await renderRoute('/convocatorias/convocatoria-antologia');
     await userEvent.setup().click(screen.getByRole('button', { name: 'Enviar postulación' }));
-    const box = await screen.findByLabelText(/Leí las bases/);
+    const box = await screen.findByLabelText(/Confirmo que deseo presentar/);
     await waitFor(() => expect(box).toHaveAttribute('aria-invalid', 'true'));
     expect(box).toHaveAccessibleDescription(/Error: Para postularte/);
+    const group = screen.getByRole('radiogroup', { name: '¿En qué formato presentás tu obra?' });
+    expect(group).toHaveAttribute('aria-invalid', 'true');
+    expect(group).toHaveAccessibleDescription(/Error: Elegí una opción/);
+    expect(screen.getByRole('link', { name: 'Elegí una opción' })).toHaveAttribute('href', '#campo-application-answers-formato');
   });
 
   test('cerrada, dice que no se reciben más postulaciones; sin formulario activado, no aparece', async () => {
@@ -437,66 +460,45 @@ describe('Portada y centrado', () => {
   });
 });
 
-describe('Formulario de postulación configurable', () => {
-  const configured = {
-    ...openCall,
-    acceptsApplications: true,
-    applicationForm: {
-      intro: 'Mandá un solo cuento.',
-      fields: { workTitle: 'off', text: 'required', link: 'off', message: 'optional' },
-      questions: [{ key: 'barrio', label: '¿De qué barrio sos?', hint: 'Por ejemplo, Cordón.', type: 'short', required: true }],
-    },
-  };
-
-  test('el sitio muestra la introducción, los campos elegidos y las preguntas propias', async () => {
+describe('Panel: editor del formulario de postulación', () => {
+  test('aparece al activar las postulaciones, con el modelo de Borde; se agregan preguntas con opciones', async () => {
     const calls = mockApi({
-      '/posts/convocatorias/convocatoria-antologia': ok(configured),
-      'POST /posts/convocatorias/convocatoria-antologia/applications': { status: 201, body: { ok: true, data: { received: true } } },
+      ...ME,
+      'POST /admin/posts': { status: 201, body: { ok: true, data: { title: 'C', status: 'draft' } } },
+      '/admin/posts?page=1&limit=10': ok([], { page: 1, limit: 10, total: 0, totalPages: 0 }),
     });
-    await renderRoute('/convocatorias/convocatoria-antologia');
-    expect(screen.getByText('Mandá un solo cuento.')).toBeInTheDocument();
-    expect(screen.queryByRole('textbox', { name: /Título de la obra/ })).toBeNull();
-    expect(screen.queryByRole('textbox', { name: /Enlace al texto/ })).toBeNull();
-    expect(screen.getByRole('textbox', { name: 'Texto' })).toHaveAttribute('aria-required', 'true');
-    const barrio = screen.getByRole('textbox', { name: '¿De qué barrio sos?' });
-    expect(barrio).toHaveAttribute('aria-required', 'true');
-    expect(barrio).toHaveAccessibleDescription('Por ejemplo, Cordón.');
-    expect(await axeViolations()).toEqual([]);
-
-    const user = userEvent.setup();
-    await user.type(screen.getByRole('textbox', { name: 'Nombre y apellido' }), 'Ana');
-    await user.type(screen.getByRole('textbox', { name: 'Correo electrónico' }), 'ana@ejemplo.com');
-    await user.type(screen.getByRole('textbox', { name: 'Texto' }), 'Mi cuento');
-    await user.type(barrio, 'Cordón');
-    await user.click(screen.getByLabelText(/Leí las bases/));
-    await user.click(screen.getByRole('button', { name: 'Enviar postulación' }));
-    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
-    expect(calls.find((c) => c.method === 'POST').body.answers).toEqual({ barrio: 'Cordón' });
-  });
-
-  test('panel: el editor aparece al activar las postulaciones y envía la configuración', async () => {
-    const calls = mockApi({ ...ME, 'POST /admin/posts': { status: 201, body: { ok: true, data: { title: 'C', status: 'draft' } } }, '/admin/posts?page=1&limit=10': ok([], { page: 1, limit: 10, total: 0, totalPages: 0 }) });
     await renderRoute('/panel/publicaciones/nueva');
     const user = userEvent.setup();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Categoría' }), 'convocatorias');
-    expect(screen.queryByRole('group', { name: 'Formulario de postulación' })).toBeNull();
+    expect(screen.queryByRole('group', { name: /Formulario de postulación/ })).toBeNull();
     await user.click(screen.getByLabelText('Recibir postulaciones con el formulario del sitio'));
     const editor = screen.getByRole('group', { name: /Formulario de postulación/ });
 
-    await user.type(within(editor).getByRole('textbox', { name: /Introducción/ }), 'Solo inéditos.');
-    await user.selectOptions(within(editor).getByRole('combobox', { name: 'Enlace al texto' }), 'off');
+    // Arranca con el modelo de Borde.
+    expect(within(editor).getByRole('textbox', { name: 'Título de la sección 1' })).toHaveValue('Datos personales');
+    expect(within(editor).queryByRole('button', { name: /Quitar el elemento 2$/ })).toBeNull(); // "Nombre y apellido" no se quita
+
     await user.click(within(editor).getByRole('button', { name: 'Agregar una pregunta' }));
-    expect(within(editor).getByRole('textbox', { name: 'Texto de la pregunta 1' })).toHaveFocus();
-    await user.keyboard('¿Edad?');
-    await user.click(within(editor).getByLabelText('Respuesta obligatoria'));
+    const count = within(editor).getAllByRole('group', { name: /^\d+\. / }).length;
+    const label = within(editor).getByRole('textbox', { name: `Texto de la pregunta ${count}` });
+    expect(label).toHaveFocus();
+    await user.keyboard('¿Participaste antes?');
+    await user.selectOptions(within(editor).getByRole('combobox', { name: `Tipo de respuesta de la pregunta ${count}` }), 'choice');
+    await user.type(within(editor).getByRole('textbox', { name: `Opciones de la pregunta ${count}` }), 'Sí{Enter}No');
     expect(await axeViolations()).toEqual([]);
 
     await user.type(screen.getByRole('textbox', { name: 'Título' }), 'C');
     await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
     await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
     const sent = calls.find((c) => c.method === 'POST').body.applicationForm;
-    expect(sent.intro).toBe('Solo inéditos.');
-    expect(sent.fields).toEqual({ workTitle: 'required', text: 'optional', link: 'off', message: 'optional' });
-    expect(sent.questions).toEqual([{ key: expect.stringMatching(/^p[a-z0-9]+$/), label: '¿Edad?', hint: '', type: 'short', required: true }]);
+    expect(sent.items.map((i) => i.key)).toContain('departamento');
+    expect(sent.items.at(-1)).toEqual({
+      key: expect.stringMatching(/^p[a-z0-9]+$/),
+      type: 'choice',
+      label: '¿Participaste antes?',
+      hint: '',
+      required: false,
+      options: ['Sí', 'No'],
+    });
   });
 });
