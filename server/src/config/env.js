@@ -27,8 +27,7 @@ const envSchema = z.object({
   CONTACT_FROM_EMAIL: z.string().default('Borde <onboarding@resend.dev>'),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
   // Proxies de confianza delante de la API: define de dónde sale req.ip (límite de
-  // intentos de login). Con más de 1, quien llame directo a Railway podría falsear
-  // su IP en X-Forwarded-For; ver README → Deploy.
+  // intentos de login). Con 1 (Vercel), es la IP que registra el borde de Vercel.
   TRUST_PROXY: z.coerce.number().int().min(0).default(1),
 });
 
@@ -39,7 +38,9 @@ if (!parsed.success) {
   for (const issue of parsed.error.issues) {
     console.error(`   - ${issue.path.join('.')}: ${issue.message}`);
   }
-  process.exit(1);
+  // Un error (no process.exit): en Vercel la función responde 500 y el detalle
+  // queda en los logs; en local, el proceso termina igual con este mensaje.
+  throw new Error(`Variables de entorno inválidas: ${parsed.error.issues.map((i) => i.path.join('.')).join(', ')}`);
 }
 
 export const env = {

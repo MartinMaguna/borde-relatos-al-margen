@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
+import { rateLimitStore } from '../utils/rateLimitStore.js';
 import { env } from '../config/env.js';
 import { ContactMessage } from '../models/ContactMessage.js';
 import { HttpError } from '../middleware/errors.js';
@@ -18,6 +19,7 @@ export function createContactRouter() {
   const limit = rateLimit({
     windowMs: 60 * 60 * 1000,
     limit: env.CONTACT_RATE_LIMIT,
+    ...rateLimitStore('contacto'),
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     handler: (_req, _res, next) =>

@@ -3,8 +3,8 @@ import { toJSONOptions } from './shared.js';
 
 /**
  * Imágenes subidas desde el panel, guardadas en MongoDB.
- * Railway no tiene disco persistente (se borra en cada deploy), así que los
- * archivos no pueden quedar en el servidor. El cliente las reduce antes de
+ * Las funciones de Vercel no tienen disco persistente, así que los archivos
+ * no pueden quedar en el servidor. El cliente las reduce antes de
  * subirlas, por eso cada una ocupa poco.
  */
 const imageSchema = new mongoose.Schema(

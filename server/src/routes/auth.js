@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import { rateLimitStore } from '../utils/rateLimitStore.js';
 import { env } from '../config/env.js';
 import { AUTH_COOKIE } from '../constants.js';
 import { User } from '../models/User.js';
@@ -40,6 +41,7 @@ export function createAuthRouter() {
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: env.LOGIN_RATE_LIMIT,
+    ...rateLimitStore('login'),
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     handler: (_req, _res, next) =>

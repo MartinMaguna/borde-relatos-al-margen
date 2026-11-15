@@ -24,9 +24,9 @@ import { notFound, errorHandler } from './middleware/errors.js';
 export function createApp() {
   const app = express();
 
-  // En producción la API está detrás de proxies (Vercel hace el rewrite y Railway
-  // tiene su propio borde): hay que indicarlo para que req.ip sea la IP real de
-  // quien navega (límite de intentos de login) y las cookies Secure funcionen.
+  // En producción la API está detrás del borde de Vercel, que pone la IP de quien
+  // navega en X-Forwarded-For: hay que indicarlo para que req.ip sea esa IP
+  // (límites de intentos) y las cookies Secure funcionen.
   app.set('trust proxy', env.TRUST_PROXY);
 
   app.use(helmet());

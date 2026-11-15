@@ -84,7 +84,8 @@ publicImagesRouter.get('/:id', validate({ params: idParams }), async (req, res) 
     'Content-Type': image.contentType,
     'Content-Length': String(image.size),
     // Cada imagen tiene una URL única que nunca cambia de contenido.
-    'Cache-Control': 'public, max-age=31536000, immutable',
+    // s-maxage: la CDN de Vercel también la guarda, así no se invoca la función en cada visita.
+    'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
   });
   res.send(image.data);
 });

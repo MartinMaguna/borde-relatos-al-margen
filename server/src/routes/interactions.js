@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
+import { rateLimitStore } from '../utils/rateLimitStore.js';
 import { env } from '../config/env.js';
 import { Post } from '../models/Post.js';
 import { Application } from '../models/Application.js';
@@ -10,10 +11,11 @@ import { CORE_KEYS, questionsOf, resolveApplicationForm } from '../utils/applica
 import { sendOk } from '../utils/respond.js';
 
 /** Límite de envíos públicos por IP (postulaciones). */
-function limiter(limit, windowMinutes, message) {
+function limiter(limit, windowMinutes, message, prefix) {
   return rateLimit({
     windowMs: windowMinutes * 60 * 1000,
     limit,
+    ...rateLimitStore(prefix),
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     handler: (_req, _res, next) => next(new HttpError(429, message, { code: 'RATE_LIMITED' })),
@@ -32,7 +34,7 @@ async function publishedPostOr404(category, slug) {
  */
 export function createPublicInteractionsRouter() {
   const router = Router();
-  const applicationLimit = limiter(env.APPLICATION_RATE_LIMIT, 60, 'Enviaste varias postulaciones seguidas. Esperá un rato y volvé a intentar.');
+  const applicationLimit = limiter(env.APPLICATION_RATE_LIMIT, 60, 'Enviaste varias postulaciones seguidas. Esperá un rato y volvé a intentar.', 'postulacion');
 
   // POST /api/posts/convocatorias/:slug/applications — solo si la convocatoria acepta postulaciones y está abierta.
   router.post(

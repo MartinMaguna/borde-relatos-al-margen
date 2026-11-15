@@ -6,7 +6,7 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 | Parte | Tecnología | Deploy |
 | ----- | ---------- | ------ |
 | `client/` | React + Vite + React Router | Vercel |
-| `server/` | Node.js + Express + Mongoose | Railway |
+| `server/` | Node.js + Express + Mongoose | Vercel (función serverless) |
 | Base de datos | MongoDB Atlas | — |
 
 ## Estructura
@@ -60,7 +60,7 @@ Diseñado con la **accesibilidad como requisito central** (WCAG 2.2 AA, lectores
 2. **Crear la base en Atlas**
    1. Crear un cluster gratuito (M0).
    2. *Database Access*: crear un usuario con contraseña.
-   3. *Network Access*: agregar tu IP (para Railway, más adelante, `0.0.0.0/0`).
+   3. *Network Access*: agregar tu IP (para Vercel, `0.0.0.0/0`).
    4. *Connect → Drivers*: copiar la cadena `mongodb+srv://…` y agregar el nombre de la base (`/borde`) antes del `?`.
 
 3. **Variables de entorno del server**
@@ -191,7 +191,7 @@ Base: `/api`. Las rutas `/api/admin/*` exigen sesión de editor (cookie `borde_s
 
 ### Imágenes
 
-Las imágenes subidas desde el panel se guardan **en MongoDB** (colección `images`): Railway no tiene disco persistente, así que no pueden quedar como archivos en el servidor.
+Las imágenes subidas desde el panel se guardan **en MongoDB** (colección `images`): las funciones de Vercel no tienen disco persistente, así que no pueden quedar como archivos en el servidor.
 
 - El navegador las **achica antes de subirlas** (lado mayor 1600 px, WebP o JPEG): una foto de celular de varios MB queda en unos cientos de KB. Los GIF se suben tal cual para no perder la animación.
 - La API verifica el tipo **por el contenido** del archivo (JPG, PNG, WebP, GIF, AVIF), no por el nombre. No se aceptan SVG (pueden contener scripts).
@@ -234,113 +234,97 @@ Todas las respuestas tienen la misma forma:
 
 Los errores se manejan en un único middleware (`server/src/middleware/errors.js`); los 500 nunca exponen detalles internos.
 
-## Por qué un rewrite de `/api` en Vercel
+## Por qué la API vive bajo `/api` del mismo dominio
 
-El navegador siempre habla con **un solo origen** (`/api/...`): en local lo resuelve el proxy de Vite y en producción un rewrite de Vercel hacia Railway. Así la cookie httpOnly del JWT es *first-party*, puede usar `SameSite=Strict` (protección contra CSRF) y no depende de CORS ni de cookies de terceros (que Safari y otros navegadores bloquean).
+El navegador siempre habla con **un solo origen** (`/api/...`): en local lo resuelve el proxy de Vite y en producción la función serverless de Vercel, en el mismo dominio que el sitio. Así la cookie httpOnly del JWT es *first-party*, puede usar `SameSite=Strict` (protección contra CSRF) y no depende de CORS ni de cookies de terceros (que Safari y otros navegadores bloquean).
 
 ## Seguridad
 
 - Contraseñas con **bcrypt** (costo 12). El login responde igual si falla el email o la contraseña, y tarda lo mismo.
 - **JWT** firmado con HS256 en cookie `httpOnly`, `Secure` (producción) y `SameSite=Strict`. En cada request se verifica que el usuario siga existiendo.
-- **Rate limiting** del login por IP. **helmet** para cabeceras seguras. Las respuestas de `/api` llevan `Cache-Control: no-store`.
+- **Rate limiting** del login y de los formularios públicos por IP (en Vercel, el conteo se guarda en MongoDB para que valga entre instancias). **helmet** para cabeceras seguras. Las respuestas de `/api` llevan `Cache-Control: no-store`.
 - **Validación** de toda entrada con Zod (mensajes en español, errores por campo). URLs solo `http(s)`.
 - **Sanitización** del HTML generado desde Markdown.
 
-## Deploy
+## Deploy (Vercel + MongoDB Atlas, costo USD 0)
 
 ```
-Navegador ──► Vercel (client/dist + vercel.json)
-                 │  /poesia, /panel… → index.html (SPA)
-                 └─ /api/*  ──rewrite──► Railway (server) ──► MongoDB Atlas
+Navegador ──► Vercel
+                 ├─ /poesia, /panel…  → client/dist/index.html (SPA)
+                 └─ /api/*  → función serverless client/api/index.js
+                                (la app de Express de /server) ──► MongoDB Atlas (M0)
 ```
 
-El navegador solo habla con el dominio de Vercel. Vercel reenvía `/api/*` a Railway, así la cookie de sesión es del mismo sitio (`SameSite=Strict`) y no hace falta CORS.
-
-Producción actual:
+Todo en un solo proyecto de Vercel (plan Hobby) y una base gratuita de Atlas (M0). Los datos —publicaciones, imágenes, usuarios, postulaciones, mensajes— están en Atlas: el servidor no guarda archivos en disco.
 
 | Servicio | URL |
 | -------- | --- |
-| Sitio (Vercel) | https://borde-relatos-al-margen.vercel.app |
-| API (Railway) | https://server-production-3d08.up.railway.app/api/health |
+| Sitio y API (Vercel) | https://borde-relatos-al-margen.vercel.app (salud: `/api/health`) |
+
+### Cómo funciona la API en Vercel
+
+- [`client/api/index.js`](client/api/index.js) es la función: reexporta [`server/src/serverless.js`](server/src/serverless.js), que conecta a Atlas una vez por instancia (la conexión se reutiliza), crea el primer editor y la página Acerca si faltan, y le pasa cada petición a la **misma app de Express** de siempre (`server/src/app.js`).
+- [`client/vercel.json`](client/vercel.json) reescribe `/api/<ruta>` → `/api?__ruta=<ruta>` y la función rearma la URL original. El resto de las rutas devuelve `index.html` (SPA).
+- Vercel incluye en la función el código de `/server` y sus dependencias (están en el `node_modules` de la raíz del monorepo): por eso el proyecto necesita "Include files outside the root directory".
+- Límites de intentos (login, postulaciones, contacto): con la variable `VERCEL` (la define Vercel) se guardan en la colección `ratelimits` de Atlas, que se limpia sola.
+- Las imágenes se sirven con `s-maxage`: la CDN de Vercel las guarda y no se invoca la función en cada visita.
+- En local nada cambia: `npm run dev` levanta Express con `server/src/index.js`.
 
 ### 1. MongoDB Atlas
 
-1. Cluster (el gratuito M0 alcanza) y un usuario de base de datos con contraseña.
-2. *Network Access* → **Add IP Address** → `0.0.0.0/0`. Railway no tiene IP fija; la seguridad la da el usuario y la contraseña de la cadena de conexión.
+1. Cluster gratuito **M0** y un usuario de base de datos con contraseña.
+2. *Network Access* → **Add IP Address** → `0.0.0.0/0`. Vercel no tiene IP fija; la seguridad la da el usuario y la contraseña de la cadena de conexión.
 3. *Connect → Drivers*: copiar la cadena `mongodb+srv://…` y agregar el nombre de la base (`/borde`) antes del `?`.
 
-### 2. Railway (API)
+### 2. Vercel
 
-1. **New Project → Deploy from GitHub repo** → este repositorio.
-2. En el servicio, *Settings*:
-   - **Root Directory: `/`** (la raíz). No `server`: el `package-lock.json` del monorepo está en la raíz.
-   - El resto lo define [`railway.json`](railway.json): arranque con `npm run start -w server`, *healthcheck* en `/api/health`, reinicio ante fallas y `watchPatterns` (un cambio solo en `client/` no redespliega la API).
-3. *Variables*:
+1. **Add New → Project** → este repositorio (o el proyecto existente).
+2. *Settings → Build and Deployment*:
+   - **Root Directory: `client`**, con **"Include files outside the root directory in the Build Step"** activado (la función usa el código de `/server` y el lockfile está en la raíz).
+   - Framework, build, salida, rewrites y duración de la función los define [`client/vercel.json`](client/vercel.json).
+3. *Settings → Environment Variables* (para **Production** y **Preview**):
 
    | Variable | Valor |
    | -------- | ----- |
-   | `NODE_ENV` | `production` (recomendado: logs de producción; la cookie igual sale `Secure` por HTTPS) |
    | `MONGODB_URI` | cadena de Atlas |
    | `JWT_SECRET` | 48+ bytes aleatorios: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
-   | `TRUST_PROXY` | opcional, `1` por defecto (ver nota) |
    | `CLIENT_ORIGIN` | `https://borde-relatos-al-margen.vercel.app` |
-   | `SESSION_TTL_HOURS`, `LOGIN_RATE_LIMIT` | opcionales (8 y 10 por defecto) |
-   | `RESEND_API_KEY` | clave de [Resend](https://resend.com) para que los mensajes de Contacto lleguen por correo (ver *Formulario de contacto*) |
-   | `CONTACT_TO_EMAIL` | correo del equipo que recibe los mensajes de Contacto (no se muestra en el sitio) |
+   | `NODE_ENV` | `production` |
+   | `RESEND_API_KEY`, `CONTACT_TO_EMAIL` | opcionales: para que los mensajes de Contacto lleguen por correo (ver *Formulario de contacto*) |
    | `CONTACT_FROM_EMAIL` | opcional; remitente, `Borde <onboarding@resend.dev>` por defecto |
-   | `APPLICATION_RATE_LIMIT`, `CONTACT_RATE_LIMIT` | opcionales (5 envíos por IP) |
-   | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo hasta crear el primer editor (ver paso 5) |
+   | `SESSION_TTL_HOURS`, `LOGIN_RATE_LIMIT`, `APPLICATION_RATE_LIMIT`, `CONTACT_RATE_LIMIT`, `TRUST_PROXY` | opcionales (8, 10, 5, 5 y 1 por defecto) |
+   | `SEED_EDITOR_NAME`, `SEED_EDITOR_EMAIL`, `SEED_EDITOR_PASSWORD` | solo si la base no tiene ningún usuario (ver abajo) |
 
-   `PORT` no se define: Railway la inyecta.
+   Un cambio de variables se aplica en el **próximo deploy** (*Deployments → … → Redeploy*).
+4. **Primer editor: se crea solo.** En la primera petición a la API, si la base no tiene ningún usuario y están las variables `SEED_EDITOR_*`, se crea ese editor (y la página "Acerca" si falta). Después, borrá las `SEED_*`. Para cambiar una contraseña o cargar ejemplos: `npm run seed` desde tu equipo, con un `server/.env` que tenga la misma `MONGODB_URI` y las `SEED_*`.
 
-   > **Nota sobre `TRUST_PROXY`.** Con `1`, el límite de intentos de login cuenta por la IP con la que Vercel llega a Railway, que pueden compartir varias personas: en el peor caso, un ataque al login bloquea el ingreso 15 minutos. Subirlo a `2` haría que se cuente por la IP real de cada persona, pero quien llame **directo** a la URL de Railway podría falsear esa IP y saltarse el límite. Para un equipo editorial chico, `1` es la opción más segura.
-4. *Networking* → **Generate Domain** (o un dominio propio).
-5. **Primer editor: se crea solo.** Al arrancar, si la base no tiene ningún usuario y están las variables `SEED_EDITOR_*`, la API crea ese editor (y la página "Acerca" si falta). En los logs de Railway aparece `👤 Primer editor creado: …`. Si no hay usuario ni variables, el log lo avisa.
-   - **Ingresá** en `https://borde-relatos-al-margen.vercel.app/panel` con `SEED_EDITOR_EMAIL` y `SEED_EDITOR_PASSWORD`.
-   - Después, **borrá las tres variables `SEED_*`** en Railway: ya no hacen falta y así la contraseña no queda guardada.
-   - El arranque **nunca** modifica usuarios existentes. Para cambiar una contraseña o cargar publicaciones de ejemplo, usá el seed manual: con la [CLI de Railway](https://docs.railway.com/guides/cli), `railway link` y luego `railway ssh`; dentro del contenedor, `npm run seed -w server` (o `npm run seed -w server -- --demo`). También se puede correr `npm run seed` desde tu equipo con un `server/.env` que tenga la misma `MONGODB_URI` y las `SEED_*`.
-
-### 3. Vercel (sitio)
-
-1. **Add New → Project** → este repositorio.
-2. *Settings → Build and Deployment*:
-   - **Root Directory: `client`**, con "Incluir archivos fuera del directorio raíz" activado (el lockfile está en la raíz).
-   - Framework, build y salida los define [`client/vercel.json`](client/vercel.json): Vite, `npm run build`, `dist`.
-3. No hacen falta variables de entorno: el cliente usa `/api` y el rewrite de `vercel.json` lo lleva a Railway. **Si cambia la URL de Railway, hay que actualizarla en `client/vercel.json`.**
-4. `vercel.json` además:
-   - devuelve `index.html` para cualquier ruta (`/poesia`, `/panel`…), así se puede entrar directo o recargar;
-   - cachea un año los archivos de `/assets` (llevan hash en el nombre);
-   - agrega cabeceras de seguridad básicas al HTML.
-
-### 4. Verificar el deploy
-
-```bash
-curl https://server-production-3d08.up.railway.app/api/health
-```
-→ `{"ok":true,"data":{"status":"ok","db":"conectado",…}}` (Railway ↔ Atlas)
+### 3. Verificar el deploy
 
 ```bash
 curl https://borde-relatos-al-margen.vercel.app/api/health
 ```
-→ la misma respuesta (Vercel ↔ Railway: el rewrite funciona)
+→ `{"ok":true,"data":{"status":"ok","db":"conectado",…}}` (Vercel ↔ Atlas)
 
 ```bash
 curl -I https://borde-relatos-al-margen.vercel.app/poesia
 ```
 → `200` con `content-type: text/html` (fallback de la SPA)
 
-En el navegador: la portada muestra las secciones (o "Todavía no hay…" si la base está vacía), `/panel` lleva al login y, tras ingresar, la cookie `borde_session` aparece con `HttpOnly`, `Secure` y `SameSite=Strict` (DevTools → Application → Cookies).
+En el navegador: la portada muestra las publicaciones, `/panel` lleva al login y, tras ingresar, la cookie `borde_session` aparece con `HttpOnly`, `Secure` y `SameSite=Strict` (DevTools → Application → Cookies).
 
 ### Problemas frecuentes
 
 | Síntoma | Causa probable |
 | ------- | -------------- |
-| La portada dice "Algo salió mal: el servidor respondió de forma inesperada" | El rewrite de `/api` no llega a Railway: revisar la URL en `client/vercel.json`. |
+| `/api/health` responde 503 "El servidor no está disponible" | La función no conecta: falta una variable (los logs de la función dicen cuál), `MONGODB_URI` mal copiada o Atlas no permite `0.0.0.0/0`. |
+| La función falla con "Cannot find module" | Falta activar "Include files outside the root directory" en Vercel. |
 | `/poesia` da 404 de Vercel al recargar | Falta `client/vercel.json` o el Root Directory de Vercel no es `client`. |
-| `/api/health` dice `"db":"desconectado"` o el deploy no pasa el healthcheck | `MONGODB_URI` mal copiada o Atlas no permite `0.0.0.0/0`. |
-| No puedo ingresar al panel en un deploy nuevo | No hay editor: revisar en los logs de Railway el aviso del arranque y las variables `SEED_EDITOR_*` (contraseña de 12+ caracteres). |
-| El login funciona en Railway pero no en Vercel (o al revés) | La cookie es de un solo dominio: usar siempre la URL de Vercel. |
-| "Demasiados intentos" para todo el equipo a la vez | Alguien está probando contraseñas: el límite es por IP de Vercel (ver nota sobre `TRUST_PROXY`). Se libera solo en 15 minutos. |
+| No puedo ingresar al panel en un deploy nuevo | No hay editor: definir `SEED_EDITOR_*` (contraseña de 12+ caracteres) y volver a desplegar. |
+| La primera carga después de un rato tarda 1–3 segundos | Arranque en frío de la función (normal en el plan gratuito); las siguientes son rápidas. |
+
+### Anterior: Railway
+
+Hasta noviembre de 2026 la API corría en Railway (`https://server-production-3d08.up.railway.app`, configuración en [`railway.json`](railway.json); `server/src/index.js` sigue funcionando como servidor tradicional). Se conserva hasta confirmar que todo funciona en Vercel.
 
 ## Design system
 
@@ -365,7 +349,7 @@ Cada mensaje se guarda en la base y se ve en el panel → **Mensajes** (con avis
 
 1. Crear una cuenta gratuita en Resend **con el mismo correo que va a recibir los mensajes** (sin dominio propio, el remitente de prueba `onboarding@resend.dev` solo puede enviar a ese correo).
 2. *API Keys* → **Create API Key** (permiso *Sending access*).
-3. En Railway, agregar `RESEND_API_KEY` (la clave) y `CONTACT_TO_EMAIL` (el correo del equipo).
+3. En Vercel (*Settings → Environment Variables*), agregar `RESEND_API_KEY` (la clave) y `CONTACT_TO_EMAIL` (el correo del equipo), y volver a desplegar.
 
 Sin esas variables el formulario funciona igual y los mensajes quedan solo en el panel. Con un dominio propio verificado en Resend se puede usar otro remitente con `CONTACT_FROM_EMAIL`.
 
