@@ -10,7 +10,7 @@ mongoose.set('strictQuery', true);
 const cache = (globalThis.__bordeMongo ??= { promise: null, listeners: false });
 
 /** Conecta a MongoDB Atlas (una sola vez por proceso). Lanza error si no logra conectar. */
-export async function connectDB(uri) {
+export async function connectDB(uri, dbName) {
   if (mongoose.connection.readyState === 1) return;
   if (!cache.listeners) {
     mongoose.connection.on('disconnected', () => console.warn('⚠️  MongoDB desconectado'));
@@ -20,6 +20,7 @@ export async function connectDB(uri) {
   cache.promise ??= mongoose
     .connect(uri, {
       serverSelectionTimeoutMS: 10_000,
+      ...(dbName && { dbName }),
       // Pocas conexiones por instancia: en serverless hay muchas instancias chicas.
       maxPoolSize: process.env.VERCEL ? 5 : 100,
     })

@@ -9,6 +9,10 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
   MONGODB_URI: z.string({ error: 'es obligatoria' }).min(1, 'es obligatoria'),
+  // Base de datos a usar dentro del clúster. Si se define, manda sobre la que diga
+  // MONGODB_URI. En producción los datos están en `test` (la cadena original no
+  // nombraba ninguna y MongoDB usa `test` por defecto).
+  MONGODB_DB_NAME: z.preprocess((v) => (v === '' ? undefined : v), z.string().regex(/^[\w-]+$/, 'nombre de base inválido').optional()),
   JWT_SECRET: z.string({ error: 'es obligatoria' }).min(32, 'debe tener al menos 32 caracteres'),
   // Duración de la sesión del editor (JWT y cookie usan el mismo valor).
   SESSION_TTL_HOURS: z.coerce.number().positive().default(8),

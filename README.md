@@ -274,7 +274,7 @@ Todo en un solo proyecto de Vercel (plan Hobby) y una base gratuita de Atlas (M0
 
 1. Cluster gratuito **M0** y un usuario de base de datos con contraseña.
 2. *Network Access* → **Add IP Address** → `0.0.0.0/0`. Vercel no tiene IP fija; la seguridad la da el usuario y la contraseña de la cadena de conexión.
-3. *Connect → Drivers*: copiar la cadena `mongodb+srv://…` y agregar el nombre de la base (`/borde`) antes del `?`.
+3. *Connect → Drivers*: copiar la cadena `mongodb+srv://…`. **Los datos de producción están en la base `test`** (la cadena original no nombraba ninguna): definir `MONGODB_DB_NAME=test` en Vercel, que manda sobre lo que diga la cadena.
 
 ### 2. Vercel
 
@@ -287,6 +287,7 @@ Todo en un solo proyecto de Vercel (plan Hobby) y una base gratuita de Atlas (M0
    | Variable | Valor |
    | -------- | ----- |
    | `MONGODB_URI` | cadena de Atlas |
+   | `MONGODB_DB_NAME` | `test` (la base donde están los datos de producción) |
    | `JWT_SECRET` | 48+ bytes aleatorios: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
    | `CLIENT_ORIGIN` | `https://borde-relatos-al-margen.vercel.app` |
    | `NODE_ENV` | `production` |

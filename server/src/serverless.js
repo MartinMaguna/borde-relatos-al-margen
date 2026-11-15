@@ -18,7 +18,7 @@ function prepare() {
     const { connectDB } = await import('./config/db.js');
     const { createApp } = await import('./app.js');
     const { ensureInitialData } = await import('./bootstrap.js');
-    await connectDB(env.MONGODB_URI);
+    await connectDB(env.MONGODB_URI, env.MONGODB_DB_NAME);
     // Primer editor y página "Acerca" si faltan. Un fallo acá no impide atender.
     await ensureInitialData().catch((err) => console.error('⚠️  No se pudieron crear los datos iniciales:', err.message));
     return createApp();
