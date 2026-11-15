@@ -44,6 +44,16 @@ export function restoreOriginalUrl(req) {
   req.url = `/api/${route.replace(/^\/+/, '')}${url.search}`;
 }
 
+/** Qué falló al iniciar, en términos seguros de mostrar. */
+export function startupReason(err) {
+  const envMatch = /^Variables de entorno inválidas: (.+)$/.exec(err?.message ?? '');
+  if (envMatch) return `Revisá estas variables de entorno: ${envMatch[1]}`;
+  if (/auth/i.test(err?.message ?? '') || err?.codeName === 'AtlasError') return 'MongoDB rechazó el usuario o la contraseña de MONGODB_URI';
+  if (err?.name === 'MongoParseError' || /Invalid scheme|URI/i.test(err?.message ?? '')) return 'MONGODB_URI no tiene un formato válido';
+  if (err?.name === 'MongoServerSelectionError') return 'No se pudo llegar a MongoDB Atlas (revisá Network Access)';
+  return err?.name ?? 'Error';
+}
+
 export default async function handler(req, res) {
   restoreOriginalUrl(req);
   let app;
@@ -57,7 +67,13 @@ export default async function handler(req, res) {
     res.end(
       JSON.stringify({
         ok: false,
-        error: { message: 'El servidor no está disponible en este momento. Probá de nuevo en unos minutos.', code: 'UNAVAILABLE' },
+        error: {
+          message: 'El servidor no está disponible en este momento. Probá de nuevo en unos minutos.',
+          code: 'UNAVAILABLE',
+          // Pista para quien configura el deploy, sin datos sensibles: solo nombres
+          // de variables o el tipo de error de conexión (nunca valores ni contraseñas).
+          reason: startupReason(err),
+        },
       }),
     );
     return;
