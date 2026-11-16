@@ -6,7 +6,7 @@ import { Post } from '../models/Post.js';
 import { Application } from '../models/Application.js';
 import { HttpError } from '../middleware/errors.js';
 import { validate } from '../middleware/validate.js';
-import { applicationInputFor, callSlugParams, idParams } from '../validators/interactions.js';
+import { applicationInputFor, applicationParams, idParams } from '../validators/interactions.js';
 import { CORE_KEYS, questionsOf, resolveApplicationForm } from '../utils/applicationForm.js';
 import { sendOk } from '../utils/respond.js';
 
@@ -36,23 +36,25 @@ export function createPublicInteractionsRouter() {
   const router = Router();
   const applicationLimit = limiter(env.APPLICATION_RATE_LIMIT, 60, 'Enviaste varias postulaciones seguidas. Esperá un rato y volvé a intentar.', 'postulacion');
 
-  // POST /api/posts/convocatorias/:slug/applications — solo si la convocatoria acepta postulaciones y está abierta.
+  // POST /api/posts/:category/:slug/applications (convocatorias y talleres) — solo si acepta postulaciones y está abierta.
   router.post(
-    '/convocatorias/:slug/applications',
+    '/:category/:slug/applications',
     applicationLimit,
-    validate({ params: callSlugParams }),
+    validate({ params: applicationParams }),
     async (req, res) => {
-      const post = await publishedPostOr404('convocatorias', req.valid.params.slug);
+      const { category, slug } = req.valid.params;
+      const post = await publishedPostOr404(category, slug);
+      const what = category === 'talleres' ? 'La inscripción a este taller' : 'La convocatoria';
       if (!post.acceptsApplications) {
-        throw new HttpError(403, 'Esta convocatoria no recibe postulaciones por el sitio. Revisá sus bases.', { code: 'APPLICATIONS_CLOSED' });
+        throw new HttpError(403, 'Esta publicación no recibe postulaciones por el sitio.', { code: 'APPLICATIONS_CLOSED' });
       }
       if (post.callStatus === 'proxima') {
-        throw new HttpError(403, 'La convocatoria todavía no abrió: las postulaciones empiezan en la fecha de apertura.', { code: 'APPLICATIONS_CLOSED' });
+        throw new HttpError(403, `${what} todavía no abrió: las postulaciones empiezan en la fecha de apertura.`, { code: 'APPLICATIONS_CLOSED' });
       }
       if (post.callStatus !== 'abierta') {
-        throw new HttpError(403, 'La convocatoria ya cerró: la fecha límite pasó.', { code: 'APPLICATIONS_CLOSED' });
+        throw new HttpError(403, `${what} ya cerró: la fecha límite pasó.`, { code: 'APPLICATIONS_CLOSED' });
       }
-      // El formulario depende de cómo lo armó el equipo en esta convocatoria.
+      // El formulario depende de cómo lo armó el equipo en esta publicación.
       const result = applicationInputFor(post).safeParse(req.body ?? {});
       if (!result.success) {
         const details = result.error.issues.map((i) => ({ field: i.path.join('.') || 'body', message: i.message }));

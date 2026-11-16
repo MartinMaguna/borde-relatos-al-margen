@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { CATEGORIES, POST_STATUS } from '../constants.js';
+import { APPLICATION_CATEGORIES, CATEGORIES, POST_STATUS } from '../constants.js';
 import { renderMarkdown } from '../utils/markdown.js';
 import { youTubeId } from '../utils/youtube.js';
 
@@ -64,13 +64,14 @@ const postSchema = new mongoose.Schema(
     signVideoUrl: { type: String, trim: true, default: null },
     // Minutos de lectura estimados (≈200 palabras por minuto), calculados al guardar.
     readingMinutes: { type: Number, default: null },
-    // Solo convocatorias: si se reciben postulaciones con el formulario del sitio.
+    // Convocatorias y talleres: si se reciben postulaciones con el formulario del sitio.
     acceptsApplications: { type: Boolean, default: false },
-    // Solo convocatorias: el formulario de postulación (ver utils/applicationForm.js). Lo valida la API al guardar.
+    // Convocatorias y talleres: el formulario de postulación (ver utils/applicationForm.js). Lo valida la API al guardar.
     applicationForm: { type: mongoose.Schema.Types.Mixed, default: null },
     status: { type: String, enum: POST_STATUS, default: 'draft' },
     publishedAt: { type: Date, default: null },
-    // Solo convocatorias. Apertura opcional (antes de esa fecha, "Próximamente").
+    // Convocatorias (cierre obligatorio) y talleres (fechas de inscripción opcionales).
+    // Apertura opcional: antes de esa fecha, "Próximamente".
     opensAt: { type: Date, default: null },
     deadline: {
       type: Date,
@@ -90,11 +91,20 @@ const postSchema = new mongoose.Schema(
 // Listados públicos: por categoría y estado, ordenados por fecha de publicación.
 postSchema.index({ category: 1, status: 1, publishedAt: -1 });
 
-/** Estado de una convocatoria, calculado en el momento (no se guarda, así nunca queda desactualizado). */
+/**
+ * Estado de una convocatoria (o de la inscripción a un taller con formulario),
+ * calculado en el momento: no se guarda, así nunca queda desactualizado.
+ * Un taller sin fecha de cierre queda abierto mientras tenga el formulario activado.
+ */
 postSchema.virtual('callStatus').get(function () {
-  if (this.category !== 'convocatorias' || !this.deadline) return undefined;
   const now = Date.now();
+  if (this.category === 'convocatorias') {
+    if (!this.deadline) return undefined;
+  } else if (this.category !== 'talleres' || !this.acceptsApplications) {
+    return undefined;
+  }
   if (this.opensAt && this.opensAt.getTime() > now) return 'proxima';
+  if (!this.deadline) return 'abierta';
   return this.deadline.getTime() >= now ? 'abierta' : 'cerrada';
 });
 
@@ -112,10 +122,10 @@ postSchema.pre('validate', function () {
   }
   // La primera vez que se publica, registramos la fecha. Si vuelve a borrador, se conserva.
   if (this.status === 'published' && !this.publishedAt) this.publishedAt = new Date();
-  if (this.category !== 'convocatorias') {
+  if (this.category !== 'convocatorias') this.basesUrl = null;
+  if (!APPLICATION_CATEGORIES.includes(this.category)) {
     this.deadline = null;
     this.opensAt = null;
-    this.basesUrl = null;
     this.acceptsApplications = false;
     this.applicationForm = null;
   }

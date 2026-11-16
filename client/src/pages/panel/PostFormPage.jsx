@@ -88,6 +88,28 @@ export default function PostFormPage() {
   const [acceptsApplications, setAcceptsApplications] = useState(Boolean(post.acceptsApplications));
   const fieldErrors = errorsByField(errors);
 
+  // Casilla para activar el formulario de postulación (convocatorias y talleres).
+  const applicationsCheckbox = (
+    <div className="field">
+      <div className="checkbox">
+        <input
+          id="campo-acceptsApplications"
+          name="acceptsApplications"
+          type="checkbox"
+          defaultChecked={post.acceptsApplications}
+          onChange={(e) => setAcceptsApplications(e.target.checked)}
+          aria-describedby="campo-acceptsApplications-pista"
+        />
+        <label htmlFor="campo-acceptsApplications">Recibir postulaciones con el formulario del sitio</label>
+      </div>
+      <p id="campo-acceptsApplications-pista" className="field__hint">
+        Agrega un formulario de postulación al final de la {category === 'talleres' ? 'página del taller' : 'convocatoria'} mientras
+        esté abierta. Las postulaciones llegan al panel y se pueden descargar en CSV. Al marcarla aparece, debajo, el editor del
+        formulario.
+      </p>
+    </div>
+  );
+
   const pageTitle = isEdit ? `Editar «${post.title}»` : 'Nueva publicación';
   useDocumentTitle(`${errors.length ? 'Error: ' : ''}${pageTitle} · Panel`);
 
@@ -135,7 +157,7 @@ export default function PostFormPage() {
         <SelectField
           name="category"
           label="Categoría"
-          hint="Si elegís Cuentos, podés dividirlo en capítulos; si elegís Convocatorias, aparecen los campos de fechas y bases."
+          hint="Si elegís Cuentos, podés dividirlo en capítulos; en Convocatorias y Talleres aparecen las fechas y el formulario de postulación."
           options={CATEGORY_OPTIONS}
           defaultValue={post.category}
           onChange={(e) => setCategory(e.target.value)}
@@ -202,27 +224,39 @@ export default function PostFormPage() {
               defaultValue={post.basesUrl ?? ''}
               error={fieldErrors.basesUrl}
             />
-            <div className="field">
-              <div className="checkbox">
-                <input
-                  id="campo-acceptsApplications"
-                  name="acceptsApplications"
-                  type="checkbox"
-                  defaultChecked={post.acceptsApplications}
-                  onChange={(e) => setAcceptsApplications(e.target.checked)}
-                  aria-describedby="campo-acceptsApplications-pista"
-                />
-                <label htmlFor="campo-acceptsApplications">Recibir postulaciones con el formulario del sitio</label>
-              </div>
-              <p id="campo-acceptsApplications-pista" className="field__hint">
-                Agrega un formulario de postulación al final de la convocatoria mientras esté abierta. Las postulaciones
-                llegan al panel y se pueden descargar en CSV. Al marcarla aparece, debajo, el editor del formulario.
-              </p>
-            </div>
+            {applicationsCheckbox}
           </Fieldset>
         )}
 
-        {category === 'convocatorias' && acceptsApplications && (
+        {category === 'talleres' && (
+          <Fieldset legend="Inscripción al taller">
+            {applicationsCheckbox}
+            {acceptsApplications && (
+              <>
+                <TextField
+                  name="opensAt"
+                  label="Apertura de la inscripción"
+                  type="date"
+                  optional
+                  hint="Desde ese día se reciben postulaciones. Si la dejás vacía, la inscripción está abierta desde que se publica."
+                  defaultValue={toDateInput(post.opensAt)}
+                  error={fieldErrors.opensAt}
+                />
+                <TextField
+                  name="deadline"
+                  label="Cierre de la inscripción"
+                  type="date"
+                  optional
+                  hint="Se reciben postulaciones hasta el final de ese día. Si la dejás vacía, queda abierta hasta que desactives el formulario."
+                  defaultValue={toDateInput(post.deadline)}
+                  error={fieldErrors.deadline}
+                />
+              </>
+            )}
+          </Fieldset>
+        )}
+
+        {(category === 'convocatorias' || category === 'talleres') && acceptsApplications && (
           <ApplicationFormEditor initial={post.applicationForm} errors={fieldErrors} />
         )}
 

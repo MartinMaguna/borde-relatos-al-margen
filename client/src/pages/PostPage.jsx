@@ -168,12 +168,42 @@ export default function PostPage() {
           </section>
         )}
 
+        {post.category === 'talleres' && post.acceptsApplications && (
+          <section className="call-details" aria-labelledby="datos-inscripcion">
+            <h2 id="datos-inscripcion" className="visually-hidden">
+              Datos de la inscripción
+            </h2>
+            <dl>
+              <dt>Inscripción</dt>
+              <dd>
+                <CallStatus post={post} />
+              </dd>
+              {post.opensAt && (
+                <>
+                  <dt>Apertura</dt>
+                  <dd>
+                    <time dateTime={post.opensAt}>{formatDate(post.opensAt)}</time>
+                  </dd>
+                </>
+              )}
+              {post.deadline && (
+                <>
+                  <dt>Cierre</dt>
+                  <dd>
+                    <time dateTime={post.deadline}>{formatDate(post.deadline)}</time>
+                  </dd>
+                </>
+              )}
+            </dl>
+          </section>
+        )}
+
         {/* HTML generado y sanitizado en el servidor a partir del Markdown (sin scripts ni atributos peligrosos). */}
         {post.bodyHtml && <div className={`prose prose--${post.category}`} dangerouslySetInnerHTML={{ __html: post.bodyHtml }} />}
 
         {post.chapters?.length > 0 && <Chapters post={post} />}
 
-        {post.category === 'convocatorias' && post.acceptsApplications && <ApplicationForm post={post} />}
+        {(post.category === 'convocatorias' || post.category === 'talleres') && post.acceptsApplications && <ApplicationForm post={post} />}
       </article>
 
       <nav className="back-links" aria-label="Volver">

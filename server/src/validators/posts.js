@@ -148,7 +148,7 @@ export const postInputSchema = z
   })
   .refine(
     (data) =>
-      data.category !== 'convocatorias' ||
+      !['convocatorias', 'talleres'].includes(data.category) ||
       !(data.opensAt instanceof Date) ||
       !(data.deadline instanceof Date) ||
       data.opensAt <= data.deadline,

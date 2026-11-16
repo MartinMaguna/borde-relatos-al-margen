@@ -502,3 +502,53 @@ describe('Panel: editor del formulario de postulación', () => {
     });
   });
 });
+
+describe('Postulaciones en talleres', () => {
+  const workshop = {
+    ...poem,
+    id: 't1',
+    category: 'talleres',
+    slug: 'taller',
+    title: 'Taller de escritura',
+    acceptsApplications: true,
+    callStatus: 'abierta',
+    deadline: '2026-12-20T02:59:59.999Z',
+  };
+
+  test('la página del taller muestra el estado de la inscripción y el formulario, que envía a /talleres', async () => {
+    const calls = mockApi({
+      '/posts/talleres/taller': ok(workshop),
+      'POST /posts/talleres/taller/applications': { status: 201, body: { ok: true, data: { received: true } } },
+    });
+    await renderRoute('/talleres/taller');
+    expect(screen.getByRole('region', { name: 'Datos de la inscripción' })).toHaveTextContent(/Inscripción\s*Estado de la inscripción: Abierta/);
+    expect(screen.getByText('Cierre')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Postulate' })).toBeInTheDocument();
+    expect(await axeViolations()).toEqual([]);
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Enviar postulación' }));
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(calls.find((c) => c.method === 'POST').path).toBe('/posts/talleres/taller/applications');
+  });
+
+  test('con la inscripción cerrada lo dice y no muestra el formulario', async () => {
+    mockApi({ '/posts/talleres/taller': ok({ ...workshop, callStatus: 'cerrada' }) });
+    await renderRoute('/talleres/taller');
+    expect(screen.getByText(/La inscripción a este taller ya cerró/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enviar postulación' })).toBeNull();
+  });
+
+  test('panel: en Talleres aparece la casilla; al marcarla, las fechas opcionales y el editor del formulario', async () => {
+    mockApi({ ...ME });
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Categoría' }), 'talleres');
+    const group = screen.getByRole('group', { name: 'Inscripción al taller' });
+    expect(within(group).queryByLabelText(/Cierre de la inscripción/)).toBeNull();
+    await user.click(within(group).getByLabelText('Recibir postulaciones con el formulario del sitio'));
+    expect(within(group).getByLabelText(/Cierre de la inscripción/)).not.toHaveAttribute('aria-required');
+    expect(screen.getByRole('group', { name: /Formulario de postulación/ })).toBeInTheDocument();
+    expect(await axeViolations()).toEqual([]);
+  });
+});

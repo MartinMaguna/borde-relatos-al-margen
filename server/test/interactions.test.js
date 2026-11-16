@@ -261,3 +261,38 @@ describe('Formulario de postulación configurable', () => {
     assert.equal(res.status, 201);
   });
 });
+
+describe('Postulaciones en talleres', () => {
+  const workshop = (data = {}) => createPost({ title: 'Taller de escritura', category: 'talleres', acceptsApplications: true, ...data });
+
+  test('un taller con el formulario activado recibe postulaciones y el panel las lista', async () => {
+    const t = await workshop();
+    assert.equal(t.acceptsApplications, true);
+    assert.equal(t.callStatus, 'abierta', 'sin fechas, queda abierto');
+    const res = await request(app).post(`/api/posts/talleres/${t.slug}/applications`).send(application());
+    assert.equal(res.status, 201);
+    const { applications } = (await agent.get(`/api/admin/posts/${t.id}/applications`)).body.data;
+    assert.equal(applications.length, 1);
+    assert.equal(applications[0].name, 'Ana Pérez');
+  });
+
+  test('respeta las fechas opcionales de inscripción', async () => {
+    const soon = await workshop({ title: 'Próximo', opensAt: '2999-01-01' });
+    assert.equal(soon.callStatus, 'proxima');
+    const closed = await workshop({ title: 'Cerrado', deadline: '2000-01-01' });
+    assert.equal(closed.callStatus, 'cerrada');
+    for (const t of [soon, closed]) {
+      const res = await request(app).post(`/api/posts/talleres/${t.slug}/applications`).send(application());
+      assert.equal(res.status, 403);
+      assert.match(res.body.error.message, /La inscripción a este taller/);
+    }
+  });
+
+  test('sin el formulario activado no recibe postulaciones ni tiene estado; los poemas tampoco', async () => {
+    const t = await workshop({ acceptsApplications: false });
+    assert.equal(t.callStatus, undefined);
+    assert.equal((await request(app).post(`/api/posts/talleres/${t.slug}/applications`).send(application())).status, 403);
+    const poem = await createPost({ title: 'Poema', category: 'poesia', acceptsApplications: true });
+    assert.equal((await request(app).post(`/api/posts/poesia/${poem.slug}/applications`).send(application())).status, 400);
+  });
+});

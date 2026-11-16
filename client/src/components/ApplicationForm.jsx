@@ -58,6 +58,7 @@ export default function ApplicationForm({ post }) {
   const consentId = fieldId('application.consent');
   const consentError = fieldErrors['application.consent'];
   const form = resolveApplicationForm(post.applicationForm);
+  const isWorkshop = post.category === 'talleres';
 
   // La confirmación reemplaza al formulario: recibe el foco cuando ya está en pantalla.
   useEffect(() => {
@@ -71,11 +72,11 @@ export default function ApplicationForm({ post }) {
         <p className="notice">
           {post.callStatus === 'proxima' ? (
             <>
-              Esta convocatoria todavía no abrió. El formulario aparece acá desde el{' '}
+              {isWorkshop ? 'La inscripción a este taller todavía no abrió.' : 'Esta convocatoria todavía no abrió.'} El formulario aparece acá desde el{' '}
               <time dateTime={post.opensAt}>{formatDate(post.opensAt)}</time>.
             </>
           ) : (
-            'Esta convocatoria ya cerró: no se reciben más postulaciones.'
+            isWorkshop ? 'La inscripción a este taller ya cerró: no se reciben más postulaciones.' : 'Esta convocatoria ya cerró: no se reciben más postulaciones.'
           )}
         </p>
       </section>
@@ -88,7 +89,7 @@ export default function ApplicationForm({ post }) {
     setSubmitting(true);
     const f = new FormData(event.currentTarget);
     try {
-      await api(`/posts/convocatorias/${post.slug}/applications`, {
+      await api(`/posts/${post.category}/${post.slug}/applications`, {
         method: 'POST',
         body: {
           answers: Object.fromEntries(questionsOf(form).map((q) => [q.key, String(f.get(fieldName(q.key)) ?? '').trim()])),
@@ -113,7 +114,7 @@ export default function ApplicationForm({ post }) {
       {done ? (
         <div className="notice notice--success" tabIndex={-1} ref={doneRef}>
           <p>
-            <strong>Recibimos tu postulación.</strong> El equipo de Relatos al margen la va a leer después del cierre de la convocatoria.
+            <strong>Recibimos tu postulación.</strong> El equipo de Relatos al margen la va a leer{isWorkshop ? '' : ' después del cierre de la convocatoria'}.
             Te vamos a escribir al medio de contacto que dejaste.
           </p>
         </div>

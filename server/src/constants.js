@@ -4,6 +4,9 @@
  */
 export const CATEGORIES = ['poesia', 'cuentos', 'talleres', 'convocatorias'];
 
+/** Categorías que pueden recibir postulaciones con el formulario del sitio. */
+export const APPLICATION_CATEGORIES = ['convocatorias', 'talleres'];
+
 export const POST_STATUS = ['draft', 'published'];
 
 export const ROLES = ['editor'];

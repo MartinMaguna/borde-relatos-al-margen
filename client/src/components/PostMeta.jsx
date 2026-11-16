@@ -30,7 +30,7 @@ export function CallStatus({ post }) {
   if (!post.callStatus) return null;
   return (
     <p className={`call-status call-status--${post.callStatus}`}>
-      <span className="visually-hidden">Estado de la convocatoria:</span> {CALL_STATUS_LABEL[post.callStatus]}
+      <span className="visually-hidden">{post.category === 'talleres' ? 'Estado de la inscripción:' : 'Estado de la convocatoria:'}</span> {CALL_STATUS_LABEL[post.callStatus]}
     </p>
   );
 }

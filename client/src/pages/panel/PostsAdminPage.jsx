@@ -159,7 +159,7 @@ export default function PostsAdminPage() {
                     Ver en el sitio <span className="visually-hidden">«{post.title}»</span>
                   </Link>
                 )}
-                {post.category === 'convocatorias' && post.acceptsApplications && (
+                {(post.category === 'convocatorias' || post.category === 'talleres') && post.acceptsApplications && (
                   <Link to={`/panel/publicaciones/${post.id}/postulaciones`} className="button button--secondary button--small">
                     Postulaciones <span className="visually-hidden">«{post.title}»</span>
                   </Link>

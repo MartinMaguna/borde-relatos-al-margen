@@ -49,4 +49,7 @@ export function applicationInputFor(post) {
 
 export const idParams = z.object({ id: objectId });
 
-export const callSlugParams = z.object({ slug: z.string().max(120) });
+export const applicationParams = z.object({
+  category: z.enum(['convocatorias', 'talleres']),
+  slug: z.string().max(120),
+});

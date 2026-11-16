@@ -33,7 +33,11 @@ export default function CallBanner({ post, headingLevel = 2 }) {
               <Deadline post={post} />
             </>
           ) : (
-            <PostMeta post={post} />
+            <>
+              {/* Taller con inscripción por el sitio: su estado (Abierta, Próximamente, Cerrada). */}
+              <CallStatus post={post} />
+              <PostMeta post={post} />
+            </>
           )}
         </div>
         {post.summary && <p className="lead call-banner__lead">{post.summary}</p>}
