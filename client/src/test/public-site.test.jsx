@@ -71,7 +71,7 @@ describe('Layout accesible', () => {
 
     const h1 = await screen.findByRole('heading', { level: 1, name: 'Poesía' });
     await waitFor(() => expect(h1).toHaveFocus());
-    expect(document.title).toBe('Poesía · Borde Relatos al margen');
+    expect(document.title).toBe('Poesía · Relatos al margen');
   });
 });
 
@@ -96,7 +96,7 @@ describe('Vistas públicas', () => {
     expect(within(pagination).getByRole('link', { name: 'Página 2' })).toHaveAttribute('aria-current', 'page');
     expect(within(pagination).getByRole('link', { name: 'Anterior: página 1' })).toHaveAttribute('href', '/poesia');
     expect(within(pagination).getByRole('link', { name: 'Siguiente: página 3' })).toHaveAttribute('href', '/poesia?pagina=3');
-    expect(document.title).toBe('Poesía (página 2 de 3) · Borde Relatos al margen');
+    expect(document.title).toBe('Poesía (página 2 de 3) · Relatos al margen');
     expect(await axeViolations()).toEqual([]);
   });
 
@@ -124,7 +124,7 @@ describe('Vistas públicas', () => {
   test('Acerca sin contenido muestra un texto por defecto', async () => {
     mockApi({});
     await renderRoute('/acerca');
-    expect(screen.getByRole('heading', { level: 1, name: 'Acerca de Borde' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Acerca de Relatos al margen' })).toBeInTheDocument();
   });
 
   test('Una ruta inexistente muestra el 404 dentro del layout', async () => {

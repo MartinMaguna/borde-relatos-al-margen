@@ -3,10 +3,11 @@ import { z } from 'zod';
 import { User } from './models/User.js';
 import { Page } from './models/Page.js';
 import { Post } from './models/Post.js';
+import { renameBrandOnce } from './migrations/renameBrand.js';
 
 export const DEFAULT_ABOUT = {
-  title: 'Acerca de Borde',
-  body: 'Borde Relatos al margen es un espacio de lectura para voces que escriben desde los márgenes.\n\nEste texto se puede editar desde el panel.',
+  title: 'Acerca de Relatos al margen',
+  body: 'Relatos al margen es un espacio de lectura para voces que escriben desde los márgenes.\n\nEste texto se puede editar desde el panel.',
 };
 
 const editorEnv = z.object({
@@ -58,4 +59,7 @@ export async function ensureInitialData({ env = process.env, log = console } = {
     await Page.create({ slug: 'acerca', ...DEFAULT_ABOUT, updatedBy: editorId });
     log.info('📄 Página "Acerca" creada con el texto inicial');
   }
+
+  // Cambio de nombre: "Borde" → "Relatos al margen" en el contenido institucional (una sola vez).
+  await renameBrandOnce({ log });
 }

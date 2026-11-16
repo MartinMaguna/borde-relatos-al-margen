@@ -55,7 +55,7 @@ export default function AboutEditPage() {
       <ErrorSummary errors={errors} />
 
       <form onSubmit={handleSubmit} noValidate className="form">
-        <TextField name="title" label="Título" defaultValue={page.title || 'Acerca de Borde'} error={fieldErrors.title} />
+        <TextField name="title" label="Título" defaultValue={page.title || 'Acerca de Relatos al margen'} error={fieldErrors.title} />
         <MarkdownEditor
           name="body"
           label="Texto"

@@ -22,8 +22,8 @@ export async function sendContactEmail({ name, email, message }) {
         to: [env.CONTACT_TO_EMAIL],
         reply_to: email,
         // Solo texto plano: nada de lo que escribió la persona se interpreta como HTML.
-        subject: `Borde · Mensaje de ${name.replace(/[\r\n]+/g, ' ').slice(0, 80)}`,
-        text: `${message}\n\n—\n${name} <${email}>\nEnviado desde el formulario de contacto de Borde. Respondé este correo para contestarle.`,
+        subject: `Relatos al margen · Mensaje de ${name.replace(/[\r\n]+/g, ' ').slice(0, 80)}`,
+        text: `${message}\n\n—\n${name} <${email}>\nEnviado desde el formulario de contacto de Relatos al margen. Respondé este correo para contestarle.`,
       }),
     });
     if (!res.ok) {

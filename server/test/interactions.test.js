@@ -21,7 +21,7 @@ beforeEach(async () => {
 const createPost = async (data) => (await agent.post('/api/admin/posts').send(postData(data))).body.data;
 const call = (data = {}) =>
   createPost({ title: 'Antología', category: 'convocatorias', deadline: '2999-12-31', acceptsApplications: true, ...data });
-/** Postulación válida para el formulario modelo de Borde; `answers` reemplaza respuestas puntuales. */
+/** Postulación válida para el formulario modelo; `answers` reemplaza respuestas puntuales. */
 const application = (answers = {}, extra = {}) => ({
   answers: {
     name: 'Ana Pérez',

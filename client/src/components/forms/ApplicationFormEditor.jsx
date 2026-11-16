@@ -30,7 +30,7 @@ const copy = (items) => items.map((i) => ({ ...i, options: [...(i.options ?? [])
  *   y renombrar, no quitar).
  * - Cada pregunta: texto, aclaración, tipo de respuesta, opciones (en listas)
  *   y si es obligatoria.
- * - "Usar el formulario modelo de Borde" carga el formulario propuesto por el equipo.
+ * - "Usar el formulario modelo" carga el formulario propuesto por el equipo.
  *
  * Los campos no son controlados (como el resto del formulario): cada elemento
  * tiene una clave estable, así al reordenar se mueve con lo que tiene escrito.
@@ -104,7 +104,7 @@ export default function ApplicationFormEditor({ initial, errors = {} }) {
     setConfirmTemplate(false);
     pendingFocus.current = 'title';
     setState((s) => ({ version: s.version + 1, form: BORDE_TEMPLATE, items: copy(BORDE_TEMPLATE.items) }));
-    announce('Se cargó el formulario modelo de Borde.');
+    announce('Se cargó el formulario modelo.');
   }
 
   return (
@@ -242,13 +242,13 @@ export default function ApplicationFormEditor({ initial, errors = {} }) {
           Agregar una sección
         </button>
         <button type="button" className="button button--secondary" onClick={() => setConfirmTemplate(true)}>
-          Usar el formulario modelo de Borde
+          Usar el formulario modelo
         </button>
       </div>
 
       <ConfirmDialog
         open={confirmTemplate}
-        title="¿Usar el formulario modelo de Borde?"
+        title="¿Usar el formulario modelo?"
         confirmLabel="Sí, usar el modelo"
         onConfirm={loadTemplate}
         onCancel={() => setConfirmTemplate(false)}

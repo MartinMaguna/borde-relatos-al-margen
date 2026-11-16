@@ -67,7 +67,7 @@ export default function MessagesAdminPage() {
               </p>
               <p className="comment__text">{m.message}</p>
               <div className="button-group">
-                <a className="button button--small" href={`mailto:${m.email}?subject=${encodeURIComponent('Re: tu mensaje a Borde')}`}>
+                <a className="button button--small" href={`mailto:${m.email}?subject=${encodeURIComponent('Re: tu mensaje a Relatos al margen')}`}>
                   Responder <span className="visually-hidden">a {m.name}</span>
                 </a>
                 <button type="button" className="button button--danger button--small" onClick={() => setToDelete(m)}>

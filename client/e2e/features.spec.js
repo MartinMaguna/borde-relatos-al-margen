@@ -53,7 +53,7 @@ test.describe('Artículos: guardar y compartir; contacto; postulaciones', () => 
     await expect(form.getByRole('radiogroup', { name: 'Idioma de la obra' })).toHaveAttribute('aria-invalid', 'true');
     await expectNoA11yViolations(page);
 
-    // Formulario modelo de Borde (la convocatoria no tiene uno propio).
+    // Formulario modelo (la convocatoria no tiene uno propio).
     await form.getByLabel('Nombre y apellido').fill('Ana Pérez');
     await form.getByLabel('Edad').fill('27');
     await form.getByLabel('Departamento de residencia').selectOption('Montevideo');
@@ -145,7 +145,7 @@ test.describe('Artículos: guardar y compartir; contacto; postulaciones', () => 
     await page.goto('/');
     await waitForView(page);
     const footer = page.getByRole('contentinfo');
-    await expect(footer.getByRole('region', { name: 'Acompañan a Borde' })).toBeVisible();
+    await expect(footer.getByRole('region', { name: 'Acompañan a Relatos al margen' })).toBeVisible();
     await expect(footer.getByRole('list', { name: 'Apoyan' }).getByRole('img', { name })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Ingreso/ })).toHaveCount(0);
     await expectNoA11yViolations(page);

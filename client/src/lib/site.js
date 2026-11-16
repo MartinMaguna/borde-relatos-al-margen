@@ -1,4 +1,4 @@
-export const SITE_NAME = 'Borde Relatos al margen';
+export const SITE_NAME = 'Relatos al margen';
 
 /**
  * Categorías en el orden del menú. `slug` coincide con la URL y con el valor de la API.
@@ -64,7 +64,7 @@ export const SUPPORTER_GROUPS = [
 export const PAGE_SIZE = 10;
 
 /**
- * Redes sociales del pie. PENDIENTE: reemplazar por las cuentas reales de Borde
+ * Redes sociales del pie. PENDIENTE: reemplazar por las cuentas reales de Relatos al margen
  * (por ahora llevan a la portada de cada red).
  */
 export const SOCIAL_LINKS = [

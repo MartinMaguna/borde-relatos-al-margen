@@ -28,7 +28,7 @@ const envSchema = z.object({
   CONTACT_TO_EMAIL: z.preprocess((v) => (v === '' ? undefined : v), z.email('tiene que ser un correo válido').optional()),
   // Remitente. Con la cuenta gratuita de Resend sin dominio propio, onboarding@resend.dev
   // solo puede enviar al correo con el que se creó la cuenta.
-  CONTACT_FROM_EMAIL: z.string().default('Borde <onboarding@resend.dev>'),
+  CONTACT_FROM_EMAIL: z.string().default('Relatos al margen <onboarding@resend.dev>'),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
   // Proxies de confianza delante de la API: define de dónde sale req.ip (límite de
   // intentos de login). Con 1 (Vercel), es la IP que registra el borde de Vercel.

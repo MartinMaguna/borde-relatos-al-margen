@@ -49,7 +49,7 @@ export default function PanelLayout() {
       <header className="site-header panel-header">
         <div className="container site-header__bar">
           <p className="site-title">
-            <span className="site-title__name">Borde</span>{' '}
+            <span className="site-title__name">Relatos al margen</span>{' '}
             <span className="site-title__sub">Panel de edición</span>
           </p>
           <p className="panel-header__site">

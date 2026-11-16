@@ -4,7 +4,7 @@ import { useDocumentTitle } from '../a11y/hooks.js';
 /** "Acerca": contenido editable desde el panel. */
 export default function AboutPage() {
   const { page } = useLoaderData();
-  const title = page?.title || 'Acerca de Borde';
+  const title = page?.title || 'Acerca de Relatos al margen';
   useDocumentTitle(title);
 
   return (

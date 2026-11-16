@@ -111,7 +111,7 @@ export default function SupportersAdminPage() {
     <>
       <h1 tabIndex={-1}>Logos al pie del sitio</h1>
       <p className="lead">
-        Quienes impulsan, apoyan, organizan y colaboran con Borde. Se muestran al pie de todas las páginas, agrupados.
+        Quienes impulsan, apoyan, organizan y colaboran con Relatos al margen. Se muestran al pie de todas las páginas, agrupados.
       </p>
 
       <h2 tabIndex={-1} ref={listHeadingRef}>

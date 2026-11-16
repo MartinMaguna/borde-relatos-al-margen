@@ -33,7 +33,7 @@ export default function SupportersSection() {
       <div className="container">
         {/* Título solo para lectores de pantalla: nombra la región sin mostrarse. */}
         <h2 id="acompanan" className="visually-hidden">
-          Acompañan a Borde
+          Acompañan a Relatos al margen
         </h2>
         <div className="supporters__groups">
           {groups.map((group) => (

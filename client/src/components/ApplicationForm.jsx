@@ -113,7 +113,7 @@ export default function ApplicationForm({ post }) {
       {done ? (
         <div className="notice notice--success" tabIndex={-1} ref={doneRef}>
           <p>
-            <strong>Recibimos tu postulación.</strong> El equipo de Borde la va a leer después del cierre de la convocatoria.
+            <strong>Recibimos tu postulación.</strong> El equipo de Relatos al margen la va a leer después del cierre de la convocatoria.
             Te vamos a escribir al medio de contacto que dejaste.
           </p>
         </div>

@@ -28,7 +28,7 @@ test('base vacía + variables SEED_*: crea el primer editor (que puede ingresar)
   assert.equal(res.status, 200);
 
   const page = await db.models.Page.findOne({ slug: 'acerca' });
-  assert.equal(page.title, 'Acerca de Borde');
+  assert.equal(page.title, 'Acerca de Relatos al margen');
   assert.match(page.bodyHtml, /<p>/);
 });
 

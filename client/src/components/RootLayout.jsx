@@ -30,8 +30,7 @@ export default function RootLayout() {
       <header className="site-header">
         <div className="container site-header__bar">
           <Link to="/" className="site-title">
-            <span className="site-title__name">Borde</span>{' '}
-            <span className="site-title__sub">Relatos al margen</span>
+            <span className="site-title__name">Relatos al margen</span>
           </Link>
           <MainNav />
         </div>
@@ -47,17 +46,14 @@ export default function RootLayout() {
         {/* Al final de un poema o un cuento no van los logos: la lectura termina en el texto. */}
         {!isPoemOrStory && <SupportersSection />}
         <div className="container site-footer__bar">
-          {/* La barra es decorativa: el lector lee "Borde Relatos al margen". */}
-          <p className="site-footer__name">
-            Borde <span aria-hidden="true">|</span> Relatos al margen
-          </p>
-          {/* Íconos con nombre accesible: "Borde en Instagram". */}
+          <p className="site-footer__name">Relatos al margen</p>
+          {/* Íconos con nombre accesible: "Relatos al margen en Instagram". */}
           <ul className="social-links" aria-label="Redes sociales">
             {SOCIAL_LINKS.map((s) => {
               const Icon = SOCIAL_ICONS[s.network];
               return (
                 <li key={s.network}>
-                  <a href={s.url} className="social-links__link" aria-label={`Borde en ${s.label}`}>
+                  <a href={s.url} className="social-links__link" aria-label={`Relatos al margen en ${s.label}`}>
                     <Icon />
                   </a>
                 </li>

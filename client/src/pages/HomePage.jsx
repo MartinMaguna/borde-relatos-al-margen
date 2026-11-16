@@ -18,10 +18,8 @@ export default function HomePage() {
     <>
       <div className="hero">
         <div className="hero__text">
-          {/* El espacio entre las dos partes mantiene el nombre accesible "Borde Relatos al margen". */}
           <h1 tabIndex={-1} className="hero__title">
-            Borde{' '}
-            <span className="hero__title-sub">Relatos al margen</span>
+            Relatos al margen
           </h1>
         </div>
         <GeometricArt className="hero__art" />

@@ -4,7 +4,7 @@
  *
  * - "name" (Nombre y apellido) y "contact" (Medio de contacto) están siempre:
  *   se pueden mover y renombrar, no quitar.
- * - Una convocatoria sin configuración usa el formulario modelo de Borde.
+ * - Una convocatoria sin configuración usa el formulario modelo.
  * - Las configuraciones del formato anterior ({ fields, questions }) se
  *   convierten al vuelo, así no se pierde nada de lo ya cargado.
  *
@@ -22,7 +22,7 @@ export const DEPARTAMENTOS = [
 
 const q = (key, type, label, extra = {}) => ({ key, type, label, hint: '', required: false, options: [], ...extra });
 
-/** Formulario modelo de Borde (el que propuso el equipo). */
+/** Formulario modelo (el que propuso el equipo). */
 export const BORDE_TEMPLATE = {
   intro: 'Un formulario breve: solo pedimos la información necesaria para participar en la convocatoria.',
   consentText: DEFAULT_CONSENT,

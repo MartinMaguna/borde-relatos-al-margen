@@ -47,7 +47,7 @@ export default function LoginPage() {
   return (
     <div className="form-page">
       <h1 tabIndex={-1}>Ingresar al panel</h1>
-      <p className="lead">Este espacio es solo para el equipo editorial de Borde.</p>
+      <p className="lead">Este espacio es solo para el equipo editorial de Relatos al margen.</p>
 
       {flash && !errors.length && <p className="notice notice--success">{flash}</p>}
 

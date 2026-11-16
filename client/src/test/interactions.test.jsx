@@ -77,7 +77,7 @@ describe('Acciones del artículo', () => {
 describe('Postulación a convocatorias', () => {
   const callWithForm = { ...openCall, acceptsApplications: true, readingMinutes: 1 };
 
-  test('el formulario modelo de Borde: secciones, lista, opciones y enlace; al enviar, la confirmación recibe el foco', async () => {
+  test('el formulario modelo: secciones, lista, opciones y enlace; al enviar, la confirmación recibe el foco', async () => {
     const calls = mockApi({
       '/posts/convocatorias/convocatoria-antologia': ok(callWithForm),
       'POST /posts/convocatorias/convocatoria-antologia/applications': { status: 201, body: { ok: true, data: { received: true } } },
@@ -208,7 +208,7 @@ describe('Logos al pie y portada', () => {
     mockApi({ '/posts/talleres/taller': ok(workshop), '/supporters': ok(supporters) });
     await renderRoute('/talleres/taller');
     const footer = screen.getByRole('contentinfo');
-    const region = await within(footer).findByRole('region', { name: 'Acompañan a Borde' });
+    const region = await within(footer).findByRole('region', { name: 'Acompañan a Relatos al margen' });
     expect(within(region).getByRole('list', { name: 'Impulsan' })).toBeInTheDocument();
     expect(within(region).getByRole('link', { name: 'Municipio' })).toHaveAttribute('href', 'https://municipio.example');
     expect(within(region).getByRole('img', { name: 'Biblioteca Popular' })).toBeInTheDocument();
@@ -220,7 +220,7 @@ describe('Logos al pie y portada', () => {
   test('sin logos, la sección no aparece', async () => {
     mockApi({ '/posts/poesia/orilla': ok(poem), '/supporters': ok([]) });
     await renderRoute('/poesia/orilla');
-    expect(screen.queryByRole('region', { name: 'Acompañan a Borde' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Acompañan a Relatos al margen' })).toBeNull();
   });
 
   test('poesía y cuentos van en una columna centrada; talleres no', async () => {
@@ -306,18 +306,18 @@ describe('Panel: mensajes y logos', () => {
 });
 
 describe('Pie y orden del artículo', () => {
-  test('el pie dice "Borde | Relatos al margen" (la barra no se lee) y tiene Instagram y YouTube', async () => {
+  test('el pie dice "Relatos al margen" y tiene Instagram y YouTube', async () => {
     mockApi({ '/posts/poesia/orilla': ok(poem) });
     await renderRoute('/poesia/orilla');
     const footer = screen.getByRole('contentinfo');
     const name = footer.querySelector('.site-footer__name');
-    expect(name).toHaveTextContent('Borde | Relatos al margen');
-    expect(within(name).getByText('|')).toHaveAttribute('aria-hidden', 'true');
+    expect(name).toHaveTextContent(/^Relatos al margen$/);
     const social = within(footer).getByRole('list', { name: 'Redes sociales' });
-    expect(within(social).getByRole('link', { name: 'Borde en Instagram' })).toBeInTheDocument();
-    expect(within(social).getByRole('link', { name: 'Borde en YouTube' })).toBeInTheDocument();
+    expect(within(social).getByRole('link', { name: 'Relatos al margen en Instagram' })).toBeInTheDocument();
+    expect(within(social).getByRole('link', { name: 'Relatos al margen en YouTube' })).toBeInTheDocument();
     expect(within(footer).queryByRole('link', { name: /Acerca|Guardados|Ingreso/ })).toBeNull();
-    expect(document.body.textContent).not.toMatch(/Borde\./);
+    // El sitio se llama solo "Relatos al margen" (el autor del fixture, "Equipo Borde", no se muestra acá).
+    expect(document.body.textContent).not.toMatch(/Borde/);
     expect(await axeViolations()).toEqual([]);
   });
 
@@ -429,7 +429,7 @@ describe('Final de poemas y cuentos', () => {
     const back = screen.getByRole('navigation', { name: 'Volver' });
     expect(within(back).getByRole('link', { name: 'Volver a Inicio' })).toHaveAttribute('href', '/');
     expect(within(back).getByRole('link', { name: 'Volver a Poesía' })).toHaveAttribute('href', '/poesia');
-    expect(screen.queryByRole('region', { name: 'Acompañan a Borde' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Acompañan a Relatos al margen' })).toBeNull();
     expect(calls.some((c) => c.path === '/supporters')).toBe(false);
     expect(await axeViolations()).toEqual([]);
   });
@@ -438,7 +438,7 @@ describe('Final de poemas y cuentos', () => {
     mockApi({ '/posts/latest?perCategory=3': ok({ poesia: [{ ...poem, signVideoId: 'abcdefghijk' }], cuentos: [], talleres: [], convocatorias: [] }) });
     await renderRoute('/');
     expect(screen.getByRole('link', { name: 'Lengua de Señas Uruguaya «Orilla»' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Borde Relatos al margen');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Relatos al margen$/);
     expect(screen.queryByText(/Un espacio de lectura/)).toBeNull();
   });
 });
@@ -461,7 +461,7 @@ describe('Portada y centrado', () => {
 });
 
 describe('Panel: editor del formulario de postulación', () => {
-  test('aparece al activar las postulaciones, con el modelo de Borde; se agregan preguntas con opciones', async () => {
+  test('aparece al activar las postulaciones, con el formulario modelo; se agregan preguntas con opciones', async () => {
     const calls = mockApi({
       ...ME,
       'POST /admin/posts': { status: 201, body: { ok: true, data: { title: 'C', status: 'draft' } } },
@@ -474,7 +474,7 @@ describe('Panel: editor del formulario de postulación', () => {
     await user.click(screen.getByLabelText('Recibir postulaciones con el formulario del sitio'));
     const editor = screen.getByRole('group', { name: /Formulario de postulación/ });
 
-    // Arranca con el modelo de Borde.
+    // Arranca con el formulario modelo.
     expect(within(editor).getByRole('textbox', { name: 'Título de la sección 1' })).toHaveValue('Datos personales');
     expect(within(editor).queryByRole('button', { name: /Quitar el elemento 2$/ })).toBeNull(); // "Nombre y apellido" no se quita
 
