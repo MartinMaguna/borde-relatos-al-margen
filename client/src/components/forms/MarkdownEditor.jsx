@@ -123,7 +123,8 @@ export default function MarkdownEditor({ name, label, hint, error, defaultValue,
   }
 
   return (
-    <div className="md-editor">
+    // En poesía, la letra del editor es la misma (algo más grande) que la de los poemas publicados.
+    <div className={`md-editor${previewClassName.includes('prose--poesia') ? ' md-editor--poesia' : ''}`}>
       <p id={toolbarLabelId} className="visually-hidden">
         Formato del texto
       </p>

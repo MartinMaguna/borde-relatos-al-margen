@@ -758,6 +758,13 @@ main:focus {
   margin: 0;
 }
 
+/* Separación entre párrafos (va después de `.prose p` para ganarle): una línea en blanco del editor = una línea. */
+.prose > p + *,
+.prose > * + p {
+  margin-top: 1.75em;
+  margin-top: 1lh;
+}
+
 .prose h2,
 .prose h3,
 .prose h4 {
@@ -1115,6 +1122,22 @@ main:focus {
 /* Separación visual entre grupos de botones (texto · títulos · saltos · listas · otros). */
 .md-toolbar__button--group-start {
   margin-left: var(--space-3);
+}
+
+/*
+ * El texto del editor con el mismo ancho, letra y espaciado que en el sitio:
+ * las líneas cortan en el mismo lugar que en la página publicada.
+ */
+.md-editor .field__textarea {
+  max-width: calc(var(--measure) + 2 * var(--space-3) + 2 * var(--stroke-rule));
+  font-family: var(--font-text);
+  font-size: 1.1875rem;
+  line-height: 1.75;
+}
+
+.md-editor--poesia .field__textarea {
+  font-size: 1.25rem;
+  line-height: 1.9;
 }
 
 .md-guide {
