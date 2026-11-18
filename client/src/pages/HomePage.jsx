@@ -30,6 +30,8 @@ export default function HomePage() {
         const headingId = `seccion-${category.slug}`;
         // Talleres y convocatorias: cada uno a todo el ancho, con el formato de la portada.
         const isCalls = Boolean(category.banner);
+        // Convocatorias: la sección se muestra solo si hay alguna abierta o por abrir (la API ya filtra las cerradas).
+        if (category.slug === 'convocatorias' && !posts.length) return null;
         return (
           <section key={category.slug} className="section" aria-labelledby={headingId}>
             <div className="section__header">

@@ -296,3 +296,15 @@ describe('Postulaciones en talleres', () => {
     assert.equal((await request(app).post(`/api/posts/poesia/${poem.slug}/applications`).send(application())).status, 400);
   });
 });
+
+describe('Portada: convocatorias vigentes', () => {
+  test('/posts/latest trae convocatorias abiertas y por abrir, no las cerradas', async () => {
+    await call({ title: 'Abierta' });
+    await call({ title: 'Por abrir', opensAt: '2999-01-01' });
+    await call({ title: 'Cerrada', deadline: '2000-01-01' });
+    const { convocatorias } = (await request(app).get('/api/posts/latest?perCategory=3')).body.data;
+    assert.deepEqual(convocatorias.map((c) => c.title).sort(), ['Abierta', 'Por abrir']);
+    const all = (await request(app).get('/api/posts?category=convocatorias')).body.data;
+    assert.equal(all.length, 3, 'en /convocatorias siguen todas');
+  });
+});

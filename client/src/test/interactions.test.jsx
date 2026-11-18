@@ -552,3 +552,14 @@ describe('Postulaciones en talleres', () => {
     expect(await axeViolations()).toEqual([]);
   });
 });
+
+describe('Portada sin convocatorias vigentes', () => {
+  test('la sección Convocatorias no aparece', async () => {
+    mockApi({ '/posts/latest?perCategory=3': ok({ poesia: [poem], cuentos: [], talleres: [], convocatorias: [] }) });
+    await renderRoute('/');
+    expect(screen.queryByRole('region', { name: 'Convocatorias' })).toBeNull();
+    expect(screen.getByRole('region', { name: 'Talleres' })).toBeInTheDocument();
+    // El menú sigue llevando a todas las convocatorias.
+    expect(screen.getByRole('navigation', { name: 'Principal' })).toHaveTextContent('Convocatorias');
+  });
+});

@@ -27,12 +27,17 @@ router.get('/', validate({ query: publicListQuery }), async (req, res) => {
   sendOk(res, items, { meta: paginationMeta({ page, limit, total }) });
 });
 
-// GET /api/posts/latest?perCategory=3 → { poesia: [...], cuentos: [...], ... } para la portada
+// GET /api/posts/latest?perCategory=3 → { poesia: [...], cuentos: [...], ... } para la portada.
+// Convocatorias: solo las vigentes (abiertas o por abrir); las cerradas siguen en /convocatorias.
 router.get('/latest', validate({ query: latestQuery }), async (req, res) => {
   const { perCategory } = req.valid.query;
+  const now = new Date();
   const lists = await Promise.all(
     CATEGORIES.map((category) =>
-      Post.find({ ...PUBLISHED, category }).select(LIST_FIELDS).sort({ publishedAt: -1 }).limit(perCategory),
+      Post.find({ ...PUBLISHED, category, ...(category === 'convocatorias' && { deadline: { $gte: now } }) })
+        .select(LIST_FIELDS)
+        .sort({ publishedAt: -1 })
+        .limit(perCategory),
     ),
   );
   sendOk(res, Object.fromEntries(CATEGORIES.map((c, i) => [c, lists[i]])));
