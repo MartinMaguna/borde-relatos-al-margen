@@ -4,6 +4,7 @@ import { User } from './models/User.js';
 import { Page } from './models/Page.js';
 import { Post } from './models/Post.js';
 import { renameBrandOnce } from './migrations/renameBrand.js';
+import { rerenderMarkdownOnce } from './migrations/rerenderMarkdown.js';
 
 export const DEFAULT_ABOUT = {
   title: 'Acerca de Relatos al margen',
@@ -62,4 +63,6 @@ export async function ensureInitialData({ env = process.env, log = console } = {
 
   // Cambio de nombre: "Borde" → "Relatos al margen" en el contenido institucional (una sola vez).
   await renameBrandOnce({ log });
+  // Texto como en el editor (líneas en blanco y sangrías): se regenera el HTML una sola vez.
+  await rerenderMarkdownOnce({ log });
 }

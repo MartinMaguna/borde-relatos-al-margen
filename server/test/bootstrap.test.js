@@ -60,3 +60,17 @@ test('no pisa una página Acerca ya editada', async () => {
   await ensureInitialData({ env: {}, log: silent });
   assert.equal((await db.models.Page.findOne({ slug: 'acerca' })).title, 'Mi texto');
 });
+
+test('rerenderMarkdownOnce regenera el HTML de los textos una sola vez, sin cambiar lo escrito', async () => {
+  const { rerenderMarkdownOnce } = await import('../src/migrations/rerenderMarkdown.js');
+  const { Post } = db.models;
+  const post = await Post.create({ title: 'Poema', category: 'poesia', slug: 'poema', author: 'A', body: 'uno\n\n\n\ndos', status: 'published' });
+  await Post.updateOne({ _id: post.id }, { bodyHtml: '<p>viejo</p>' });
+  const log = { info: () => {} };
+  const first = await rerenderMarkdownOnce({ log });
+  assert.ok(first.changed >= 1);
+  const updated = await Post.findById(post.id);
+  assert.match(updated.bodyHtml, /linea-vacia/);
+  assert.equal(updated.body, 'uno\n\n\n\ndos');
+  assert.deepEqual(await rerenderMarkdownOnce({ log }), { skipped: true });
+});

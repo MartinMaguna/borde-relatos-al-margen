@@ -742,7 +742,16 @@ main:focus {
 }
 
 .prose > * + * {
-  margin-top: 1.1em;
+  /* Una línea en blanco en el editor ocupa exactamente una línea en el sitio. */
+  margin-top: 1.75em;
+  margin-top: 1lh;
+}
+
+/* Cada línea en blanco de más (varias seguidas en el editor) ocupa una línea. */
+.prose .linea-vacia {
+  height: 1.75em;
+  height: 1lh;
+  margin-top: 0 !important;
 }
 
 .prose p {
@@ -777,7 +786,8 @@ main:focus {
 }
 
 .prose--poesia p + p {
-  margin-top: 1.6em;
+  margin-top: 1.9em;
+  margin-top: 1lh;
 }
 
 .back-link,
