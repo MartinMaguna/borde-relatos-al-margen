@@ -1088,7 +1088,11 @@ main:focus {
   gap: var(--space-2);
 }
 
+/* La barra queda fija arriba mientras se recorre un texto largo. */
 .md-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
@@ -1096,6 +1100,21 @@ main:focus {
   background: var(--surface-sunken);
   border: var(--stroke-hairline) solid var(--line);
   border-radius: calc(var(--radius-lg) / 2);
+}
+
+/* Separación visual entre grupos de botones (texto · títulos · saltos · listas · otros). */
+.md-toolbar__button--group-start {
+  margin-left: var(--space-3);
+}
+
+.md-guide {
+  margin: var(--space-2) 0 0;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.md-guide code {
+  font-size: 0.875em;
 }
 
 .md-toolbar__button {

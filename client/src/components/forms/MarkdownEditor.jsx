@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useAnnounce } from '../../a11y/Announcer.jsx';
-import { insertLink, insertSeparator, toggleInline, toggleLinePrefix } from '../../lib/markdownEdit.js';
+import { insertLink, insertParagraph, insertSeparator, toggleInline, toggleLinePrefix } from '../../lib/markdownEdit.js';
 import { TextArea, fieldId } from './fields.jsx';
 
 /**
@@ -20,22 +20,25 @@ import { TextArea, fieldId } from './fields.jsx';
  *   se anuncia lo que pasó ("Negrita aplicada" / "quitada").
  * - Deshacer (Ctrl+Z) funciona: el texto se inserta como si se tipeara.
  * - Vista previa generada por el servidor, igual a como se publica.
+ *
+ * Los botones van agrupados por uso (group): primero los más frecuentes.
  */
 const ACTIONS = [
-  { id: 'h2', label: 'Título de sección', short: 'Título', kind: 'line', lineKind: 'heading', prefix: '# ', said: ['Título de sección aplicado', 'Título de sección quitado'] },
-  { id: 'h3', label: 'Subtítulo', short: 'Subtítulo', kind: 'line', lineKind: 'heading', prefix: '## ', said: ['Subtítulo aplicado', 'Subtítulo quitado'] },
-  { id: 'h4', label: 'Encabezado menor', short: 'Encabezado', kind: 'line', lineKind: 'heading', prefix: '### ', said: ['Encabezado aplicado', 'Encabezado quitado'] },
-  { id: 'bold', label: 'Negrita', short: 'Negrita', kind: 'inline', marker: '**', placeholder: 'texto en negrita', keys: 'Control+B', said: ['Negrita aplicada', 'Negrita quitada'] },
-  { id: 'italic', label: 'Cursiva', short: 'Cursiva', kind: 'inline', marker: '*', placeholder: 'texto en cursiva', keys: 'Control+I', said: ['Cursiva aplicada', 'Cursiva quitada'] },
-  { id: 'strike', label: 'Tachado', short: 'Tachado', kind: 'inline', marker: '~~', placeholder: 'texto tachado', said: ['Tachado aplicado', 'Tachado quitado'] },
-  { id: 'quote', label: 'Cita', short: 'Cita', kind: 'line', lineKind: 'quote', prefix: '> ', said: ['Cita aplicada', 'Cita quitada'] },
-  { id: 'bullet', label: 'Lista con viñetas', short: 'Viñetas', kind: 'line', lineKind: 'bullet', prefix: '- ', said: ['Lista con viñetas aplicada', 'Lista con viñetas quitada'] },
-  { id: 'ordered', label: 'Lista numerada', short: 'Numerada', kind: 'line', lineKind: 'ordered', prefix: '1. ', said: ['Lista numerada aplicada', 'Lista numerada quitada'] },
-  { id: 'link', label: 'Enlace', short: 'Enlace', kind: 'link', keys: 'Control+K', said: ['Enlace insertado: completá la dirección', ''] },
-  { id: 'hr', label: 'Separador', short: 'Separador', kind: 'hr', said: ['Separador insertado', ''] },
+  { id: 'bold', group: 'texto', label: 'Negrita', short: 'Negrita', kind: 'inline', marker: '**', placeholder: 'texto en negrita', keys: 'Control+B', said: ['Negrita aplicada', 'Negrita quitada'] },
+  { id: 'italic', group: 'texto', label: 'Cursiva', short: 'Cursiva', kind: 'inline', marker: '*', placeholder: 'texto en cursiva', keys: 'Control+I', said: ['Cursiva aplicada', 'Cursiva quitada'] },
+  { id: 'h2', group: 'titulos', label: 'Título de sección', short: 'Título', kind: 'line', lineKind: 'heading', prefix: '# ', said: ['Título de sección aplicado', 'Título de sección quitado'] },
+  { id: 'h3', group: 'titulos', label: 'Subtítulo', short: 'Subtítulo', kind: 'line', lineKind: 'heading', prefix: '## ', said: ['Subtítulo aplicado', 'Subtítulo quitado'] },
+  { id: 'paragraph', group: 'saltos', label: 'Nuevo párrafo', short: '¶ Nuevo párrafo', kind: 'paragraph', keys: 'Control+Enter', said: ['Nuevo párrafo: seguí escribiendo', ''] },
+  { id: 'hr', group: 'saltos', label: 'Salto de página', short: 'Salto de página', kind: 'hr', said: ['Salto de página insertado', ''] },
+  { id: 'bullet', group: 'listas', label: 'Lista con viñetas', short: 'Viñetas', kind: 'line', lineKind: 'bullet', prefix: '- ', said: ['Lista con viñetas aplicada', 'Lista con viñetas quitada'] },
+  { id: 'ordered', group: 'listas', label: 'Lista numerada', short: 'Numerada', kind: 'line', lineKind: 'ordered', prefix: '1. ', said: ['Lista numerada aplicada', 'Lista numerada quitada'] },
+  { id: 'quote', group: 'listas', label: 'Cita', short: 'Cita', kind: 'line', lineKind: 'quote', prefix: '> ', said: ['Cita aplicada', 'Cita quitada'] },
+  { id: 'link', group: 'otros', label: 'Enlace', short: 'Enlace', kind: 'link', keys: 'Control+K', said: ['Enlace insertado: completá la dirección', ''] },
+  { id: 'h4', group: 'otros', label: 'Encabezado menor', short: 'Encabezado', kind: 'line', lineKind: 'heading', prefix: '### ', said: ['Encabezado aplicado', 'Encabezado quitado'] },
+  { id: 'strike', group: 'otros', label: 'Tachado', short: 'Tachado', kind: 'inline', marker: '~~', placeholder: 'texto tachado', said: ['Tachado aplicado', 'Tachado quitado'] },
 ];
 
-const SHORTCUTS = { b: 'bold', i: 'italic', k: 'link' };
+const SHORTCUTS = { b: 'bold', i: 'italic', k: 'link', enter: 'paragraph' };
 
 function compute(action, value, start, end) {
   switch (action.kind) {
@@ -45,6 +48,8 @@ function compute(action, value, start, end) {
       return toggleLinePrefix(value, start, end, action.lineKind, action.prefix);
     case 'link':
       return insertLink(value, start, end);
+    case 'paragraph':
+      return insertParagraph(value, start, end);
     default:
       return insertSeparator(value, start, end);
   }
@@ -135,7 +140,7 @@ export default function MarkdownEditor({ name, label, hint, error, defaultValue,
             key={action.id}
             ref={(el) => (buttonsRef.current[i] = el)}
             type="button"
-            className={`md-toolbar__button md-toolbar__button--${action.id}`}
+            className={`md-toolbar__button md-toolbar__button--${action.id}${i > 0 && ACTIONS[i - 1].group !== action.group ? ' md-toolbar__button--group-start' : ''}`}
             tabIndex={i === active ? 0 : -1}
             aria-keyshortcuts={action.keys}
             onFocus={() => setActive(i)}
@@ -152,6 +157,12 @@ export default function MarkdownEditor({ name, label, hint, error, defaultValue,
           </button>
         ))}
       </div>
+      {/* Guía breve, a la vista: cómo se separan líneas, párrafos y partes del texto. */}
+      <p className="md-guide">
+        <strong>Enter</strong>: nueva línea (ideal para versos). <strong>Nuevo párrafo</strong> (o Control+Enter): deja un espacio
+        entre bloques. <strong>Salto de página</strong>: separa partes del texto. Los signos <code>**</code> y <code>#</code> marcan el
+        formato y no se ven en el sitio.
+      </p>
 
       <TextArea
         ref={textareaRef}

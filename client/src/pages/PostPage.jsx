@@ -65,31 +65,16 @@ function PostMedia({ post }) {
 }
 
 /**
- * Capítulos de un cuento: primero un índice (navegación con nombre) y después
- * cada capítulo como sección con su h2, así se recorren también con la lista
- * de encabezados del lector de pantalla. Los enlaces del índice llevan el foco
- * al título del capítulo.
+ * Capítulos de un cuento, uno después del otro: cada uno es una sección con su
+ * h2 ("Capítulo 2 El regreso"), así se recorren con la lista de encabezados
+ * del lector de pantalla.
  */
 function Chapters({ post }) {
   return (
     <div className="chapters-read">
-      <nav className="chapters-index" aria-labelledby="indice-capitulos">
-        <h2 id="indice-capitulos" className="chapters-index__title">
-          Capítulos
-        </h2>
-        <ol>
-          {post.chapters.map((chapter, i) => (
-            <li key={i}>
-              <a href={`#capitulo-${i + 1}`}>{chapter.title}</a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-
       {post.chapters.map((chapter, i) => (
         <section key={i} className="chapter-read" aria-labelledby={`capitulo-${i + 1}`}>
-          {/* tabIndex -1: destino de los enlaces del índice (recibe el foco al llegar). */}
-          <h2 id={`capitulo-${i + 1}`} tabIndex={-1} className="chapter-read__title">
+          <h2 id={`capitulo-${i + 1}`} className="chapter-read__title">
             <span className="chapter-read__number">Capítulo {i + 1}</span> {chapter.title}
           </h2>
           <div className="prose prose--cuentos" dangerouslySetInnerHTML={{ __html: chapter.bodyHtml }} />

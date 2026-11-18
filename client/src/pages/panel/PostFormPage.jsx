@@ -188,7 +188,7 @@ export default function PostFormPage() {
           name="body"
           label="Texto"
           rows={16}
-          hint={`${category === 'cuentos' ? 'Si el cuento tiene capítulos (más abajo), este texto es la introducción y puede quedar vacío. ' : ''}Cada salto de línea se respeta, ideal para versos; para separar párrafos o estrofas, dejá una línea en blanco. Usá la barra de formato (antes del campo) o los atajos Control+B negrita, Control+I cursiva y Control+K enlace.`}
+          hint={`${category === 'cuentos' ? 'Si el cuento tiene capítulos (más abajo), este texto es la introducción y puede quedar vacío. ' : ''}Atajos: Control+B negrita, Control+I cursiva, Control+K enlace.`}
           defaultValue={post.body}
           error={fieldErrors.body}
           previewClassName={`prose prose--${category}`}

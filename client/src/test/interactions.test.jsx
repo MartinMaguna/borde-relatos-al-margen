@@ -346,7 +346,7 @@ describe('Pie y orden del artículo', () => {
 });
 
 describe('Capítulos, apertura y talleres', () => {
-  test('un cuento con capítulos muestra un índice y cada capítulo como sección', async () => {
+  test('un cuento con capítulos muestra cada capítulo como sección, sin índice', async () => {
     const story = {
       ...poem,
       category: 'cuentos',
@@ -360,8 +360,7 @@ describe('Capítulos, apertura y talleres', () => {
     };
     mockApi({ '/posts/cuentos/novela': ok(story) });
     await renderRoute('/cuentos/novela');
-    const index = screen.getByRole('navigation', { name: 'Capítulos' });
-    expect(within(index).getByRole('link', { name: 'El regreso' })).toHaveAttribute('href', '#capitulo-2');
+    expect(screen.queryByRole('navigation', { name: 'Capítulos' })).toBeNull();
     expect(screen.getByRole('heading', { level: 2, name: 'Capítulo 2 El regreso' })).toHaveAttribute('id', 'capitulo-2');
     expect(screen.getByRole('region', { name: 'Capítulo 1 La partida' })).toHaveTextContent('Uno');
     expect(await axeViolations()).toEqual([]);

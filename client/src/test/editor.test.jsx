@@ -81,6 +81,20 @@ describe('Funciones de formato', () => {
   });
 });
 
+describe('Nuevo párrafo', () => {
+  test('deja una línea en blanco en el cursor, sin duplicar saltos', async () => {
+    const { insertParagraph } = await import('../lib/markdownEdit.js');
+    const apply = (value, at) => {
+      const c = insertParagraph(value, at, at);
+      return { text: value.slice(0, c.from) + c.insert + value.slice(c.to), caret: c.selStart };
+    };
+    expect(apply('Primera estrofa', 15)).toEqual({ text: 'Primera estrofa\n\n', caret: 17 });
+    expect(apply('uno\ndos', 3)).toEqual({ text: 'uno\n\ndos', caret: 5 });
+    expect(apply('uno\n\ndos', 3)).toEqual({ text: 'uno\n\ndos', caret: 5 });
+    expect(apply('', 0)).toEqual({ text: '', caret: 0 });
+  });
+});
+
 describe('Barra de formato en el formulario', () => {
   const ME = { '/auth/me': ok({ user: { id: 'u1', name: 'Ed', email: 'e@x.test', role: 'editor' } }) };
 
@@ -95,10 +109,13 @@ describe('Barra de formato en el formulario', () => {
     const toolbar = screen.getByRole('toolbar', { name: 'Formato del texto' });
     expect(toolbar).toHaveAttribute('aria-controls', screen.getByLabelText('Texto').id);
     const buttons = within(toolbar).getAllByRole('button');
+    // Agrupados por uso, los más frecuentes primero.
     expect(buttons.map((b) => b.textContent)).toEqual([
-      'TítuloTítulo de sección', 'Subtítulo', 'EncabezadoEncabezado menor', 'Negrita', 'Cursiva', 'Tachado', 'Cita',
-      'ViñetasLista con viñetas', 'NumeradaLista numerada', 'Enlace', 'Separador',
+      'Negrita', 'Cursiva', 'TítuloTítulo de sección', 'Subtítulo', '¶ Nuevo párrafoNuevo párrafo', 'Salto de página',
+      'ViñetasLista con viñetas', 'NumeradaLista numerada', 'Cita', 'Enlace', 'EncabezadoEncabezado menor', 'Tachado',
     ]);
+    expect(within(toolbar).getByRole('button', { name: 'Nuevo párrafo' })).toHaveAttribute('aria-keyshortcuts', 'Control+Enter');
+    expect(screen.getByText(/nueva línea \(ideal para versos\)/)).toBeInTheDocument();
     expect(buttons.filter((b) => b.tabIndex === 0)).toHaveLength(1);
     expect(within(toolbar).getByRole('button', { name: 'Título de sección' })).toBeInTheDocument();
     expect(within(toolbar).getByRole('button', { name: 'Negrita' })).toHaveAttribute('aria-keyshortcuts', 'Control+B');
@@ -108,12 +125,12 @@ describe('Barra de formato en el formulario', () => {
   test('las flechas recorren los botones', async () => {
     const { user } = await openForm();
     const toolbar = screen.getByRole('toolbar', { name: 'Formato del texto' });
-    const first = within(toolbar).getByRole('button', { name: 'Título de sección' });
+    const first = within(toolbar).getByRole('button', { name: 'Negrita' });
     first.focus();
     await user.keyboard('{ArrowRight}');
-    expect(within(toolbar).getByRole('button', { name: 'Subtítulo' })).toHaveFocus();
+    expect(within(toolbar).getByRole('button', { name: 'Cursiva' })).toHaveFocus();
     await user.keyboard('{End}');
-    expect(within(toolbar).getByRole('button', { name: 'Separador' })).toHaveFocus();
+    expect(within(toolbar).getByRole('button', { name: 'Tachado' })).toHaveFocus();
     await user.keyboard('{ArrowRight}');
     expect(first).toHaveFocus();
   });

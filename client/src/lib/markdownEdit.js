@@ -96,6 +96,25 @@ export function insertLink(value, start, end) {
   return { from: start, to: end, insert, selStart: start + 1, selEnd: start + 1 + placeholder.length, removed: false };
 }
 
+/**
+ * Nuevo párrafo: deja una línea en blanco en el cursor (lo que separa párrafos
+ * o estrofas). Si ya hay saltos alrededor, completa solo lo que falta.
+ */
+export function insertParagraph(value, start, end) {
+  const before = value.slice(0, start).replace(/[ \t]+$/, '');
+  const after = value.slice(end).replace(/^[ \t]+/, '');
+  const from = before.length;
+  const to = value.length - after.length;
+  // Al principio del texto no hace falta separar nada.
+  if (before === '') return { from, to, insert: '', selStart: from, selEnd: from, removed: false };
+  const newlinesBefore = before.match(/\n*$/)[0].length;
+  const newlinesAfter = after.match(/^\n*/)[0].length;
+  const insert = '\n'.repeat(Math.max(0, 2 - newlinesBefore - newlinesAfter));
+  // El cursor queda al comienzo del párrafo nuevo (después de la línea en blanco).
+  const caret = from + insert.length + newlinesAfter;
+  return { from, to, insert, selStart: caret, selEnd: caret, removed: false };
+}
+
 /** Separador (línea horizontal), siempre rodeado de líneas en blanco. */
 export function insertSeparator(value, start, end) {
   const beforeText = value.slice(0, start);

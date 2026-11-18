@@ -61,7 +61,7 @@ export default function AboutEditPage() {
           label="Texto"
           optional
           rows={14}
-          hint="Para separar párrafos, dejá una línea en blanco. Usá la barra de formato (antes del campo) o los atajos Control+B negrita, Control+I cursiva y Control+K enlace."
+          hint="Atajos: Control+B negrita, Control+I cursiva, Control+K enlace."
           defaultValue={page.body}
           error={fieldErrors.body}
         />
