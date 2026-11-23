@@ -17,7 +17,11 @@ const TYPE_OPTIONS = [
   { value: 'select', label: 'Lista desplegable (elegir una)' },
   { value: 'choice', label: 'Opciones a la vista (elegir una)' },
 ];
-const CONTACT_TYPES = TYPE_OPTIONS.filter((t) => t.value === 'short' || t.value === 'email');
+// «Medio de contacto»: correo y teléfono por separado (recomendado), o un solo campo.
+const CONTACT_TYPES = [
+  { value: 'contact', label: 'Correo electrónico y número de teléfono (al menos uno)' },
+  ...TYPE_OPTIONS.filter((t) => t.value === 'short' || t.value === 'email'),
+];
 const hasOptions = (type) => type === 'select' || type === 'choice';
 
 const n = (i, prop) => `applicationForm.items.${i}.${prop}`;

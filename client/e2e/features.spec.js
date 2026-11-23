@@ -57,7 +57,7 @@ test.describe('Artículos: guardar y compartir; contacto; postulaciones', () => 
     await form.getByLabel('Nombre y apellido').fill('Ana Pérez');
     await form.getByLabel('Edad').fill('27');
     await form.getByLabel('Departamento de residencia').selectOption('Montevideo');
-    await form.getByLabel('Medio de contacto').fill('ana@ejemplo.com');
+    await form.getByRole('group', { name: 'Medio de contacto' }).getByLabel('Correo electrónico').fill('ana@ejemplo.com');
     await form.getByRole('radio', { name: 'Por escrito' }).check();
     await form.getByLabel(/^Tu presentación/).fill('Escribo desde Malvín.');
     await form.getByLabel('Título de la obra').fill('Orilla');

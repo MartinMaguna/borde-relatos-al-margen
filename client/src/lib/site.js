@@ -35,7 +35,7 @@ export const CATEGORIES = [
     label: 'Convocatorias',
     intro: '',
     seeAll: 'Ver todas las convocatorias',
-    empty: 'Por ahora no hay convocatorias.',
+    empty: 'En este momento no hay convocatorias abiertas.',
     banner: true,
   },
 ];

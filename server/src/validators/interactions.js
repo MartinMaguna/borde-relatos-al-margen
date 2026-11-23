@@ -8,8 +8,36 @@ const honeypot = z.string().max(200).optional();
 
 const LIMITS = { short: 300, long: 30000, number: 10, email: 254, link: 2000, select: 200, choice: 200 };
 
+const trimmed = (v) => (typeof v === 'string' ? v.trim() : '');
+const EMAIL = z.email();
+const PHONE = /^\+?[\d\s().-]+$/;
+
+/**
+ * «Medio de contacto» con dos campos: correo electrónico y número de teléfono.
+ * Hace falta al menos uno; los dos se validan si se completan.
+ */
+function contactSchema() {
+  return z
+    .preprocess((v) => (v && typeof v === 'object' ? v : {}), z.object({ email: z.unknown().optional(), phone: z.unknown().optional() }))
+    .transform((v) => ({ email: trimmed(v.email).toLowerCase().slice(0, 254), phone: trimmed(v.phone).slice(0, 40) }))
+    .superRefine(({ email, phone }, ctx) => {
+      if (!email && !phone) {
+        ctx.addIssue({ code: 'custom', path: ['email'], message: 'Escribí un correo electrónico o un número de teléfono' });
+        return;
+      }
+      if (email && !EMAIL.safeParse(email).success) {
+        ctx.addIssue({ code: 'custom', path: ['email'], message: 'Escribí un correo electrónico válido, por ejemplo nombre@ejemplo.com' });
+      }
+      const digits = phone.replace(/\D/g, '').length;
+      if (phone && (!PHONE.test(phone) || digits < 6 || digits > 15)) {
+        ctx.addIssue({ code: 'custom', path: ['phone'], message: 'Escribí un número de teléfono válido, por ejemplo 099 123 456' });
+      }
+    });
+}
+
 /** Esquema de la respuesta a una pregunta, según su tipo. Vacía y opcional → ''. */
 function answerSchema(item) {
+  if (item.type === 'contact') return contactSchema();
   const requiredMessage = item.type === 'select' || item.type === 'choice' ? 'Elegí una opción' : 'Completá este campo';
   const max = LIMITS[item.type] ?? 300;
   let check;

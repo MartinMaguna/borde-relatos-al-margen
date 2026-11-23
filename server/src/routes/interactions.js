@@ -66,7 +66,8 @@ export function createPublicInteractionsRouter() {
         await Application.create({
           post: post.id,
           name: answers.name,
-          contact: answers.contact,
+          // Texto único (panel y CSV) y, si vino con dos campos, cada uno por separado.
+          ...contactFields(answers.contact),
           workTitle: answers.workTitle ?? '',
           consent: true,
           // Se guarda también la pregunta: si después se edita el formulario, la respuesta conserva su contexto.
@@ -78,6 +79,15 @@ export function createPublicInteractionsRouter() {
   );
 
   return router;
+}
+
+/** «Medio de contacto»: texto libre (formatos anteriores) o { email, phone }. */
+function contactFields(contact) {
+  if (contact && typeof contact === 'object') {
+    const { email = '', phone = '' } = contact;
+    return { contact: [email, phone].filter(Boolean).join(' · '), contactEmail: email, contactPhone: phone };
+  }
+  return { contact: contact ?? '' };
 }
 
 /** Rutas del panel (detrás de requireAuth). */

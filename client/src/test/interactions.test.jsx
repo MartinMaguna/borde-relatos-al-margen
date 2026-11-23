@@ -89,14 +89,18 @@ describe('Postulación a convocatorias', () => {
       expect(within(form).getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
     }
     expect(within(form).getByRole('textbox', { name: /^Nombre artístico o seudónimo/ })).toBeInTheDocument();
-    expect(within(form).queryByRole('textbox', { name: /Correo electrónico/ })).toBeNull();
+    expect(within(form).getAllByRole('textbox', { name: /Correo electrónico/ })).toHaveLength(1); // solo dentro de «Medio de contacto»
     expect(within(form).getByRole('radiogroup', { name: '¿En qué formato presentás tu obra?' })).toHaveAttribute('aria-required', 'true');
     expect(await axeViolations()).toEqual([]);
 
     await user.type(within(form).getByRole('textbox', { name: 'Nombre y apellido' }), 'Ana Pérez');
     await user.type(within(form).getByRole('textbox', { name: 'Edad' }), '27');
     await user.selectOptions(within(form).getByRole('combobox', { name: 'Departamento de residencia' }), 'Rocha');
-    await user.type(within(form).getByRole('textbox', { name: 'Medio de contacto' }), '099 123 456');
+    // «Medio de contacto»: dos opciones identificadas, dentro de un grupo con su nombre.
+    const contact = within(form).getByRole('group', { name: 'Medio de contacto' });
+    expect(within(contact).getByRole('textbox', { name: 'Correo electrónico' })).toHaveAttribute('type', 'email');
+    expect(within(contact).getByRole('textbox', { name: 'Número de teléfono' })).toHaveAttribute('type', 'tel');
+    await user.type(within(contact).getByRole('textbox', { name: 'Número de teléfono' }), '099 123 456');
     await user.type(within(form).getByRole('textbox', { name: 'Título de la obra' }), 'Orilla');
     await user.click(within(form).getByRole('radio', { name: 'Audio' }));
     await user.click(within(form).getByRole('radio', { name: 'Lengua de Señas Uruguaya (LSU)' }));
@@ -112,7 +116,7 @@ describe('Postulación a convocatorias', () => {
       name: 'Ana Pérez',
       edad: '27',
       departamento: 'Rocha',
-      contact: '099 123 456',
+      contact: { email: '', phone: '099 123 456' },
       workTitle: 'Orilla',
       formato: 'Audio',
       idioma: 'Lengua de Señas Uruguaya (LSU)',

@@ -22,6 +22,8 @@ export default defineConfig(({ mode }) => {
       // Los tests de e2e/ son de Playwright y corren aparte (npm run test:e2e).
       include: ['src/**/*.test.{js,jsx}'],
       setupFiles: ['./src/test/setup.js'],
+      // Algunos tests recorren formularios grandes con axe (accesibilidad): 5 s puede quedar corto.
+      testTimeout: 15_000,
       css: false,
     },
   };

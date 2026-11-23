@@ -25,7 +25,7 @@ const call = (data = {}) =>
 const application = (answers = {}, extra = {}) => ({
   answers: {
     name: 'Ana Pérez',
-    contact: 'ana@ejemplo.com',
+    contact: { email: 'ana@ejemplo.com' },
     edad: '27',
     departamento: 'Montevideo',
     workTitle: 'Orilla',
@@ -306,5 +306,30 @@ describe('Portada: convocatorias vigentes', () => {
     assert.deepEqual(convocatorias.map((c) => c.title).sort(), ['Abierta', 'Por abrir']);
     const all = (await request(app).get('/api/posts?category=convocatorias')).body.data;
     assert.equal(all.length, 3, 'en /convocatorias siguen todas');
+  });
+});
+
+describe('Medio de contacto: correo y teléfono', () => {
+  test('hace falta al menos uno; se validan los dos y se guardan por separado', async () => {
+    const c = await call();
+    const post = (contact) => request(app).post(`/api/posts/convocatorias/${c.slug}/applications`).send(application({ contact }));
+
+    const none = await post({ email: '', phone: '' });
+    assert.equal(none.status, 400);
+    assert.deepEqual(none.body.error.details.map((d) => [d.field, d.message]), [
+      ['answers.contact.email', 'Escribí un correo electrónico o un número de teléfono'],
+    ]);
+    const bad = await post({ email: 'no-es-correo', phone: 'llamame' });
+    assert.deepEqual(bad.body.error.details.map((d) => d.field).sort(), ['answers.contact.email', 'answers.contact.phone']);
+
+    assert.equal((await post({ phone: '099 123 456' })).status, 201);
+    assert.equal((await post({ email: 'Ana@Ejemplo.com', phone: '+598 99 123 456' })).status, 201);
+
+    const { applications } = (await agent.get(`/api/admin/posts/${c.id}/applications`)).body.data;
+    const both = applications.find((a) => a.contactEmail);
+    assert.equal(both.contactEmail, 'ana@ejemplo.com');
+    assert.equal(both.contactPhone, '+598 99 123 456');
+    assert.equal(both.contact, 'ana@ejemplo.com · +598 99 123 456');
+    assert.ok(applications.some((a) => a.contact === '099 123 456' && a.contactPhone === '099 123 456'));
   });
 });

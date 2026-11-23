@@ -47,11 +47,15 @@ function HintAndError({ id, hint, error }) {
   );
 }
 
-export function TextField({ name, label, hint, error, optional = false, type = 'text', ...inputProps }) {
+/**
+ * `showOptional={false}`: un campo opcional que no dice "(opcional)" (por ejemplo, cuando la
+ * consigna del grupo ya explica que hay que completar al menos uno de varios).
+ */
+export function TextField({ name, label, hint, error, optional = false, showOptional = true, type = 'text', ...inputProps }) {
   const id = fieldId(name);
   return (
     <div className={`field${error ? ' field--error' : ''}`}>
-      <Label id={id} label={label} optional={optional} />
+      <Label id={id} label={label} optional={optional && showOptional} />
       <HintAndError id={id} hint={hint} error={error} />
       <input
         id={id}

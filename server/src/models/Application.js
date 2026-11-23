@@ -12,6 +12,9 @@ const applicationSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true, maxlength: 120 },
     // Medio de contacto que dejó la persona (correo, teléfono, WhatsApp…).
     contact: { type: String, trim: true, maxlength: 300, default: '' },
+    // Con el campo de dos opciones: cada una por separado (para escribir o llamar con un clic).
+    contactEmail: { type: String, trim: true, lowercase: true, maxlength: 254, default: '' },
+    contactPhone: { type: String, trim: true, maxlength: 40, default: '' },
     // Solo en postulaciones anteriores al formulario configurable.
     email: { type: String, trim: true, lowercase: true, maxlength: 200, default: '' },
     workTitle: { type: String, trim: true, maxlength: 200, default: '' },

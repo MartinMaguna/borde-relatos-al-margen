@@ -3,7 +3,7 @@ import { api } from '../api/client.js';
 import { useAnnounce } from '../a11y/Announcer.jsx';
 import ErrorSummary from './forms/ErrorSummary.jsx';
 import Honeypot from './forms/Honeypot.jsx';
-import { RadioGroup, SelectField, TextArea, TextField, fieldId } from './forms/fields.jsx';
+import { Fieldset, RadioGroup, SelectField, TextArea, TextField, fieldId } from './forms/fields.jsx';
 import { errorsByField, errorsFromApi } from './forms/errors.js';
 import { formatDate } from '../lib/format.js';
 import { questionsOf, resolveApplicationForm } from '../lib/applicationForm.js';
@@ -21,7 +21,44 @@ const INPUT_PROPS = {
 const AUTOCOMPLETE = { name: 'name' };
 
 /** Una pregunta del formulario, según su tipo. Las obligatorias llevan aria-required; las opcionales dicen "(opcional)". */
-function Question({ item, error }) {
+/**
+ * «Medio de contacto» con dos opciones: correo electrónico y número de teléfono.
+ * Un grupo con su consigna ("completá al menos uno"); cada campo con su etiqueta
+ * visible, su tipo de teclado en el celular y su propio mensaje de error.
+ */
+function ContactQuestion({ item, errors }) {
+  const name = fieldName(item.key);
+  return (
+    <Fieldset legend={item.label} hint={item.hint || undefined}>
+      <TextField
+        name={`${name}.email`}
+        label="Correo electrónico"
+        type="email"
+        autoComplete="email"
+        spellCheck={false}
+        maxLength={254}
+        optional
+        showOptional={false}
+        error={errors[`${name}.email`]}
+      />
+      <TextField
+        name={`${name}.phone`}
+        label="Número de teléfono"
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        maxLength={40}
+        hint="Por ejemplo, 099 123 456."
+        optional
+        showOptional={false}
+        error={errors[`${name}.phone`]}
+      />
+    </Fieldset>
+  );
+}
+
+function Question({ item, error, errors }) {
+  if (item.type === 'contact') return <ContactQuestion item={item} errors={errors} />;
   const common = { name: fieldName(item.key), hint: item.hint || undefined, error, optional: !item.required };
   if (item.type === 'long') return <TextArea {...common} label={item.label} rows={item.key === 'presentacion' ? 6 : 5} maxLength={30000} />;
   if (item.type === 'select') {
@@ -92,7 +129,13 @@ export default function ApplicationForm({ post }) {
       await api(`/posts/${post.category}/${post.slug}/applications`, {
         method: 'POST',
         body: {
-          answers: Object.fromEntries(questionsOf(form).map((q) => [q.key, String(f.get(fieldName(q.key)) ?? '').trim()])),
+          answers: Object.fromEntries(
+            questionsOf(form).map((q) => {
+              const get = (n) => String(f.get(n) ?? '').trim();
+              const n = fieldName(q.key);
+              return [q.key, q.type === 'contact' ? { email: get(`${n}.email`), phone: get(`${n}.phone`) } : get(n)];
+            }),
+          ),
           consent: f.get('application.consent') === 'on',
           website: f.get('website'),
         },
@@ -131,7 +174,7 @@ export default function ApplicationForm({ post }) {
                   {item.hint && <p className="application__section-text">{item.hint}</p>}
                 </div>
               ) : (
-                <Question key={item.key} item={item} error={fieldErrors[fieldName(item.key)]} />
+                <Question key={item.key} item={item} error={fieldErrors[fieldName(item.key)]} errors={fieldErrors} />
               ),
             )}
 

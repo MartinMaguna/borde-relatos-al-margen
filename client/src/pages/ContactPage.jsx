@@ -53,7 +53,7 @@ export default function ContactPage() {
     <div className="article">
       <h1 tabIndex={-1}>Contacto</h1>
       <p className="lead">
-        ¿Querés proponer un texto, sumarte a un taller o contarnos algo? Escribinos y te respondemos a la brevedad.
+        ¿Querés proponer un texto, sumarte a un taller o contarnos algo?
       </p>
 
       {done ? (
@@ -94,10 +94,6 @@ export default function ContactPage() {
         </section>
       )}
 
-      <p>
-        Para postularte a una convocatoria, usá el formulario de esa convocatoria (si lo tiene) o seguí lo que indican
-        sus bases.
-      </p>
     </div>
   );
 }

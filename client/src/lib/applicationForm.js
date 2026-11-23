@@ -10,7 +10,8 @@
  *
  * Copia de server/src/utils/applicationForm.js (mismos valores por defecto que la API).
  */
-export const ITEM_TYPES = ['section', 'short', 'long', 'number', 'email', 'link', 'select', 'choice'];
+// 'contact': correo electrónico y número de teléfono (al menos uno), solo para «Medio de contacto».
+export const ITEM_TYPES = ['section', 'short', 'long', 'number', 'email', 'link', 'select', 'choice', 'contact'];
 export const CORE_KEYS = ['name', 'contact'];
 
 export const DEFAULT_CONSENT = 'Confirmo que deseo presentar esta obra a la convocatoria y que conozco sus bases.';
@@ -24,7 +25,7 @@ const q = (key, type, label, extra = {}) => ({ key, type, label, hint: '', requi
 
 /** Formulario modelo (el que propuso el equipo). */
 export const BORDE_TEMPLATE = {
-  intro: 'Un formulario breve: solo pedimos la información necesaria para participar en la convocatoria.',
+  intro: '',
   consentText: DEFAULT_CONSENT,
   privacyText: '',
   items: [
@@ -33,9 +34,9 @@ export const BORDE_TEMPLATE = {
     q('seudonimo', 'short', 'Nombre artístico o seudónimo'),
     q('edad', 'number', 'Edad', { required: true }),
     q('departamento', 'select', 'Departamento de residencia', { required: true, options: DEPARTAMENTOS }),
-    q('contact', 'short', 'Medio de contacto', {
+    q('contact', 'contact', 'Medio de contacto', {
       required: true,
-      hint: 'Indicá un medio por el que podamos comunicarnos contigo: correo electrónico, teléfono o WhatsApp.',
+      hint: 'Completá al menos uno de los dos para que podamos comunicarnos contigo.',
     }),
     q('s-presentacion', 'section', 'Presentación personal', {
       hint: 'Contanos brevemente quién sos y qué te motiva a participar. No es necesario tener experiencia artística ni presentar un currículum.',
@@ -54,7 +55,7 @@ export const BORDE_TEMPLATE = {
     }),
     q('s-apoyos', 'section', 'Accesibilidad y apoyos'),
     q('apoyos', 'long', '¿Necesitás algún apoyo o ajuste para participar?', {
-      hint: 'Por ejemplo, apoyo para completar el formulario, presentar tu obra o participar en las actividades. No es necesario informar diagnósticos ni datos médicos.',
+      hint: 'Por ejemplo, apoyo para completar el formulario, presentar tu obra o participar en las actividades.',
     }),
     q('s-confirmacion', 'section', 'Confirmación'),
   ],
@@ -92,7 +93,7 @@ export function resolveApplicationForm(form) {
   const items = resolved.items.map((i) => ({ hint: '', options: [], required: false, ...i }));
   // Por si una configuración vieja o incompleta no los tiene.
   if (!items.some((i) => i.key === 'name')) items.unshift(q('name', 'short', 'Nombre y apellido', { required: true }));
-  if (!items.some((i) => i.key === 'contact')) items.splice(1, 0, q('contact', 'short', 'Medio de contacto', { required: true }));
+  if (!items.some((i) => i.key === 'contact')) items.splice(1, 0, q('contact', 'contact', 'Medio de contacto', { required: true, hint: 'Completá al menos uno de los dos para que podamos comunicarnos contigo.' }));
   for (const i of items) if (CORE_KEYS.includes(i.key)) i.required = true;
   return { ...resolved, items };
 }

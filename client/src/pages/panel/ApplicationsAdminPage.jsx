@@ -75,8 +75,14 @@ export default function ApplicationsAdminPage() {
                 <div>
                   <dt>Contacto</dt>
                   <dd>
-                    {/* Si el contacto es un correo, se puede escribir con un clic. */}
-                    {(a.contact || a.email).includes('@') ? (
+                    {/* Correo y teléfono: se puede escribir o llamar con un clic. */}
+                    {a.contactEmail || a.contactPhone ? (
+                      <>
+                        {a.contactEmail && <a href={`mailto:${a.contactEmail}`}>{a.contactEmail}</a>}
+                        {a.contactEmail && a.contactPhone && ' · '}
+                        {a.contactPhone && <a href={`tel:${a.contactPhone.replace(/[^\d+]/g, '')}`}>{a.contactPhone}</a>}
+                      </>
+                    ) : (a.contact || a.email).includes('@') ? (
                       <a href={`mailto:${a.contact || a.email}`}>{a.contact || a.email}</a>
                     ) : (
                       a.contact
