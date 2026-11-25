@@ -14,6 +14,7 @@ import previewRouter from './routes/preview.js';
 import { adminInteractionsRouter, createPublicInteractionsRouter } from './routes/interactions.js';
 import { adminSupportersRouter, publicSupportersRouter } from './routes/supporters.js';
 import { adminMessagesRouter, createContactRouter } from './routes/contact.js';
+import { adminSettingsRouter, publicSettingsRouter } from './routes/settings.js';
 import { requireAuth, requireRole } from './middleware/auth.js';
 import { notFound, errorHandler } from './middleware/errors.js';
 
@@ -51,6 +52,7 @@ export function createApp() {
   app.use('/api/pages', publicPagesRouter);
   app.use('/api/images', publicImagesRouter);
   app.use('/api/supporters', publicSupportersRouter);
+  app.use('/api/settings', publicSettingsRouter);
   app.use('/api/contact', createContactRouter());
 
   // Panel del editor: todo lo que cuelga de /api/admin exige sesión y rol.
@@ -60,6 +62,7 @@ export function createApp() {
   app.use('/api/admin/images', adminImagesRouter);
   app.use('/api/admin/preview', previewRouter);
   app.use('/api/admin/supporters', adminSupportersRouter);
+  app.use('/api/admin/settings', adminSettingsRouter);
   app.use('/api/admin/messages', adminMessagesRouter);
   app.use('/api/admin', adminInteractionsRouter);
 

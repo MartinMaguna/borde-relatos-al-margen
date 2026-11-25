@@ -11,6 +11,7 @@ const PANEL_NAV = [
   { to: '/panel/mensajes', label: 'Mensajes' },
   { to: '/panel/logos', label: 'Logos' },
   { to: '/panel/acerca', label: 'Página Acerca' },
+  { to: '/panel/textos', label: 'Textos del sitio' },
 ];
 
 /**

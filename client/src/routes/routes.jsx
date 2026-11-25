@@ -11,6 +11,7 @@ import LoginPage from '../pages/panel/LoginPage.jsx';
 import PostsAdminPage from '../pages/panel/PostsAdminPage.jsx';
 import PostFormPage from '../pages/panel/PostFormPage.jsx';
 import AboutEditPage from '../pages/panel/AboutEditPage.jsx';
+import SiteTextsPage from '../pages/panel/SiteTextsPage.jsx';
 import ApplicationsAdminPage from '../pages/panel/ApplicationsAdminPage.jsx';
 import MessagesAdminPage from '../pages/panel/MessagesAdminPage.jsx';
 import SupportersAdminPage from '../pages/panel/SupportersAdminPage.jsx';
@@ -22,6 +23,7 @@ import {
   adminPostsLoader,
   applicationsLoader,
   editAboutLoader,
+  siteTextsLoader,
   editPostLoader,
   loginLoader,
   requireUserLoader,
@@ -64,6 +66,7 @@ export const routes = [
               { path: 'mensajes', loader: adminMessagesLoader, element: <MessagesAdminPage /> },
               { path: 'logos', loader: adminSupportersLoader, element: <SupportersAdminPage /> },
               { path: 'acerca', loader: editAboutLoader, element: <AboutEditPage /> },
+              { path: 'textos', loader: siteTextsLoader, element: <SiteTextsPage /> },
             ],
           },
         ],

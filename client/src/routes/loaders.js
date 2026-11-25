@@ -34,11 +34,16 @@ function pageFrom(request) {
 export function categoryLoader(category) {
   return async ({ request }) => {
     const page = pageFrom(request);
-    const { data: posts, meta } = await load(
-      `/posts?category=${category}&page=${page}&limit=${PAGE_SIZE}`,
-      request.signal,
-    );
-    return { posts, meta };
+    const [{ data: posts, meta }, emptyText] = await Promise.all([
+      load(`/posts?category=${category}&page=${page}&limit=${PAGE_SIZE}`, request.signal),
+      // Convocatorias: el mensaje cuando no hay ninguna se edita en el panel (Textos del sitio).
+      category === 'convocatorias'
+        ? api('/settings', { signal: request.signal })
+            .then((r) => r.data.convocatoriasEmpty)
+            .catch(() => null)
+        : null,
+    ]);
+    return { posts, meta, emptyText };
   };
 }
 

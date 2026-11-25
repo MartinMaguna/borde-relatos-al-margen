@@ -117,6 +117,17 @@ export default function PostPage() {
 
         <PostMedia post={post} />
 
+        {/* Talleres: lo más importante, en un recuadro antes del texto. Región con nombre para encontrarla con el lector. */}
+        {post.highlightHtml && (
+          <section className="highlight-box" aria-labelledby="informacion-destacada">
+            <h2 id="informacion-destacada" className="highlight-box__title">
+              Información destacada
+            </h2>
+            {/* HTML generado y sanitizado en el servidor a partir del Markdown. */}
+            <div className="prose" dangerouslySetInnerHTML={{ __html: post.highlightHtml }} />
+          </section>
+        )}
+
         {post.category === 'convocatorias' && (
           <section className="call-details" aria-labelledby="datos-convocatoria">
             <h2 id="datos-convocatoria" className="visually-hidden">

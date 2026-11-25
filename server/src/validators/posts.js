@@ -125,6 +125,7 @@ export const postInputSchema = z
     summary: z.string().trim().max(500, 'El resumen admite hasta 500 caracteres').default(''),
     body: z.string().trim().max(100_000).default(''),
     chapters: z.array(chapterSchema).max(60, 'Hasta 60 capítulos').default([]),
+    highlight: z.string().trim().max(3000, 'La información destacada admite hasta 3000 caracteres').default(''),
     image: imageSchema.nullable().default(null),
     audio: audioSchema.nullable().default(null),
     signVideoUrl: emptyToUndefined(signVideoUrl.nullable().optional()),

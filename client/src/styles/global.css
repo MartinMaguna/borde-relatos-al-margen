@@ -1940,6 +1940,35 @@ main:focus {
   max-width: min(100%, 22.5rem);
 }
 
+/* ---------- Talleres: recuadro de información destacada ---------- */
+.highlight-box {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
+  background: var(--surface-raised);
+  border: var(--stroke-hairline) solid var(--line);
+  border-left: 0.375rem solid var(--violet);
+  border-radius: var(--radius-lg);
+}
+
+.highlight-box__title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-text);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+
+.highlight-box .prose {
+  font-size: 1.25rem;
+}
+
+/* Mensajes editables en el panel: respetan los saltos de línea. */
+.notice--multiline {
+  white-space: pre-line;
+}
+
 /* ---------- Capítulos (cuentos) ---------- */
 .chapters-index {
   margin: var(--space-5) 0;

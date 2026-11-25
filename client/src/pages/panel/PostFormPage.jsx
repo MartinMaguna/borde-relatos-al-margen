@@ -37,6 +37,7 @@ function payloadFrom(form, status, previousApplicationForm) {
     category: get('category'),
     author: get('author'),
     summary: get('summary'),
+    highlight: get('category') === 'talleres' ? get('highlight') : '',
     body: get('body'),
     chapters: get('category') === 'cuentos' ? chaptersFrom(form) : [],
     status,
@@ -183,6 +184,19 @@ export default function PostFormPage() {
           defaultValue={post.summary}
           error={fieldErrors.summary}
         />
+
+        {category === 'talleres' && (
+          <MarkdownEditor
+            name="highlight"
+            label="Información destacada"
+            optional
+            rows={6}
+            hint="Lo más importante del taller (fechas, modalidad, cupos, cómo postularse). Se muestra en un recuadro resaltado, antes del texto."
+            defaultValue={post.highlight ?? ''}
+            error={fieldErrors.highlight}
+            previewClassName="prose prose--talleres"
+          />
+        )}
 
         <MarkdownEditor
           name="body"

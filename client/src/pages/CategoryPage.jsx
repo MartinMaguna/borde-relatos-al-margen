@@ -6,7 +6,7 @@ import { useDocumentTitle } from '../a11y/hooks.js';
 
 /** Listado paginado de una categoría (Poesía, Cuentos, Talleres, Convocatorias). */
 export default function CategoryPage({ category }) {
-  const { posts, meta } = useLoaderData();
+  const { posts, meta, emptyText } = useLoaderData();
   const { page, totalPages, total } = meta;
   const pageLabel = totalPages > 1 ? `página ${page} de ${totalPages}` : null;
   const isCalls = Boolean(category.banner);
@@ -38,7 +38,7 @@ export default function CategoryPage({ category }) {
           ))}
         </ul>
       ) : (
-        <p className="notice">{total > 0 ? 'No hay publicaciones en esta página.' : category.empty}</p>
+        <p className="notice notice--multiline">{total > 0 ? 'No hay publicaciones en esta página.' : emptyText || category.empty}</p>
       )}
 
       <Pagination page={page} totalPages={totalPages} basePath={`/${category.slug}`} />

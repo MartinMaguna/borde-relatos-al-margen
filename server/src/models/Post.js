@@ -58,6 +58,9 @@ const postSchema = new mongoose.Schema(
     },
     bodyHtml: { type: String, default: '' }, // HTML sanitizado, para leer
     chapters: { type: [chapterSchema], default: [] },
+    // Solo talleres: bloque con la información más destacada (Markdown y su HTML).
+    highlight: { type: String, default: '' },
+    highlightHtml: { type: String, default: '' },
     image: { type: imageSchema, default: null },
     audio: { type: audioSchema, default: null },
     // Versión en lengua de señas: video de YouTube (guardado en forma canónica).
@@ -115,6 +118,10 @@ postSchema.virtual('signVideoId').get(function () {
 
 postSchema.pre('validate', function () {
   if (this.category !== 'cuentos') this.chapters = [];
+  if (this.category !== 'talleres') this.highlight = '';
+  if (this.isModified('highlight') || (this.highlight && !this.highlightHtml)) {
+    this.highlightHtml = this.highlight ? renderMarkdown(this.highlight) : '';
+  }
   if (this.isModified('body') || this.isModified('chapters') || this.readingMinutes == null) {
     this.bodyHtml = this.body ? renderMarkdown(this.body) : '';
     for (const chapter of this.chapters) chapter.bodyHtml = renderMarkdown(chapter.body);

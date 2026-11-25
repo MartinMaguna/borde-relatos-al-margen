@@ -566,3 +566,61 @@ describe('Portada sin convocatorias vigentes', () => {
     expect(screen.getByRole('navigation', { name: 'Principal' })).toHaveTextContent('Convocatorias');
   });
 });
+
+describe('Textos editables e información destacada', () => {
+  const empty = { page: 1, limit: 10, total: 0, totalPages: 0 };
+
+  test('Convocatorias sin publicaciones muestra el mensaje editado en el panel (o el de siempre)', async () => {
+    mockApi({ '/posts?category=convocatorias&page=1&limit=10': ok([], empty), '/settings': ok({ convocatoriasEmpty: 'Pronto abrimos la próxima.' }) });
+    await renderRoute('/convocatorias');
+    expect(screen.getByText('Pronto abrimos la próxima.')).toBeInTheDocument();
+  });
+
+  test('sin el texto del panel, Convocatorias dice el mensaje por defecto', async () => {
+    mockApi({ '/posts?category=convocatorias&page=1&limit=10': ok([], empty) });
+    await renderRoute('/convocatorias');
+    expect(screen.getByText('En este momento no hay convocatorias abiertas.')).toBeInTheDocument();
+  });
+
+  test('panel: "Textos del sitio" guarda el mensaje de Convocatorias y lo anuncia', async () => {
+    const calls = mockApi({
+      ...ME,
+      '/admin/settings': ok({ convocatoriasEmpty: '', defaults: { convocatoriasEmpty: 'En este momento no hay convocatorias abiertas.' } }),
+      'PUT /admin/settings': ok({ convocatoriasEmpty: 'Nuevo texto' }),
+    });
+    await renderRoute('/panel/textos');
+    expect(screen.getByRole('navigation', { name: 'Panel' })).toHaveTextContent('Textos del sitio');
+    const field = screen.getByRole('textbox', { name: /Convocatorias: mensaje cuando no hay ninguna/ });
+    expect(field).toHaveAccessibleDescription(/En este momento no hay convocatorias abiertas/);
+    expect(await axeViolations()).toEqual([]);
+    const user = userEvent.setup();
+    await user.type(field, 'Nuevo texto');
+    await user.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+    await waitFor(() => expect(screen.getByTestId('announcer-polite')).toHaveTextContent('Se guardaron los textos del sitio.'));
+    expect(calls.find((c) => c.method === 'PUT').body).toEqual({ convocatoriasEmpty: 'Nuevo texto' });
+  });
+
+  test('un taller con información destacada la muestra en un recuadro con nombre, antes del texto', async () => {
+    const workshop = { ...poem, category: 'talleres', slug: 'lab', title: 'Laboratorio', highlightHtml: '<p>Entre <strong>marzo y junio</strong>.</p>' };
+    mockApi({ '/posts/talleres/lab': ok(workshop) });
+    await renderRoute('/talleres/lab');
+    const box = screen.getByRole('region', { name: 'Información destacada' });
+    expect(box).toHaveTextContent('Entre marzo y junio.');
+    expect(box.compareDocumentPosition(document.querySelector('.prose--talleres')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  test('panel: el campo "Información destacada" aparece solo en Talleres y se envía', async () => {
+    const calls = mockApi({ ...ME, 'POST /admin/posts': { status: 201, body: { ok: true, data: { title: 'T', status: 'draft' } } }, '/admin/posts?page=1&limit=10': ok([], empty) });
+    await renderRoute('/panel/publicaciones/nueva');
+    const user = userEvent.setup();
+    expect(screen.queryByLabelText(/Información destacada/)).toBeNull();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Categoría' }), 'talleres');
+    await user.type(screen.getByRole('textbox', { name: /Información destacada/ }), 'Entre marzo y junio');
+    await user.type(screen.getByRole('textbox', { name: 'Título' }), 'T');
+    await user.type(screen.getByRole('textbox', { name: 'Texto' }), 'Cuerpo');
+    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }));
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(calls.find((c) => c.method === 'POST').body.highlight).toBe('Entre marzo y junio');
+  });
+});

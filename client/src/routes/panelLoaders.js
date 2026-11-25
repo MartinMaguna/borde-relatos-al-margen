@@ -71,6 +71,11 @@ export async function applicationsLoader({ params, request }) {
   return data;
 }
 
+export async function siteTextsLoader({ request }) {
+  const { data: settings } = await adminLoad('/admin/settings', request);
+  return { settings };
+}
+
 export async function editAboutLoader({ request }) {
   const { data: page } = await adminLoad('/admin/pages/acerca', request);
   return { page };
