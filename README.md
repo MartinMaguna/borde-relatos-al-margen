@@ -259,7 +259,7 @@ Todo en un solo proyecto de Vercel (plan Hobby) y una base gratuita de Atlas (M0
 
 | Servicio | URL |
 | -------- | --- |
-| Sitio y API (Vercel) | https://borde-relatos-al-margen.vercel.app (salud: `/api/health`) |
+| Sitio y API (Vercel) | https://relatosalmargen.org (salud: `/api/health`); también https://borde-relatos-al-margen.vercel.app |
 
 ### Cómo funciona la API en Vercel
 
@@ -289,7 +289,7 @@ Todo en un solo proyecto de Vercel (plan Hobby) y una base gratuita de Atlas (M0
    | `MONGODB_URI` | cadena de Atlas |
    | `MONGODB_DB_NAME` | `test` (la base donde están los datos de producción) |
    | `JWT_SECRET` | 48+ bytes aleatorios: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
-   | `CLIENT_ORIGIN` | `https://borde-relatos-al-margen.vercel.app` |
+   | `CLIENT_ORIGIN` | `https://relatosalmargen.org` |
    | `NODE_ENV` | `production` |
    | `RESEND_API_KEY`, `CONTACT_TO_EMAIL` | opcionales: para que los mensajes de Contacto lleguen por correo (ver *Formulario de contacto*) |
    | `CONTACT_FROM_EMAIL` | opcional; remitente, `Borde <onboarding@resend.dev>` por defecto |
@@ -298,6 +298,15 @@ Todo en un solo proyecto de Vercel (plan Hobby) y una base gratuita de Atlas (M0
 
    Un cambio de variables se aplica en el **próximo deploy** (*Deployments → … → Redeploy*).
 4. **Primer editor: se crea solo.** En la primera petición a la API, si la base no tiene ningún usuario y están las variables `SEED_EDITOR_*`, se crea ese editor (y la página "Acerca" si falta). Después, borrá las `SEED_*`. Para cambiar una contraseña o cargar ejemplos: `npm run seed` desde tu equipo, con un `server/.env` que tenga la misma `MONGODB_URI` y las `SEED_*`.
+
+### Dominio propio: relatosalmargen.org
+
+- **Principal:** `https://relatosalmargen.org`. **`www.relatosalmargen.org`** redirige con **308** al principal (conserva ruta y parámetros). La dirección `borde-relatos-al-margen.vercel.app` sigue funcionando.
+- **DNS:** administrado por Vercel (`ns1/ns2.vercel-dns.com`). Registros que crea y mantiene Vercel: ALIAS del dominio raíz, ALIAS comodín `*` (por eso `www` apunta a Vercel) y CAA para `letsencrypt.org`, `pki.goog` y `sectigo.com`. No hace falta tocarlos.
+- **Certificados:** Let's Encrypt, uno por dominio, emitidos y renovados solos por Vercel. Cada variante (con y sin www) tiene que estar agregada al proyecto en *Settings → Domains*: si no, Vercel no le emite certificado y el navegador muestra "La conexión no es privada".
+- **`CLIENT_ORIGIN`** = `https://relatosalmargen.org` (origen permitido por CORS).
+
+**Cambio del 26/11/2026 (problema "La conexión no es privada" en www):** `www.relatosalmargen.org` no estaba agregado al proyecto, así que respondía con el certificado de `relatosalmargen.org`. Se agregó con redirección 308 al dominio principal (Vercel emitió su certificado) y `CLIENT_ORIGIN` pasó de `https://borde-relatos-al-margen.vercel.app` a `https://relatosalmargen.org`. No se modificó ningún registro DNS. Para revertir: quitar `www.relatosalmargen.org` en *Settings → Domains* y volver `CLIENT_ORIGIN` a su valor anterior (y redesplegar).
 
 ### 3. Verificar el deploy
 
