@@ -16,7 +16,7 @@ import {
 /**
  * Guardar · Compartir · Mis guardados, arriba del texto de una publicación.
  *
- * - Guardar: botón cuyo texto dice lo que hace ("Guardar" / "Quitar de guardados").
+ * - Guardar: botón que se activa y desactiva (aria-pressed); el ícono relleno muestra que está guardado.
  * - Compartir: botón que despliega opciones (patrón "disclosure": aria-expanded
  *   y aria-controls), no un menú ARIA: son enlaces y botones comunes, que se
  *   recorren con Tab como cualquier otro. Escape cierra y devuelve el foco.
@@ -39,9 +39,10 @@ export default function ArticleActions({ post }) {
 
   return (
     <div className="article-actions">
-      <button type="button" className="action-button" onClick={toggleSaved}>
+      {/* Botón que se activa y desactiva: siempre dice "Guardar"; el estado lo dan aria-pressed y el ícono relleno. */}
+      <button type="button" className="action-button" aria-pressed={saved} onClick={toggleSaved}>
         <BookmarkIcon filled={saved} />
-        {saved ? 'Quitar de guardados' : 'Guardar'}
+        Guardar
       </button>
       <ShareMenu post={post} />
       <Link className="action-button" to="/guardados">

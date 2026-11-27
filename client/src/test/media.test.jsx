@@ -76,7 +76,7 @@ describe('Detalle con audio y lengua de señas', () => {
     const { container } = await renderRoute('/poesia/orilla');
 
     const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent.trim());
-    expect(h2).toContain('Escuchar: Lectura de la autora');
+    expect(h2).toContain('Escuchar');
     expect(h2).toContain('Lengua de Señas Uruguaya');
 
     const audio = container.querySelector('audio[controls]');
@@ -85,10 +85,9 @@ describe('Detalle con audio y lengua de señas', () => {
 
     const iframe = screen.getByTitle('Versión en Lengua de Señas Uruguaya de «Orilla» (video de YouTube)');
     expect(iframe).toHaveAttribute('src', `https://www.youtube-nocookie.com/embed/${VIDEO_ID}`);
-    expect(screen.getByRole('link', { name: 'Ver en YouTube la versión en Lengua de Señas Uruguaya' })).toHaveAttribute(
-      'href',
-      withMedia.signVideoUrl,
-    );
+    // Sin enlaces extra: ni "Ver en YouTube" ni "Abrir o descargar el audio".
+    expect(screen.queryByRole('link', { name: /Ver en YouTube/ })).toBeNull();
+    expect(screen.queryByText(/Abrir o descargar el audio/)).toBeNull();
     expect(await axeViolations()).toEqual([]);
   });
 

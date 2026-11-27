@@ -32,8 +32,11 @@ describe('Acciones del artículo', () => {
     const { router } = await renderRoute('/poesia/orilla');
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: 'Guardar' }));
-    expect(screen.getByRole('button', { name: 'Quitar de guardados' })).toBeInTheDocument();
+    const saveButton = screen.getByRole('button', { name: 'Guardar' });
+    expect(saveButton).toHaveAttribute('aria-pressed', 'false');
+    await user.click(saveButton);
+    // Botón que se activa y desactiva: mismo nombre, estado en aria-pressed.
+    expect(screen.getByRole('button', { name: 'Guardar', pressed: true })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId('announcer-polite')).toHaveTextContent(/Guardado en este navegador/));
     expect(JSON.parse(localStorage.getItem('borde:guardados'))[0]).toMatchObject({ slug: 'orilla', title: 'Orilla' });
 

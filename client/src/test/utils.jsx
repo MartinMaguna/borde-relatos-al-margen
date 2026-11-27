@@ -47,7 +47,8 @@ export async function renderRoute(path) {
       </AnnouncerProvider>
     </StrictMode>,
   );
-  await screen.findByRole('heading', { level: 1 });
+  // Hasta 5 s: con la máquina cargada, la primera carga (loader + render) puede pasar el segundo por defecto.
+  await screen.findByRole('heading', { level: 1 }, { timeout: 5000 });
   return { router, ...utils };
 }
 

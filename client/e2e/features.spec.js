@@ -8,7 +8,10 @@ test.describe('Artículos: guardar y compartir; contacto; postulaciones', () => 
     await expect(page.getByText(/minutos? de lectura/)).toBeVisible();
 
     await page.getByRole('button', { name: 'Guardar' }).click();
-    await expect(page.getByRole('button', { name: 'Quitar de guardados' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Guardar', pressed: true })).toBeVisible();
+    // Las tres acciones en una sola fila (también en el celular).
+    const tops = await page.locator('.article-actions > *').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(new Set(tops).size).toBe(1);
 
     const share = page.getByRole('button', { name: 'Compartir' });
     await share.click();

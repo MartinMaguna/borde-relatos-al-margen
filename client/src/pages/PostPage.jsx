@@ -22,17 +22,13 @@ function PostMedia({ post }) {
       {post.audio?.url && (
         <section className="post-media__block" aria-labelledby="audio-titulo">
           <h2 id="audio-titulo" className="post-media__title">
-            Escuchar: {post.audio.label}
+            Escuchar
           </h2>
           {/* Controles nativos: accesibles con teclado y lector en todos los navegadores. */}
           {/* eslint-disable-next-line jsx-a11y/media-has-caption -- la transcripción es el texto de la publicación, en esta misma página */}
           <audio controls preload="none" src={post.audio.url} aria-labelledby="audio-titulo" className="post-media__audio">
             <a href={post.audio.url}>Descargar el audio</a>
           </audio>
-          <p className="post-media__note">
-            <a href={post.audio.url}>Abrir o descargar el audio</a>
-            {' · '}El texto completo está debajo.
-          </p>
         </section>
       )}
 
@@ -53,11 +49,6 @@ function PostMedia({ post }) {
               referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
-          <p className="post-media__note">
-            <a href={post.signVideoUrl}>
-              Ver en YouTube <span className="visually-hidden">la versión en Lengua de Señas Uruguaya</span>
-            </a>
-          </p>
         </section>
       )}
     </div>
